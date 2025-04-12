@@ -1,4 +1,3 @@
-"""
 # Hack The Box Writeups
 
 All the information provided in this repository was obtained through the legitimate solving of Hack The Box machines.  
@@ -9,8 +8,3 @@ You can verify my progress on my official [Hack The Box profile](https://app.hac
 
 Documentation has been improved and structured using **ChatGPT** to ensure high readability and clarity.
 
----
-
-## Easy Machines
-
-"""
