@@ -1,4 +1,5 @@
-main_readme = """# Hack The Box Writeups
+"""
+# Hack The Box Writeups
 
 All the information provided in this repository was obtained through the legitimate solving of Hack The Box machines.  
 Each writeup reflects the step-by-step approach I used to complete the machines and capture the flags.
