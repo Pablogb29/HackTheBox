@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.55`  
 **OS:** Ubuntu  
 **Difficulty:** Easy  
-**Tags:** LFI, Python Flask, Subdomain Enumeration, File Disclosure
+**Tags:** #LFI, #PythonFlask, #SubdomainEnumeration, #FileDisclosure
 
 ---
 

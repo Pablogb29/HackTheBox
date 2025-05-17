@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.108`  
 **OS:** Windows Server 2019  
 **Difficulty:** Medium  
-**Tags:** SMB, WinRM, Web Panel, LDAP Injection, Service Abuse, Reverse Shell
+**Tags:** #SMB, #WinRM, #WebPanel, #LDAPInjection, #ServiceAbuse, #ReverseShell
 
 ---
 

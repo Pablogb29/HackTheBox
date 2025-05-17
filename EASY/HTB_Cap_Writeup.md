@@ -3,7 +3,7 @@
 **IP Address:** `10.10.10.245`  
 **OS:** Ubuntu 20.04  
 **Difficulty:** Easy  
-**Tags:** FTP, PCAP, Wireshark, SSH, LinPEAS, SUID, Python
+**Tags:** #FTP, #PCAP, #Wireshark, #SSH, #LinPEAS, #SUID, #Python
 
 ---
 

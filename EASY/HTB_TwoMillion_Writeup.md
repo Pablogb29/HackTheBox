@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.221`  
 **OS:** Ubuntu  
 **Difficulty:** Medium  
-**Tags:** Web, ROT13, Base64, Cookie Injection, Command Injection, Reverse Shell, OverlayFS
+**Tags:** #Web, #ROT13, #Base64, #CookieInjection, #CommandInjection, #ReverseShell, #OverlayFS
 
 ---
 

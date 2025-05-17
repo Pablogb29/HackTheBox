@@ -3,7 +3,7 @@
 **IP Address:** `10.10.10.3`  
 **OS:** Linux  
 **Difficulty:** Easy  
-**Tags:** FTP, Samba, RCE, Netcat, CVE-2007-2447, Shell Stabilization
+**Tags:** #FTP, #Samba, #RCE, #Netcat, #CVE-2007-2447, #ShellStabilization
 
 ---
 

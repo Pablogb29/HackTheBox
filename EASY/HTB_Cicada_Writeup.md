@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.35`  
 **OS:** Windows Server 2022  
 **Difficulty:** Medium  
-**Tags:** SMB, Kerberos, RID Brute Force, WinRM, Privilege Escalation, Backup Operators, Hive Dumping
+**Tags:** #SMB, #Kerberos, #RIDBruteForce, #WinRM, #PrivilegeEscalation, #BackupOperators, #HiveDumping
 
 ---
 

@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.174`  
 **OS:** Windows  
 **Difficulty:** Easy  
-**Tags:** SMB, LDAP, WinRM, Kerberos, BloodHound, RBCD
+**Tags:** #SMB, #LDAP, #WinRM, #Kerberos, #BloodHound, #RBCD
 
 ---
 

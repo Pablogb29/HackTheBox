@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.35`  
 **OS:** Ubuntu Jammy (22.04)  
 **Difficulty:** Easy  
-**Tags:** Web App, Docker, Request Tracker, SSH, KeePass, PuTTY Key Conversion
+**Tags:** #WebApp, #Docker, #RequestTracker, #SSH, #KeePass, #PuTTYKeyConversion
 
 ---
 

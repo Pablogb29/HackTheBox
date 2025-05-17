@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.38`  
 **OS:** Ubuntu  
 **Difficulty:** Easy  
-**Tags:** Flask, File Upload, Python Werkzeug, Reverse Shell, Hash Cracking, LFI
+**Tags:** #Flask, #FileUpload, #PythonWerkzeug, #ReverseShell, #HashCracking, #LFI
 
 ---
 

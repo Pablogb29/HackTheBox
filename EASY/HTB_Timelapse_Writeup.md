@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.152`  
 **OS:** Windows Server 2019  
 **Difficulty:** Medium  
-**Tags:** SMB, PFX Certificate, Evil-WinRM with SSL, LAPS, Domain Admin, Password Extraction
+**Tags:** #SMB, #PFX #Certificate, #Evil-WinRM with SSL, #LAPS, #DomainAdmin, #PasswordExtraction
 
 ---
 

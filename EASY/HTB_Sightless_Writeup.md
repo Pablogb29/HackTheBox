@@ -3,7 +3,7 @@
 **IP Address:** `10.10.11.32`  
 **OS:** Ubuntu (Jammy + Docker)  
 **Difficulty:** Medium  
-**Tags:** Web, Docker, SQLPad, CVE-2022-0944, SSH, Port Forwarding, KeePass
+**Tags:** #Web, #Docker, #SQLPad, #CVE-2022-0944, #SSH, #PortForwarding, #KeePass
 
 ---
 
