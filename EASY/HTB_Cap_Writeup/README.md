@@ -42,11 +42,11 @@ Nmap done: 1 IP address (1 host up) scanned in 10.75 seconds
 
 Navigating to `http://10.10.10.245` opens a "Security Dashboard" already logged in as `Nathan`. 
 
-![Main Dashboard](./screenshots/website_with_lateral_menu.png)
+![Lateral menu of website](./screenshots/website_with_lateral_menu.png)
 
 Clicking **Security Snapshot** changes the URL to `/capture/data/0`.
 
-![Main Dashboard](dashboard_security_snapshot.png)
+![Page 19 of Dashboard](./screenshots/dashboard_security_snapshot.png)
 
 ```text
 /capture/data/0 → contains downloadable PCAP data
@@ -56,7 +56,7 @@ Clicking **Security Snapshot** changes the URL to `/capture/data/0`.
 
 Filtered traffic by protocol **FTP** and discovered:
 
-![Main Dashboard](wireshark.png)
+![Analyzing Dashboard information with Wireshark](./screenshots/wireshark.png)
 
 ```text
 Username: nathan
@@ -94,7 +94,7 @@ chmod +x linpeas.sh
 ./linpeas.sh
 ```
 
-![Main Dashboard](nathan_user.png)
+![Nathan User](./screenshots/nathan_user.png)
 
 ---
 ### 4.2 Root via Python SUID Abuse
@@ -109,7 +109,7 @@ os.setuid(0)
 os.system("/bin/bash")
 ```
 
-![Main Dashboard](escalation.png)
+![Root user](./screenshots/escalation.png)
 
 ✅ Spawned a root shell  
 🏁 **Root flag retrieved from `/root`**
