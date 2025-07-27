@@ -5,6 +5,10 @@
 **Difficulty:** Hard  
 **Tags:** #SMB, #WinRM, #BloodHound, #ShadowCredentials, #RPC, #PasswordCracking, #DCSync, #Kerberoast
 
+**Extra initial information:**
+- User: olivia
+- Password: ichliebedich
+
 ---
 
 ## 1. Initial Enumeration
