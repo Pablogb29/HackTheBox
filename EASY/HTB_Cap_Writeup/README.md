@@ -42,7 +42,7 @@ Nmap done: 1 IP address (1 host up) scanned in 10.75 seconds
 
 Navigating to `http://10.10.10.245` opens a "Security Dashboard" already logged in as `Nathan`. 
 
-![Main Dashboard](website_with_lateral_menu.png)
+![Main Dashboard](./screenshots/website_with_lateral_menu.png)
 
 Clicking **Security Snapshot** changes the URL to `/capture/data/0`.
 
