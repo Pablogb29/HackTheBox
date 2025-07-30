@@ -61,7 +61,9 @@
 
 <p align="center">
   <img src="https://github-readme-stats.vercel.app/api?username=Pablogb29&show_icons=true&theme=tokyonight&hide_border=true" width="48%" />
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Pablogb29&layout=compact&theme=tokyonight&hide_border=true" width="48%" />
+</p>
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&pause=1000&color=39FF14&center=true&vCenter=true&width=435&lines=Offensive+Security+Engineer;AI+Automation+Builder;Python%2C+Bash%2C+Flutter+Lover;Always+Learning%2C+Always+Breaking" />
 </p>
 
 ---
