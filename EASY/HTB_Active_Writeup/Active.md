@@ -30,7 +30,7 @@ To verify if the host is up and reachable, we send a single ICMP packet:
 ping -c 1 10.10.10.100
 ```
 
-![[ping.png]]
+![ping](./screenshots/ping.png)
 The machine responds, confirming it is alive.
 
 ### 1.2 Port Scanning
