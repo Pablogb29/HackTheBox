@@ -89,7 +89,8 @@ Let's analyse de result with targeted file:
 cat targeted -l java
 ```
 
-![[cat_targeted.png]]
+![cat_targeted](./screenshots/cat_targeted.png)
+
  Better color composition as bash command
 
 | Port   | Service         | Description                                 |
