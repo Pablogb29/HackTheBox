@@ -30,7 +30,7 @@ To verify if the host is up and reachable, we send a single ICMP packet:
 ping -c 1 10.10.10.100
 ```
 
-![[screenshots/ping.png]]
+![[ping.png]]
 The machine responds, confirming it is alive.
 
 ### 1.2 Port Scanning
@@ -48,7 +48,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.100 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)
 - `-oG allPorts`: Output in grepable format for later processing
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/nmap.png]]
+![[nmap.png]]
 
 Alternative method using masscan and nmap:
 
@@ -68,7 +68,7 @@ After the scan, we extract the list of open ports using a custom script:
 extractPorts allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/extractPorts.png]]
+![[extractPorts.png]]
 
 ### 1.3 Targeted Scan
 
@@ -134,7 +134,7 @@ We also run CrackMapExec to get a quick overview:
 crackmapexec smb 10.10.10.100
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/crackmapexec.png]]
+![[crackmapexec.png]]
 
 Confirms the hostname and domain, indicating that we are indeed dealing with a DC.
 
@@ -146,7 +146,7 @@ We enumerate the available shares using unauthenticated access (null session):
 smbclient -L 10.10.10.100 -N
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbclient_null.png]]
+![[smbclient_null.png]]
 
 Several shares are listed, and public access is allowed to at least one of them.
 
@@ -158,7 +158,7 @@ We list available shares and their permissions using `smbmap`:
 smbmap -H 10.10.10.100
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbmap.png]]
+![[smbmap.png]]
 
 Access is granted only to the `Replication` share.
 
@@ -168,13 +168,13 @@ This indicates that we can read files inside the **SYSVOL** structure. We procee
 smbmap -H 10.10.10.100 -r Replication
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbmap_replication.png]]
+![[smbmap_replication.png]]
 
 The structure closely resembles the typical **SYSVOL** directory used for GPO deployment in Active Directory environments.
 
 ![[smbmap_active.png]]
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbmap_policies.png]]
+![[smbmap_policies.png]]
 
 ![[smbmap_31b2f340.png]]
 
