@@ -30,7 +30,7 @@ To verify if the host is up and reachable, we send a single ICMP packet:
 ping -c 1 10.10.10.100
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/ping.png]]
+![Ping](GitHub%20Documentation/EASY/HTB_Active_2_Writeup/screenshots/ping.png)
 The machine responds, confirming it is alive.
 
 ### 1.2 Port Scanning
