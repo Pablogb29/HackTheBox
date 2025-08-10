@@ -1,15 +1,51 @@
-main_readme = """# Hack The Box Writeups
+<p align="center">
+  <img src="https://www.hackthebox.com/storage/logo.svg" alt="HTB Logo" width="120"/>
+</p>
 
-All the information provided in this repository was obtained through the legitimate solving of Hack The Box machines.  
-Each writeup reflects the step-by-step approach I used to complete the machines and capture the flags.
+<h1 align="center">Hack The Box - WriteUps by Pablo</h1>
 
-You can verify my progress on my official [Hack The Box profile](https://app.hackthebox.com/profile/xxxx)  
-(Note: Replace the link above with your public HTB profile)
-
-Documentation has been improved and structured using **ChatGPT** to ensure high readability and clarity.
+<p align="center">
+  <b>Repository containing my documented Hack The Box machine write-ups</b><br>
+  Professional approach, OSCP-oriented, and focused on real-world penetration testing.
+</p>
 
 ---
 
-## Easy Machines
+## 📂 Categories
 
-"""
+| Difficulty | Description | Examples |
+|------------|-------------|----------|
+| 🟢 **Easy** | Beginner-friendly machines to strengthen fundamentals. | [Active](EASY/Active.md) · [Cap](EASY/Cap.md) |
+| 🟡 **Medium** | Intermediate challenges with multiple exploitation stages. | *Coming soon* |
+| 🔴 **Hard** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
+| ⚫ **Insane** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
+
+---
+
+## 📊 Progress
+
+- **Total machines completed:** 2 / (growing)
+- **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
+- **Platform:** [Hack The Box](https://www.hackthebox.com/)
+
+---
+
+## 🛠 Common Tools & Techniques
+
+- 🔍 **Enumeration**: `nmap`, `masscan`, `gobuster`, `enum4linux`, `ldapsearch`
+- 💻 **Exploitation**: SMB, GPP, Kerberoasting, IDOR, SUID, Linux Capabilities
+- 🧠 **Post-Exploitation**: `psexec.py`, `linPEAS`, plaintext credentials, capability-based privilege escalation
+- 🛡 **Mitigations** included in every write-up
+
+---
+
+## 📬 Contact
+
+<p align="center">
+  <a href="https://www.linkedin.com/in/pabloinfosec"><img src="https://img.shields.io/badge/LinkedIn-Profile-blue?logo=linkedin"></a>
+  <a href="mailto:pabloinfosec@gmail.com"><img src="https://img.shields.io/badge/Email-Contact-red?logo=gmail"></a>
+</p>
+
+---
+
+> ⚠️ **Disclaimer:** All content is for educational and documentation purposes only. Do not perform any activities without proper authorization.
