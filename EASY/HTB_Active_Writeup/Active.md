@@ -31,6 +31,7 @@ ping -c 1 10.10.10.100
 ```
 
 ![Ping](screenshots/ping.png)
+
 The machine responds, confirming it is alive.
 
 ### 1.2 Port Scanning
