@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.hackthebox.com/storage/logo.svg" alt="HTB Logo" width="120"/>
+  <img src="[https://www.hackthebox.com/storage/logo.svg](https://www.svgrepo.com/show/330606/hackthebox.svg)" alt="HTB Logo" width="120"/>
 </p>
 
 <h1 align="center">Hack The Box - WriteUps by Pablo</h1>
@@ -15,8 +15,8 @@
 
 | Difficulty | Description | # Solved |
 |------------|-------------|----------|
-| 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | 23 |
-| 🟡 **M[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | 3 |
+| 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | **23** |
+| 🟡 **M[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | **3** |
 | 🔴 **[**Hard**](./HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
 | ⚫ **[**Insane**](./INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
 
