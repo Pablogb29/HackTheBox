@@ -13,12 +13,12 @@
 
 ## 📂 Categories
 
-| Difficulty | Description | Examples |
+| Difficulty | Description | # Solved |
 |------------|-------------|----------|
-| 🟢 **Easy** | Beginner-friendly machines to strengthen fundamentals. | [Active](EASY/Active.md) · [Cap](EASY/Cap.md) |
-| 🟡 **Medium** | Intermediate challenges with multiple exploitation stages. | *Coming soon* |
-| 🔴 **Hard** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
-| ⚫ **Insane** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
+| 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | 23 |
+| 🟡 **M[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | 3 |
+| 🔴 **[**Hard**](./HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
+| ⚫ **[**Insane**](./INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
 
 ---
 
