@@ -423,4 +423,3 @@ A remote shell is obtained as `NT AUTHORITY\SYSTEM`.
 
 
 
-[^1]: 
