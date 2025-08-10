@@ -49,7 +49,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.100 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)
 - `-oG allPorts`: Output in grepable format for later processing
 
-![[GitHub Documentation/EASY/HTB_Active_2_Writeup/screenshots/nmap.png]]
+![nmap](screenshots/nmap.png)
 
 Alternative method using masscan and nmap:
 
