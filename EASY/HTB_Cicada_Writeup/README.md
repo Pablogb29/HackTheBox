@@ -36,7 +36,7 @@ We start by verifying whether the target is alive using an ICMP echo request:
 ping -c 1 10.10.11.35
 ```
 
-![[GitHub Documentation/EASY/HTB_Cicada_Writeup/screenshots/ping.png]]
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable and ready for further enumeration.
 
