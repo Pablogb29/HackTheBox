@@ -131,7 +131,7 @@ Here, the file is missing, allowing us to browse the directory:
 http://10.10.11.125/wp-content/plugins/
 ```
 
-![[wp_plugins.png]]
+![wp_plugins](./screenshots/wp_plugins.png)
 
 Two plugins found:
 
@@ -214,7 +214,7 @@ def makeRequest():
 
 if __name__ == '__main__':
     makeRequest()
-    ```
+```
 
 Filtering results reveals:
 
@@ -233,7 +233,7 @@ Filtering results reveals:
 
 Search for exploits:
 
-![[sploit_gdbserver.png]]
+![sploit_gdbserver](./screenshots/sploit_gdbserver.png)
 
 Download exploit:
 
