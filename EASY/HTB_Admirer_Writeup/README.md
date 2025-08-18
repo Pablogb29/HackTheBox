@@ -36,7 +36,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.187
 ```
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/ping.png]]
+![Ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -56,7 +56,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.187 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/allports.png]]
+![All Ports Scan](screenshots/allports.png)
 
 Extract open ports from the result:
 
@@ -64,7 +64,7 @@ Extract open ports from the result:
 extractPorts allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/extractports.png]]
+![Extract Ports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -85,7 +85,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/targeted.png]]
+![Targeted Scan](screenshots/targeted.png)
 
 | Port | Service | Version / Description                         |
 | ---- | ------- | --------------------------------------------- |
@@ -95,7 +95,7 @@ cat targeted -l java
 
 Running CrackMapExec confirms this is **not a Domain Controller**:
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/crackmapexec.png]]
+![CrackMapExec](screenshots/crackmapexec.png)
 
 We confirm that the target is a Linux host.
 
@@ -104,7 +104,7 @@ We confirm that the target is a Linux host.
 
 Accessing the web service at `http://10.10.10.187` shows a basic webpage:
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/web.png]]
+![Website Home](screenshots/web.png)
 
 The page is static with only one input field. After initial testing, no interaction was possible.  
 At this point, **fuzzing** becomes the best approach.
@@ -117,7 +117,7 @@ We run `wfuzz` against the target:
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt http://10.10.10.187/FUZZ
 ```
 
-![[wfuzz_F.png]]
+![Wfuzz F results](screenshots/wfuzz_F.png)
 
 Nothing relevant is found.  
 However, from the **Nmap scan** we noticed the `/admin-dir/` folder. Let's refine the fuzzing by targeting extensions:
@@ -126,7 +126,7 @@ However, from the **Nmap scan** we noticed the `/admin-dir/` folder. Let's refin
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -z list,php-html-txt http://10.10.10.187/admin-dir/FUZZ.FUZ2Z
 ```
 
-![[wfuzz_contact.png]]
+![Wfuzz contact.txt](screenshots/wfuzz_contact.png)
 
 We discover `contacts.txt`:
 
@@ -134,7 +134,7 @@ We discover `contacts.txt`:
 http://10.10.10.187/admin-dir/contacts.txt
 ```
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/web_contact.png]]
+![Contacts.txt](screenshots/web_contact.png)
 
 This file contains **emails of employees**, which may be used later.
 
@@ -146,7 +146,7 @@ To improve results, we create a custom dictionary with keywords like `user`, `pa
 grep -iE "user|name|pass|key|cred|secret|mail|database|db|config" /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt > ../content/dictionary
 ```
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/dictionary.png]]
+![Dictionary creation](screenshots/dictionary.png)
 
 Then rerun fuzzing:
 
@@ -154,11 +154,11 @@ Then rerun fuzzing:
 wfuzz -c --hc=404 -t 200 -w /home/kali/Documents/Machines/Admirer/content/dictionary http://10.10.10.187/admin-dir/FUZZ.txt
 ```
 
-![[wfuzz_credentials.png]]
+![Wfuzz credentials.txt](screenshots/wfuzz_credentials.png)
 
 This reveals a **credentials.txt** file:
 
-![[web_credentials.png]]
+![Credentials.txt](screenshots/web_credentials.png)
 
 The credentials allow FTP access.
 
@@ -169,16 +169,16 @@ The credentials allow FTP access.
 
 Using the discovered credentials, we connect to FTP and download available files:
 
-![[ftp_ftpuser.png]]
+![FTP login](screenshots/ftp_ftpuser.png)
 
 Inside we find `dump.sql` that is a database dump generated with `mysqldump`, containing the structure and data of the application.  
 It often includes sensitive information such as users, passwords, or critical configurations.:
 
-![[dump_sql.png]]
+![dump.sql](screenshots/dump_sql.png)
 
 No useful credentials here. Extracting files from the second archive reveals more data, including a script in **utility-scripts** directory with credentials:
 
-![[db_admin.png]]
+![Database Admin credentials](screenshots/db_admin.png)
 
 Discovered credentials:  
 `waldo : Wh3r3_1s_w4ld0?`
@@ -187,9 +187,9 @@ Discovered credentials:
 
 Accessing `info.php` provides **PHP configuration details**:
 
-![[web_info_php.png]]
+![phpinfo()](screenshots/web_info_php.png)
 
-![[web_info_disabled_functions.png]]
+![Disabled PHP functions](screenshots/web_info_disabled_functions.png)
 
 The most interesting part of `disable_functions` is that it shows which critical PHP functions are blocked.  
 If `system`, `exec`, `shell_exec` or similar are not listed, we can use them to execute system commands.  
@@ -201,7 +201,7 @@ Will be useful later for exploitation.
 
 Fuzzing also revealed `adminer.php`, a **database management tool**:
 
-![[web_adminer.png]]
+![Adminer login page](screenshots/web_adminer.png)
 
 Research shows this version is vulnerable ([Foregenix Blog](https://www.foregenix.com/blog/serious-vulnerability-discovered-in-adminer-tool)).  
 The attack allows connecting Adminer to our **attacker-controlled MySQL server**.
@@ -220,16 +220,16 @@ show tables;
 describe data;
 ```
 
-![[mariadb_creation.png]]
-![[mariadb_table_data.png]]
+![MariaDB database creation](screenshots/mariadb_creation.png)
+![MariaDB table creation](screenshots/mariadb_table_data.png)
 
 Using Adminer, we execute SQL commands against our database:
 
-![[login_adminer.png]]
+![Adminer login](screenshots/login_adminer.png)
 
 Go to SQL Command section:
 
-![[adminer_sql_command.png]]
+![Adminer SQL command](screenshots/adminer_sql_command.png)
 
 And write the command:
 
@@ -238,7 +238,7 @@ load data local infile "/var/www/html/index.php"
 into table Pwned.data
 ```
 
-![[adminer_sql_command_execued.png]]
+![Adminer SQL executed](screenshots/adminer_sql_command_execued.png)
 
 And now let’s check the data of the table:
 
@@ -246,13 +246,13 @@ And now let’s check the data of the table:
 select output from data;
 ```
 
-![[select_output_from_data.png]]
+![Select output from data](screenshots/select_output_from_data.png)
 
 We extract new credentials from the table.
 
 Let’s try the credentials on SSH as `waldo`:
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/user_flag.png]]
+![User flag](screenshots/user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -263,7 +263,7 @@ Let’s try the credentials on SSH as `waldo`:
 
 While enumerating, we discover that the script `/opt/scripts/admin_tasks.sh` can be executed by all users:
 
-![[setenv_admin_tasks.png]]
+![Admin tasks script](screenshots/setenv_admin_tasks.png)
 
 ``` bash
 #!/bin/bash
@@ -385,7 +385,7 @@ done
 
 The script internally calls `backup.py`, let´s see the code:
 
-![[cat_backup.png]]
+![Backup.py content](screenshots/cat_backup.png)
 
 Inspecting `backup.py`, we see it imports the **`shutil`** library and uses the function `make_archive` so this opens the possibility of **Python library hijacking**.
 
@@ -405,7 +405,7 @@ Now `/bin/bash` has the SUID bit set:
 ls -l /bin/bash
 ```
 
-![[root_permissions.png]]
+![Root permissions on bash](screenshots/root_permissions.png)
 
 Spawn a root shell:
 
@@ -416,7 +416,7 @@ cd /root/
 cat root.txt
 ```
 
-![[GitHub Documentation/EASY/HTB_Admirer_Writeup/screenshots1/root_flag.png]]
+![Root flag](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**
 
