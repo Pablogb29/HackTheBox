@@ -311,7 +311,7 @@ Execute collection:
 Download the ZIP and analyze in BloodHound:
 
 ![bh_file_uploaded](screenshots/bh_zip_file.png)
-![bh_file_uploaded](screenshots/bh_file uploaded.png)
+![bh_file_uploaded](screenshots/bh_file_uploaded.png)
 
 The path reveals that `svc_loanmgr` has **DCSync privileges**.
 
