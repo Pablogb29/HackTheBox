@@ -134,8 +134,8 @@ The config file shows Cisco type 7 passwords:
 
 Using an [online decoder](https://www.ifm.net.nz/cookbooks/passwordcracker.html) for cisco passwords:  
 
-![[cisco_password_crack_rout3r.png]]
-![[cisco_password_crack_admin.png]]
+![](screenshots/cisco_password_crack_rout3r.png)
+![](screenshots/cisco_password_crack_admin.png)
 
 Decrypted:
 
@@ -186,7 +186,7 @@ User **Hazard** is valid with password `stealth1agent`.
 crackmapexec winrm 10.10.10.149 -u 'hazard' -p 'stealth1agent'
 ```
 
-![[crackmapexec_winrm_hazard.png]]
+![](screenshots/crackmapexec_winrm_hazard.png)
 
 The account does not belong to the **Remote Management Users** group, so we cannot use WinRM at this stage.  
 Next, we attempt to enumerate resources with `rpcclient` and `smbmap`:
@@ -195,7 +195,8 @@ Next, we attempt to enumerate resources with `rpcclient` and `smbmap`:
 rpcclient -U "hazard%stealth1agent" 10.10.10.149 -c 'enumdomusers'
 smbmap -H 10.10.11.174 -u 'hazard%stealth1agent'
 ```
-![[smbmap_rpcclient_NOK.png]]
+
+![](screenshots/smbmap_rpcclient_NOK.png)
 
 No useful information is retrieved.  
 
