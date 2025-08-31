@@ -310,7 +310,8 @@ crackmapexec winrm 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 evil-winrm -i 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 ```
 
-![[crackmapexec_maya.png]]![](screenshots/user_flag.png)
+![](screenshots/crackmapexec_maya.png)
+![](screenshots/user_flag.png)
 
 🏁 **User flag obtained**
 
