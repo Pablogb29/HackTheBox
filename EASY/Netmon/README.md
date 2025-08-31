@@ -58,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.152 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allPorts.png)
+![](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -66,7 +66,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractPorts.png)
+![](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
