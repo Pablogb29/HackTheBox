@@ -37,7 +37,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.245
 ```
 
-![ping](GitHubv2/HackTheBox/EASY/Cap/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -57,7 +57,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.245 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![nmap](GitHubv2/HackTheBox/EASY/Cap/screenshots/nmap.png)
+![nmap](screenshots/nmap.png)
 
 Extract open ports from the result:
 
@@ -65,7 +65,7 @@ Extract open ports from the result:
 extractPorts allPorts
 ```
 
-![extractPorts](GitHubv2/HackTheBox/EASY/Cap/screenshots/extractPorts.png)
+![extractPorts](screenshots/extractPorts.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -103,11 +103,11 @@ cat targeted -l java
 
 Browsing to `http://10.10.10.245`, after saving it into `/etc/hosts`, reveals a **Security Dashboard** already logged in as user `Nathan`.
 
-![dashboard](GitHubv2/HackTheBox/EASY/Cap/screenshots/dashboard.png)
+![dashboard](screenshots/dashboard.png)
 
 Menu options include:
 
-![dashboard_left_menu](GitHubv2/HackTheBox/EASY/Cap/screenshots/dashboard_left_menu.png)
+![dashboard_left_menu](screenshots/dashboard_left_menu.png)
 
 - **IP Config** → Displays output of `ifconfig`  
 - **Network Status** → Displays output of `netstat`  
@@ -122,12 +122,12 @@ When generating a capture, the URL changes to:
 /capture/data/1
 ```
 
-![dashboard_data_1](GitHubv2/HackTheBox/EASY/Cap/screenshots/dashboard_data_1.png)
+![dashboard_data_1](screenshots/dashboard_data_1.png)
 
 This suggests the capture ID is sequential.  
 Testing `/capture/data/0` successfully downloads a previous capture.
 
-![dashboard_data_0](GitHubv2/HackTheBox/EASY/Cap/screenshots/dashboard_data_0.png)
+![dashboard_data_0](screenshots/dashboard_data_0.png)
 
 > **Vulnerability:**  
 > This is an **Insecure Direct Object Reference (IDOR)** — direct access to objects by modifying identifiers in the request.
@@ -141,7 +141,7 @@ The capture file from `/capture/data/0` is downloaded, opened in **Wireshark** a
 ftp
 ```
 
-![wireshark](GitHubv2/HackTheBox/EASY/Cap/screenshots/wireshark.png)
+![wireshark](screenshots/wireshark.png)
 
 Captured credentials:
 
@@ -161,7 +161,7 @@ Use the recovered credentials to log in via SSH:
 ssh nathan@10.10.10.245
 ```
 
-![user_flag](GitHubv2/HackTheBox/EASY/Cap/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **SSH login successful**  
 🏁 **User flag retrieved from Nathan's home directory**
@@ -177,7 +177,7 @@ After obtaining the user flag, we start privilege escalation by checking for SUI
 find / -perm -4000 -user root 2>/dev/null | xargs ls -l
 ```
 
-![root_permisions](GitHubv2/HackTheBox/EASY/Cap/screenshots/root_permisions.png)
+![root_permisions](screenshots/root_permisions.png)
 
 No exploitable SUID binaries are found.
 
@@ -190,7 +190,7 @@ Next, we enumerate all file capabilities for user `nathan`:
 getcap -r / 2>/dev/null
 ```
 
-![getcap_devnull](GitHubv2/HackTheBox/EASY/Cap/screenshots/getcap_devnull.png)
+![getcap_devnull](screenshots/getcap_devnull.png)
 
 Finding:
 
@@ -229,7 +229,7 @@ Finally, spawn a root shell:
 python3.8 -c 'import os; os.setuid(0); os.system("bash")'
 ```
 
-![setuid_0](GitHubv2/HackTheBox/EASY/Cap/screenshots/setuid_0.png)
+![setuid_0](screenshots/setuid_0.png)
 
 🏁 **Root flag retrieved from `/root`**
 
