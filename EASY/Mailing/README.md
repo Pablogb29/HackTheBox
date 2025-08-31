@@ -176,7 +176,7 @@ curl -s -X GET 'http://mailing.htb/download.php?file=..\..\..\..\..\..\..\Progra
 curl -s -X GET 'http://mailing.htb/download.php?file=..\..\..\..\..\..\..\Program%20Files\hMailServer\Data'
 ```
 
-![[curl.png]]
+![](screenshots/curl.png)
 
 After several attempts we did not retrieve anything useful.  
 However, searching again we find another reference indicating a different path that aims to `server.ini`:
