@@ -277,6 +277,7 @@ bash -p
 ```
 
 ![](screenshots/ssh_alert_bash.png)
+![](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**
 
