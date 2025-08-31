@@ -36,7 +36,7 @@ Privilege escalation is achieved by exploiting a vulnerable **LibreOffice** inst
 ping -c 1 10.10.11.14
 ```
 
-![](screenshots/ping.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.14 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -79,7 +79,7 @@ nmap -p25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49
 cat targeted -l java
 ```
 
-![](screenshots/targeted.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/targeted.png)
 
 **Finding:**
 
@@ -116,7 +116,7 @@ Add the host entry to `/etc/hosts`:
 sudo nano /etc/hosts
 ```
 
-![](screenshots/web.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/web.png)
 
 Users identified on the website:
 
@@ -147,7 +147,7 @@ This may indicate an **LFI vulnerability**. Testing with Gobuster for php files:
 gobuster dir -u http://mailing.htb/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 20 -x php
 ```
 
-![](screenshots/gobuster.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/gobuster.png)
 
 ---
 ## 3. LFI & Credential Extraction
@@ -311,7 +311,7 @@ evil-winrm -i 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 ```
 
 ![](screenshots/crackmapexec_maya.png)
-![](screenshots/user_flag.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -361,7 +361,7 @@ After a few seconds, the file was automatically processed, triggering our payloa
 
 We now have full control over the machine and can read the root flag:
 
-![](screenshots/root_flag.png)
+![](GitHubv2/HackTheBox/EASY/Mailing/screenshots/root_flag.png)
 
 🏁 Root flag obtained
 
