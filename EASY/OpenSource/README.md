@@ -64,7 +64,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractPorts.png)
+![](screenshots/extractports.png)
 
 ### 1.3 Targeted Scan
 
