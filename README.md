@@ -44,6 +44,7 @@
 <p align="center">
   <a href="https://www.linkedin.com/in/pabloinfosec"><img src="https://img.shields.io/badge/LinkedIn-Profile-blue?logo=linkedin"></a>
   <a href="mailto:pabloinfosec@gmail.com"><img src="https://img.shields.io/badge/Email-Contact-red?logo=gmail"></a>
+  <a href="https://app.hackthebox.com/users/653281"><img src="https://img.shields.io/badge/Hack%20The%20Box-Profile-2E3440?logo=hackthebox&logoColor=00FF00"></a>
 </p>
 
 ---
