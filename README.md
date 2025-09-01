@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.brandfetch.io/id-M19oKfL/w/400/h/400/theme/dark/icon.jpeg?c=1dxbfHSJFAPEGdCLU4o5B" alt="HTB Logo" width="120"/>
+  <img src="https://cdn.brandfetch.io/id-M19oKfL/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="HTB Logo" width="120"/>
 </p>
 
 <h1 align="center">Hack The Box - WriteUps by Pablo</h1>
