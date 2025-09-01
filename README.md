@@ -2,7 +2,7 @@
   <img src="https://cdn.brandfetch.io/id-M19oKfL/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="HTB Logo" width="360"/>
 </p>
 
-<h1 align="center">Hack The Box - WriteUps by Pablo</h1>
+<h1 align="center">WriteUps by Pablo</h1>
 
 <p align="center">
   <b>Repository containing my documented Hack The Box machine write-ups</b><br>
