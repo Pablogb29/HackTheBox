@@ -81,11 +81,6 @@ nmap -sCV -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49668,49673
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
 
 ![targeted](screenshots/targeted.png)
 
@@ -311,7 +306,7 @@ Execute collection:
 Download the ZIP and analyze in BloodHound:
 
 ![bh_file_uploaded](screenshots/bh_zip_file.png)
-![bh_file_uploaded](bh_file_uploaded.png)
+![bh_file_uploaded](screenshots/bh_file_uploaded.png)
 
 The path reveals that `svc_loanmgr` has **DCSync privileges**.
 

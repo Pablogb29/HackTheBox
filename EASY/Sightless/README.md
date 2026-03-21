@@ -82,12 +82,6 @@ nmap -p21,22,80 -sC -sV 10.10.11.32 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
-
 ![targeted](screenshots/targeted.png)  
 
 **Findings:**
@@ -249,7 +243,7 @@ As a first step, we attempt to access the `/root` directory:
 Access is denied, so we move on to privilege escalation checks.  
 We begin by searching for **SUID binaries**:
 
-``` bash
+```bash
 find / -perm -4000 2>/dev/null
 ```
 
@@ -257,7 +251,7 @@ find / -perm -4000 2>/dev/null
 
 No interesting binaries are found. Next, we enumerate **capabilities** assigned to executables:
 
-``` bash
+```bash
 getcap -r / 2>/dev/null
 ```
 
@@ -287,7 +281,7 @@ The web root (`/var/www/html/froxlor`) is restricted.
 
 When inspecting the Apache configuration file, most of the lines are comments (`#`). To clean the output and focus only on active directives, we use:
 
-``` bash
+```bash
 cat /etc/apache2/sites-enabled/000-default.conf | grep -v '#'
 ```
 
@@ -295,7 +289,7 @@ This reveals that the **Apache2 server** is serving another subdomain: **`admin.
 
 We then attempt to check the **DocumentRoot** permissions:
 
-``` bash
+```bash
 ls -l /var/www/html/froxlor
 ```
 
@@ -305,7 +299,7 @@ Access is denied. With the current user, we only have access to `/www`; the dire
 
 From the configuration, we also identify that this Apache2 instance is bound to **127.0.0.1:8080**. To confirm the running services, we check active sockets:
 
-``` bash
+```bash
 ss -nltp
 ```
 

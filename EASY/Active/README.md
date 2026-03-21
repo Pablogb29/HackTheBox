@@ -1,18 +1,21 @@
+# HTB - Active
 
 **IP Address:** `10.10.10.100`  
 **OS:** Windows  
 **Difficulty:** Easy  
-**Tags:** SMB, GPP, SYSVOL, Kerberos, User SPNs, Password Cracking
+**Tags:** #SMB, #GPP, #SYSVOL, #Kerberos, #UserSPNs, #PasswordCracking
 
---- 
+---
 ## Synopsis
 
 Active is an easy-to-medium Windows machine demonstrating two common Active Directory exploitation techniques: extracting credentials from Group Policy Preferences (GPP) and performing a Kerberoasting attack to escalate privileges to Domain Administrator.
 
+---
 ## Skills Required
 
 - Basic Active Directory enumeration knowledge
 - Familiarity with SMB, LDAP, and Kerberos
+
 ## Skills Learned
 
 - SMB null session enumeration
@@ -83,15 +86,7 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5722,9389,47001,49152,49
 - `-sV`: Detect service versions
 - `-oN`: Output results in a human-readable format
 
-Let's analyse de result with targeted file:
-
-```bash
-cat targeted -l java
-```
-
-![cat_targeted](screenshots/cat_targeted.png)
-
-Better color composition as bash command
+![targeted](screenshots/targeted.png)
 
 | Port   | Service         | Description                                 |
 | ------ | --------------- | ------------------------------------------- |
@@ -126,7 +121,7 @@ This phase focuses on exploiting the exposed SMB service to access sensitive fil
 
 Based on the open ports and SMB responses, we suspect the target is a Domain Controller. To confirm this, we review the scan results and add the domain to `/etc/hosts`:
 
-``` bash
+```bash
 echo "10.10.10.100 active.htb" >> /etc/hosts
 ```
 
@@ -329,7 +324,7 @@ Kerberos is time-sensitive — by default, it allows a maximum of 5 minutes of c
 
 We fix the time sync using `ntpdate`:
 
-``` bash
+```bash
 sudo apt install ntpsec-ntpdate
 sudo ntpdate -u 10.10.10.100
 ```
@@ -407,21 +402,20 @@ A remote shell is obtained as `NT AUTHORITY\SYSTEM`.
 # ✅ MACHINE COMPLETE
 
 ---
-
-## 6 Summary of Exploitation Path
+## Summary of Exploitation Path
 
 1. **SMB Null Session** → Access to SYSVOL/Replication share.
 2. **Group Policy Preferences (GPP)** → Decrypted `SVC_TGS` credentials from Groups.xml.
 3. **Kerberoasting** → Extracted and cracked TGS ticket for `Administrator`.
 4. **psexec.py** → Remote SYSTEM shell on the Domain Controller.
 
-💡 **Defensive Recommendations**
+## Defensive Recommendations
 
-- Disable **SMB null sessions** and restrict SYSVOL access to only necessary accounts.
-- Remove **GPP XML files** containing passwords from SYSVOL.
-- Enforce strong, random passwords for all service accounts to prevent Kerberoasting.
-- Enable Kerberos pre-authentication for all accounts.
-- Monitor and alert on unusual Kerberos ticket requests
+- Disable **SMB null sessions** and restrict SYSVOL access to only necessary accounts.  
+- Remove **GPP XML files** containing passwords from SYSVOL.  
+- Enforce strong, random passwords for all service accounts to prevent Kerberoasting.  
+- Enable Kerberos pre-authentication for all accounts.  
+- Monitor and alert on unusual Kerberos ticket requests.
 
 
 

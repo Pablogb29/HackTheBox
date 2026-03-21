@@ -80,12 +80,6 @@ nmap -sCV -p80 10.10.10.93 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
-
 ![targeted](screenshots/targeted.png)
 
 **Findings:**

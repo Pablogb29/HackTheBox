@@ -80,12 +80,6 @@ nmap -sCV -p22,80 10.10.11.221 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let’s analyze the result:
-
-```bash
-cat targeted -l java
-```
-
 ![targeted](screenshots/targeted.png)
 
 **Findings:**
@@ -212,7 +206,7 @@ We confirm our user is now admin:
 curl -s -X GET "http://2million.htb/api/v1/admin/auth" -H "Cookie: PHPSESSID=..." | jq
 ```
 
-![test_user_is_admin](screenshots/test_user_is admin.png)
+![test_user_is_admin](screenshots/test_user_is_admin.png)
 
 ---
 ## 5. Command Injection

@@ -80,21 +80,16 @@ nmap -sCV -p21,22,80 10.10.10.245 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-Let's check the result:
 
-```bash
-cat targeted -l java
-```
-
-![targeted](GitHubv2/HackTheBox/EASY/Legacy/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
-| Port | Service | Version                  |
-|------|---------|--------------------------|
+| Port | Service | Version                           |
+| ---- | ------- | --------------------------------- |
 | 21   | FTP     | vsftpd (anonymous login disabled) |
-| 22   | SSH     | OpenSSH 8.x               |
-| 80   | HTTP    | Gunicorn Python WSGI server |
+| 22   | SSH     | OpenSSH 8.x                       |
+| 80   | HTTP    | Gunicorn Python WSGI server       |
 
 ---
 ## 2. Web Enumeration

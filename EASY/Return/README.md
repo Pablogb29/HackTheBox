@@ -6,7 +6,6 @@
 **Tags:** #SMB, #LDAP, #WinRM, #ServiceAbuse, #ServerOperators, #PrivilegeEscalation
 
 ---
-
 ## Synopsis
 
 Return is an easy Windows machine featuring a **network printer administration panel** that stores **LDAP credentials**.  
@@ -16,15 +15,12 @@ The retrieved account has **WinRM** access and belongs to the **Server Operators
 This machine demonstrates the risks of exposed printer management interfaces, credential harvesting, and privilege escalation via Windows service abuse.
 
 ---
-
 ## Skills Required
 
 - Basic Windows enumeration knowledge  
 - Familiarity with SMB, WinRM, and LDAP  
 - Beginner Active Directory knowledge  
 - Understanding of Windows service permissions and abuse techniques
-
----
 
 ## Skills Learned
 
@@ -35,7 +31,6 @@ This machine demonstrates the risks of exposed printer management interfaces, cr
 - Using `msfvenom` and Metasploit for a stable Meterpreter session
 
 ---
-
 ## 1. Initial Enumeration
 
 Before interacting with the target, we first verify connectivity and identify open services to plan our attack path.
@@ -98,11 +93,6 @@ nmap -sC -sV -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49
 - `-sV` → Detect service versions.  
 - `-oN targeted` → Output results in a readable file.
 
-Let's review the result:
-
-```bash
-cat targeted -l java
-```
 
 ![targeted.png](screenshots/targeted.png)
 
@@ -179,7 +169,7 @@ We proceed with option 2.
 
 We set up a listener on LDAP port 389:
 
-``` bash
+```bash
 nc -nlvp 389
 ```
 

