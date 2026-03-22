@@ -1,4 +1,4 @@
-﻿# HTB - Devel
+# HTB - Devel
 
 **IP Address:** `10.10.10.5`  
 **OS:** Windows 7 / IIS 7.5  

@@ -15,8 +15,8 @@
 
 | Difficulty | Description | # Solved |
 |------------|-------------|:--------:|
-| 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | **30** |
-| 🟡 **[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | **3** |
+| 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | **31** |
+| 🟡 **[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | **2** |
 | 🔴 **[**Hard**](./HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
 | ⚫ **[**Insane**](./INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
 
