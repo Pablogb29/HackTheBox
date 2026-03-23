@@ -10,6 +10,6 @@
 > **This writeup will be published in May 2026.**  
 > WingData is currently an active machine on Hack The Box. Per HTB rules, detailed public writeups for active machines are not permitted. The full report will be uploaded once the machine is retired.
 
-![machine_complete](cases/HackTheBox/EASY/WingData/screenshots/Machine_complete.png)
+![machine_complete](screenshots/machine_complete.png)
 
 ---
