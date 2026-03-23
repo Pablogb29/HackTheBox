@@ -24,7 +24,7 @@
 
 ## 📊 Progress
 
-- **Total machines completed:** 33 
+- **Total machines documented:** 33 
 - **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
 - **Platform:** [Hack The Box](https://www.hackthebox.com/)
 
