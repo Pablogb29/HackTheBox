@@ -1,3 +1,4 @@
+
 # HTB - Devel
 
 **IP Address:** `10.10.10.5`  
@@ -41,7 +42,7 @@ The host responds, confirming it is reachable.
 ---
 ### 1.2 Port Scanning
 
-Scan all TCP ports to identify running services:
+Scan all TCP ports to identify open services:
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.5 -oG allPorts
@@ -67,7 +68,7 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
-Run a deeper scan with service/version detection and default scripts:
+Run a deeper scan on the identified ports with version detection and default scripts:
 
 ```bash
 nmap -p21,80 -sC -sV 10.10.10.5 -oN targeted
@@ -87,9 +88,20 @@ nmap -p21,80 -sC -sV 10.10.10.5 -oN targeted
 | 80   | HTTP    | Microsoft IIS httpd 7.5 |
 
 ---
-## 2. Exploitation
+## 2. Service Enumeration
 
-### 2.1 FTP Access
+### 2.1 IIS HTTP surface
+
+Confirm the web server response on port 80:
+
+```bash
+curl -i http://10.10.10.5/
+```
+
+---
+## 3. Foothold
+
+### 3.1 FTP Access
 
 The FTP service is open, so we attempt to log in using `anonymous` credentials with an email as password:
 
@@ -110,7 +122,7 @@ put test.txt
 The file uploads successfully, confirming we can place files in the webroot.
 
 ---
-### 2.2 Uploading a Webshell
+### 3.2 Uploading a Webshell
 
 We upload the default ASPX webshell from Kali:
 
@@ -126,7 +138,7 @@ whoami
 We obtain remote command execution as user `iis apppool\web`.
 
 ---
-### 2.3 System Enumeration
+### 3.3 System Enumeration
 
 Check system details:
 
@@ -155,7 +167,7 @@ dir C:\Users\babis
 No useful information found.
 
 ---
-### 2.4 Reverse Shell with Metasploit
+### 3.4 Reverse Shell with Metasploit
 
 We generate a reverse ASPX payload:
 
@@ -196,7 +208,7 @@ whoami /priv
 ![shell_info](screenshots/shell_info.png)
 
 ---
-## 3. Privilege Escalation
+## 4. Privilege Escalation
 
 We background the session:
 
@@ -230,7 +242,7 @@ We escalate successfully to Administrator:
 ![root_user_flag](screenshots/root_user_flag.png)
 
 ---
-## 4. Post-Exploitation
+## 5. Post-Exploitation
 
 Retrieve the flags:
 

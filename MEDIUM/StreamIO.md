@@ -1,5 +1,4 @@
 # HTB - StreamIO
-
 **IP Address:** `10.10.11.158`  
 **OS:** Windows  
 **Difficulty:** Medium  

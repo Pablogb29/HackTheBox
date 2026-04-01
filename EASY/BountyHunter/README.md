@@ -1,3 +1,4 @@
+
 # HTB - BountyHunter
 
 **IP Address:** `10.10.11.100`  
@@ -44,6 +45,9 @@ The host responds, confirming it is reachable.
 ---
 ### 1.2 Port Scanning
 
+Scan all TCP ports to identify open services:
+
+
 Perform a full TCP scan to identify open services:
 
 ```bash
@@ -70,6 +74,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a more detailed scan on the identified open ports:
 
 ```bash
@@ -93,7 +100,7 @@ nmap -sCV -p22,80 10.10.11.100 -oN targeted
 We confirm the target is running **Ubuntu Focal**. This may be useful later when searching for specific exploits.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 We use **whatweb** to identify technologies behind the web service:
 
@@ -149,7 +156,7 @@ Decoded:
 This indicates possible **XXE injection**.
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 XXE Injection
 
@@ -215,7 +222,7 @@ $dbpassword = "m19RoAU0hP41A1sTsq6K";
 ```
 
 ---
-## 4. Foothold
+### 3.3 SSH access and user flag
 
 We attempt SSH access with the discovered credentials:
 
@@ -234,7 +241,7 @@ Inside `/home/development`, we also find `contract.txt`:
 It references special permissions to run a script.
 
 ---
-## 5. Privilege Escalation
+## 4. Privilege Escalation
 
 Checking sudo permissions:
 

@@ -1,3 +1,4 @@
+
 # HTB - Arctic
 
 **IP Address:** `10.10.10.11`  
@@ -32,6 +33,9 @@ Privilege escalation is achieved by abusing the **SeImpersonatePrivilege** with 
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive using ICMP:
 
 ```bash
@@ -44,6 +48,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports to identify running services:
 
@@ -70,6 +77,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -91,7 +101,7 @@ nmap -sCV -p135,8500,49154 10.10.10.11 -oN targeted
 | 49154 | MS RPC  | Microsoft Windows RPC over high port  |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Navigating to `http://10.10.10.11:8500` reveals the **ColdFusion web interface**:
 
@@ -118,7 +128,7 @@ The encrypted values might represent a hash. We can reveal them by changing the 
 This hash is not recognized by CrackStation, and after several attempts with Hashcat and John, it does not appear to correspond to a valid password.
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 Directory Traversal / LFI
 

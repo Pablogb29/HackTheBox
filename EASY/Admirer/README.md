@@ -1,3 +1,4 @@
+
 # HTB - Admirer
 
 **IP Address:** `10.10.10.187`  
@@ -30,6 +31,9 @@ The exploitation path involves fuzzing hidden directories, extracting credential
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive using ICMP:
 
 ```bash
@@ -42,6 +46,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We begin by scanning all 65,535 TCP ports to identify exposed services:
 
@@ -69,6 +76,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -95,7 +105,7 @@ Running CrackMapExec confirms this is **not a Domain Controller**:
 We confirm that the target is a Linux host.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Accessing the web service at `http://10.10.10.187` shows a basic webpage:
 
@@ -164,6 +174,10 @@ The credentials allow FTP access.
 
 Using the discovered credentials, we connect to FTP and download available files:
 
+```bash
+ftp 10.10.10.187
+```
+
 ![FTP login](screenshots/ftp_ftpuser.png)
 
 Inside we find `dump.sql` that is a database dump generated with `mysqldump`, containing the structure and data of the application.  
@@ -181,6 +195,10 @@ Discovered credentials:
 ### 3.2 Web Information Disclosure
 
 Accessing `info.php` provides **PHP configuration details**:
+
+```bash
+curl -i http://10.10.10.187/info.php
+```
 
 ![phpinfo()](screenshots/web_info_php.png)
 

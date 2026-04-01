@@ -1,3 +1,4 @@
+
 # HTB - Cap
 
 **IP Address:** `10.10.10.245`  
@@ -31,6 +32,9 @@ Privilege escalation is achieved by abusing the `cap_setuid` Linux capability as
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive using ICMP:
 
 ```bash
@@ -43,6 +47,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports to identify running services:
 
@@ -70,6 +77,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -92,11 +102,15 @@ nmap -sCV -p21,22,80 10.10.10.245 -oN targeted
 | 80   | HTTP    | Gunicorn Python WSGI server       |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Dashboard Overview
 
 Browsing to `http://10.10.10.245`, after saving it into `/etc/hosts`, reveals a **Security Dashboard** already logged in as user `Nathan`.
+
+```bash
+curl -i http://10.10.10.245/
+```
 
 ![dashboard](screenshots/dashboard.png)
 
@@ -247,4 +261,3 @@ python3.8 -c 'import os; os.setuid(0); os.system("bash")'
 - Avoid storing or transmitting credentials in plaintext (use FTPS/SFTP).  
 - Restrict Linux capabilities to only required binaries.  
 - Regularly audit server configurations for misconfigurations.
-

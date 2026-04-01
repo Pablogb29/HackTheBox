@@ -1,9 +1,10 @@
-# HTB - Escape
+
+# HTB - Escapes
 
 **IP Address:** `10.129.12.41`  
 **OS:** Windows Server 2019 (10.0.17763)  
 **Difficulty:** Medium  
-**Tags:** #ActiveDirectory, #MSSQL, #Responder, #NetNTLM, #WinRM, #ADCS, #Certipy, #CertificateServices, #UserAuthentication, #sequel.htb
+**Tags:** #ActiveDirectory, #MSSQL, #Responder, #NetNTLM, #WinRM, #ADCS, #Certipy, #CertificateServices, #UserAuthentication, #sequel
 
 ---
 ## Synopsis
@@ -202,9 +203,9 @@ evil-winrm -i 10.129.12.41 -u sql_svc -p 'REGGIE1234ronnie'
 ![evil-winrm sql_svc](screenshots/escape_19_evil_winrm_sql_svc.png)
 
 ---
-## 4. User Access
+### 3.4 ERRORLOG credential leak and user flag
 
-On the **DC** as `sql_svc`, read the SQL install log backup:
+On the **DC** as `sql_svc`, read the SQL install log backup for failed login entries that may expose another domain account:
 
 ```powershell
 type C:\SQLServer\Logs\ERRORLOG.BAK
@@ -227,7 +228,9 @@ type C:\Users\Ryan.Cooper\Desktop\user.txt
 🏁 **User flag obtained**
 
 ---
-## 5. Privilege Escalation
+## 4. Privilege Escalation
+
+### 4.1 AD CS: Certipy find, request, and auth
 
 Synchronize the attacker clock with the domain (**`sudo timedatectl set-ntp true`**) before **`certipy-ad auth`** to avoid **`KRB_AP_ERR_SKEW`**.
 

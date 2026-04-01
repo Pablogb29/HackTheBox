@@ -1,3 +1,4 @@
+
 # HTB - Active
 
 **IP Address:** `10.10.10.100`  
@@ -27,6 +28,9 @@ Active is an easy-to-medium Windows machine demonstrating two common Active Dire
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 To verify if the host is up and reachable, we send a single ICMP packet:
 
 ```bash
@@ -38,6 +42,9 @@ ping -c 1 10.10.10.100
 The machine responds, confirming it is alive.
 
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We begin by scanning all 65,535 TCP ports to identify exposed services:
 
@@ -75,6 +82,9 @@ extractPorts allPorts
 ![extractPorts](screenshots/extractPorts.png)
 
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Using the open ports, we perform a deeper scan with version and default scripts enabled:
 
@@ -114,7 +124,7 @@ At this stage we confirm:
 - **Kerberoasting** and **SMB enumeration** are promising next steps.
 
 ---
-## 2. SMB Enumeration & SYSVOL Access
+## 2. Service Enumeration
 
 This phase focuses on exploiting the exposed SMB service to access sensitive files stored in the SYSVOL share, which are often misconfigured and may contain credentials via Group Policy Preferences (GPP).
 ### 2.1 Detecting Domain Controller
@@ -265,7 +275,7 @@ smbmap -H 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' --download U
 > - Rotate affected passwords.
 
 ---
-## 3. Domain Enumeration
+## 3. Foothold
 
 With valid credentials for the domain account `SVC_TGS`, the next logical step is to enumerate domain users, groups, and potential attack paths within the Active Directory environment.
 ### 3.1 Enumerate Users
@@ -304,9 +314,7 @@ Group enumeration provides insight into privilege levels, delegation, and trust 
 > 💡 **Tip:** Since we have valid credentials, other tools like `ldapsearch`, `BloodHound`, or `CrackMapExec` with LDAP enumeration modules could be used for more in-depth reconnaissance. However, for this machine, the RPC enumeration is enough to identify the next attack vector: **Kerberoasting**.
 
 ---
-## 4. Kerberos SPN Attack
-
-### 4.1 SPN Enumeration
+### 3.3 Kerberos SPN Attack — SPN Enumeration
 
 We attempt to enumerate and request service tickets using **Impacket’s GetUserSPNs.py** tool:
 
@@ -320,7 +328,7 @@ impacket-GetUserSPNs active.htb/SVC_TGS:GPPstillStandingStrong2k18 -request
 
 Kerberos is time-sensitive — by default, it allows a maximum of 5 minutes of clock skew.
 
-### 4.2 Fixing Time Synchronisation
+### 3.4 Fixing Time Synchronisation
 
 We fix the time sync using `ntpdate`:
 
@@ -340,7 +348,7 @@ We save the hash to a file named `hash`:
 
 ![hash](screenshots/hash.png)
 
-### 4.3 Cracking the Hash
+### 3.5 Cracking the Hash
 
 We crack the TGS hash offline using **John the Ripper** with the `rockyou.txt` wordlist:
 
@@ -355,7 +363,7 @@ john --wordlist=/usr/share/wordlists/rockyou.txt --format=krb5tgs hash
 - **Username:** `Administrator`
 - **Password:** `Ticketmaster1968`
 
-### 4.4 Validating Administrator Access
+### 3.6 Validating Administrator Access
 
 We test the recovered credentials with CrackMapExec:
 
@@ -378,15 +386,25 @@ Administrator authentication successful — **full domain compromise achieved**.
 > - Monitor for abnormal Kerberos ticket requests.
 > - Restrict which accounts can be queried for SPNs.
 
-## 5. Remote Access & SYSTEM Privileges
+## 4. Privilege Escalation
 
-With valid **Domain Administrator** credentials obtained from the Kerberoasting attack, our goal is to gain an interactive shell on the target machine with the highest level of privileges (`NT AUTHORITY\SYSTEM`).
-### 5.1 Choosing the Access Method
+With valid **Domain Administrator** credentials from Kerberoasting, we aim for an interactive **SYSTEM**-equivalent shell on the DC. **WinRM** is not available, so we use **Impacket** remote execution over **SMB**.
+
+### 4.1 Choosing the Access Method
 
 We note that **WinRM (5985/5986)** is **not open** on the target, so we cannot use Evil-WinRM for remote access.  
 Instead, we opt for **psexec.py** from the Impacket toolkit, which uses SMB and RPC to execute commands remotely as SYSTEM.
 
-### 5.2 Executing psexec.py
+Confirm WinRM is closed and SMB remains reachable:
+
+```bash
+nmap -p445,5985,5986 -Pn 10.10.10.100
+```
+
+### 4.2 Executing psexec.py
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 psexec.py active.htb/Administrator:Ticketmaster1968@10.10.10.100 cmd.exe
@@ -416,6 +434,4 @@ A remote shell is obtained as `NT AUTHORITY\SYSTEM`.
 - Enforce strong, random passwords for all service accounts to prevent Kerberoasting.  
 - Enable Kerberos pre-authentication for all accounts.  
 - Monitor and alert on unusual Kerberos ticket requests.
-
-
 

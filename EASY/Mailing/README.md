@@ -1,4 +1,5 @@
-﻿# HTB - Mailing
+
+# HTB - Mailing
 
 **IP Address:** `10.10.11.14`  
 **OS:** Windows  
@@ -32,6 +33,9 @@ Privilege escalation is achieved by exploiting a vulnerable **LibreOffice** inst
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 ```bash
 ping -c 1 10.10.11.14
 ```
@@ -42,6 +46,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.14 -oG allPorts
@@ -66,6 +73,9 @@ extractPorts allPorts
 
 ---
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 ```bash
 nmap -p25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49666,49667,49668,58648 -sC -sV 10.10.11.14 -oN targeted
@@ -103,7 +113,7 @@ nmap -p25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49
 | 58648  | MSRPC          | Microsoft Windows RPC                                                          |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 We identify the domain **mailing.htb** and a web server running on **IIS10.0**.  
 Add the host entry to `/etc/hosts`:
@@ -146,7 +156,9 @@ gobuster dir -u http://mailing.htb/ -w /usr/share/seclists/Discovery/Web-Content
 ![gobuster](screenshots/gobuster.png)
 
 ---
-## 3. LFI & Credential Extraction
+## 3. Foothold
+
+### 3.1 LFI & credential extraction
 
 Since this is not a Domain Controller and the necessary ports are not open, we cannot confirm if the users we discovered earlier are valid.  
 
@@ -214,7 +226,7 @@ telnet 10.10.11.14 25
 ![telnet_passwd_base64](screenshots/telnet_passwd_base64.png)
 
 ---
-## 4. Exploitation – Outlook RCE
+### 3.2 Exploitation – Outlook RCE
 
 Target vulnerable to **CVE-2024-21413**.  
 Exploit: [xaitax/CVE-2024-21413](https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability)
@@ -312,7 +324,7 @@ evil-winrm -i 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 🏁 **User flag obtained**
 
 ---
-## 5. Privilege Escalation
+## 4. Privilege Escalation
 
 While exploring the user environment, we notice a folder named **Important Documents**.  
 Whenever a file is uploaded here, it disappears after a few seconds, indicating that an automated process is interacting with it.  

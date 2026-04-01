@@ -1,3 +1,4 @@
+
 # HTB - Return
 
 **IP Address:** `10.10.11.108`  
@@ -39,6 +40,9 @@ Before interacting with the target, we first verify connectivity and identify op
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 We start with an ICMP ping to check if the host is reachable and to get an initial response time:
 
 ```bash
@@ -52,6 +56,9 @@ The host responds, confirming it is online and reachable through our VPN connect
 ---
 
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We perform a **full TCP port scan** to identify all open ports and exposed services:
 
@@ -81,6 +88,9 @@ extractPorts allPorts
 ---
 
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Using the list of open ports, we run a **version detection** and **default script** scan to gather more information:
 
@@ -120,7 +130,7 @@ From these results, the key services of interest are:
 
 ---
 
-## 2. SMB & Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 SMB Null Session Check
 
@@ -165,7 +175,7 @@ We proceed with option 2.
 
 ---
 
-## 3. Credential Extraction via LDAP Upload
+## 3. Foothold
 
 We set up a listener on LDAP port 389:
 
@@ -253,7 +263,11 @@ services
 
 ### 4.2 Uploading Payload
 
-We upload `nc.exe` to the target:
+Stage a **netcat** binary on the host (upload path as shown in the evidence):
+
+```powershell
+dir C:\Users\svc-printer\Desktop
+```
 
 ![nc_uploaded.png](screenshots/nc_uploaded.png)
 

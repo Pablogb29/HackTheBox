@@ -1,3 +1,4 @@
+
 # HTB - TwoMillion
 
 **IP Address:** `10.10.11.221`  
@@ -31,6 +32,9 @@ Finally, command injection in an API endpoint grants a shell, and root is obtain
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 We begin by testing connectivity to the target:
 
 ```bash
@@ -43,6 +47,9 @@ The host responds, confirming it is alive.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports:
 
@@ -70,6 +77,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with version and default scripts:
 
 ```bash
@@ -90,7 +100,7 @@ nmap -sCV -p22,80 10.10.11.221 -oN targeted
 | 80   | HTTP    | Apache httpd        |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Accessing `http://2million.htb` shows the **original 2017 HTB design**. Registration requires an invitation code.  
 
@@ -136,7 +146,9 @@ We now have a valid invite code, register, and log into the platform.
 ![main_home](screenshots/main_home.png)
 
 ---
-## 3. API Exploration
+## 3. Foothold
+
+### 3.1 API exploration
 
 Inside the user panel, two API endpoints are present:
 
@@ -181,8 +193,7 @@ curl -s -X POST "http://2million.htb/api/v1/admin/vpn/generate" -H "Cookie: PHPS
 
 We are not authorized again.
 
----
-## 4. Privilege Escalation via API Manipulation
+### 3.2 Privilege escalation via API manipulation
 
 Trying a PUT request to update settings:
 
@@ -208,8 +219,7 @@ curl -s -X GET "http://2million.htb/api/v1/admin/auth" -H "Cookie: PHPSESSID=...
 
 ![test_user_is_admin](screenshots/test_user_is_admin.png)
 
----
-## 5. Command Injection
+### 3.3 Command injection
 
 With admin rights, we attempt VPN generation again:
 
@@ -239,8 +249,7 @@ nc -nlvp 443
 
 We successfully obtain a shell.
 
----
-## 6. Post-Exploitation
+### 3.4 Post-exploitation enumeration
 
 Stabilize the shell:
 
@@ -261,7 +270,7 @@ This file contains the admin credentials. We also retrieve the **user flag**:
 ![user_flag](screenshots/user_flag.png)
 
 ---
-## 7. Privilege Escalation
+## 4. Privilege Escalation
 
 Searching for files owned by `admin`:
 

@@ -1,3 +1,4 @@
+
 # HTB - Lame
 
 **IP Address:** `10.10.10.3`  
@@ -161,7 +162,12 @@ The Samba version `3.0.20-Debian` is vulnerable to the **username map script** c
 
 ### 3.1 Identifying the Exploit
 
-Search on Metasploit for Samba exploit modules:
+Search on Metasploit for Samba exploit modules that match the discovered `smbd` version:
+
+```bash
+msfconsole
+search samba
+```
 
 ![msfconsole](screenshots/msfconsole.png)
 
@@ -336,7 +342,9 @@ whoami
 ![manually_exploitation_bash](screenshots/manually_exploitation_bash.png)
 
 ---
-## 4. Post-Exploitation (Automatic exploitation continuation)
+## 4. Privilege Escalation
+
+Root access was obtained directly from the Samba exploit; this section confirms retrieval of the **user** and **root** flags on disk.
 
 Retrieve the **user flag**:
 

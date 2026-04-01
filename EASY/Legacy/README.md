@@ -1,3 +1,4 @@
+
 # HTB - Legacy
 
 **IP Address:** `10.10.10.4`  
@@ -28,6 +29,9 @@ The exploitation path takes advantage of the well-known **MS08-067** vulnerabili
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive using ICMP:
 
 ```bash
@@ -40,6 +44,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports to identify exposed services:
 
@@ -67,6 +74,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with version detection and default scripts:
 
 ```bash
@@ -91,7 +101,18 @@ nmap -p135,139,445 -sC -sV 10.10.10.4 -oN targeted
 - SMB service is accessible, even for **guest** users  
 
 ---
-## 2. Exploitation
+## 2. Service Enumeration
+
+### 2.1 SMB reachability
+
+Confirm the **SMB** service behaves as expected on a legacy **Windows XP** host:
+
+```bash
+smbclient -L //10.10.10.4 -N
+```
+
+---
+## 3. Foothold
 
 Searching for known vulnerabilities affecting Windows XP SMB, we find **MS08-067**:  
 
@@ -123,9 +144,9 @@ exploit
 ✅ We obtain a shell with SYSTEM privileges.
 
 ---
-## 3. Post-Exploitation
+## 4. Privilege Escalation
 
-### 3.1 User Flag
+### 4.1 User Flag
 
 The user flag is saved in `john` user inside the `Documents and Settings`directory:
 
@@ -138,7 +159,7 @@ type C:\Documents and Settings\john\Desktop\user.txt
 ✅ **User flag obtained**
 
 ---
-### 3.2 Root Flag
+### 4.2 Root Flag
 
 We are root, so we can go to `Administrator` directory for the root flag:
 

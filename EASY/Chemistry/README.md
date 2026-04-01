@@ -1,3 +1,4 @@
+
 # HTB - Chemistry
 
 **IP Address:** `10.10.11.38`  
@@ -31,6 +32,9 @@ The attack path involves exploiting the RCE to gain a foothold, extracting and c
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive using ICMP:
 
 ```bash
@@ -43,6 +47,9 @@ The machine responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports to identify running services:
 
@@ -70,6 +77,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -91,11 +101,15 @@ nmap -sCV -p22,5000 10.10.11.38 -oN targeted
 
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Basic Access
 
 Browsing to `http://10.10.11.38:5000` reveals a Flask-based application **"Chemistry CIF Analyzer"**.
+
+```bash
+curl -i http://10.10.11.38:5000/
+```
 
 ![chemistry_analyzer](screenshots/chemistry_analyzer.png)
 

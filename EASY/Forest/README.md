@@ -1,3 +1,4 @@
+
 # HTB - Forest
 
 **IP Address:** `10.129.95.210`  
@@ -32,9 +33,18 @@ It involves enumerating domain users via **RPC null sessions**, exploiting an **
 ---
 ## 1. Initial Enumeration
 
-### 1.1 Port Scanning
+### 1.1 Connectivity Test
 
-We scan all ports with Nmap:
+Check if the host is alive using ICMP:
+
+```bash
+ping -c 1 10.129.95.210
+```
+
+---
+### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.95.210 -oG allPorts
@@ -58,9 +68,9 @@ extractPorts allPorts
 ![extractports](screenshots/extractports.png)
 
 ---
-### 1.2 Targeted Scan
+### 1.3 Targeted Scan
 
-Using the discovered ports, we run a deeper service/version scan:
+Run a deeper scan on the identified ports with version detection and default scripts:
 
 ```bash
 nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49664,49665,49666,49668,49671,49676,49677,49684,49706,49961 10.129.95.210 -oN targeted
@@ -192,7 +202,7 @@ We can also query display info for additional details:
 No passwords revealed in this case.
 
 ---
-## 3. Foothold via AS-REP Roasting
+## 3. Foothold
 
 ### 3.1 Extracting AS-REP Hash
 
@@ -271,6 +281,10 @@ evil-winrm -i 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 ### 4.1 Identifying the Path
 
 We can see other user directories but don't have access:
+
+```powershell
+dir C:\Users
+```
 
 ![evilwinrm_users](screenshots/evilwinrm_users.png)
 

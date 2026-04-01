@@ -1,3 +1,4 @@
+
 # HTB - Backdoor
 
 **IP Address:** `10.10.11.125`  
@@ -35,6 +36,9 @@ Privilege escalation is achieved by attaching to an existing root `screen` sessi
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Check if the host is reachable:
 
 ```bash
@@ -48,6 +52,9 @@ The machine responds, confirming it is alive.
 ---
 
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports:
 
@@ -65,6 +72,9 @@ Extract open ports:
 
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Perform a deeper scan on the identified open ports:
 
 ```bash
@@ -81,7 +91,7 @@ Open ports:
 
 ---
 
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 CMS Identification
 
@@ -169,12 +179,16 @@ Database credentials found but not directly useful.
 
 ---
 
-## 3. Foothold via `/proc` Enumeration
+## 3. Foothold
 
 ### 3.1 What is `/proc/{PID}/cmdline`?
 
 In Linux, `/proc/{PID}/cmdline` contains the full command line used to start a process, without spaces between arguments.  
 This makes it useful for identifying how a process was launched — in our case, to investigate port 1337.
+
+```bash
+head -c 200 /proc/self/cmdline | tr '\0' ' '; echo
+```
 
 ---
 
@@ -225,6 +239,12 @@ Filtering results reveals:
 
 - **GDB**: GNU Debugger, used to inspect and control programs during execution.
 - **gdbserver**: Runs on the target machine to allow remote debugging by GDB running on another machine.
+
+On the attacker box you only need a compatible GDB toolchain for the exploit workflow; confirm gdbserver is available where you build payloads:
+
+```bash
+gdbserver --version
+```
 
 ---
 
@@ -277,6 +297,12 @@ This command checks if `/var/run/screen/S-root` is empty and, if so, starts a de
 ---
 
 ### 4.2 How `screen` Works
+
+`screen` multiplexes terminals and keeps session metadata under `/var/run/screen/`:
+
+```bash
+screen -version
+```
 
 - Creates `/var/run/screen/S-{username}` directories for each user session.
 - A root-owned session allows other users to attach if permissions are misconfigured.

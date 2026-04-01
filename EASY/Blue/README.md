@@ -1,3 +1,4 @@
+
 # HTB - Blue
 
 **IP Address:** `10.10.10.40`  
@@ -30,6 +31,9 @@ Exploitation leads to direct remote code execution as `NT AUTHORITY\SYSTEM`, gra
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive using ICMP:
 
 ```bash
@@ -42,6 +46,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports to identify running services:
 
@@ -69,6 +76,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -95,7 +105,7 @@ nmap -sCV -p135,139,445 10.10.10.40 -oN targeted
 - Port 445 exposure on Windows 7 strongly suggests possible **MS17-010 (EternalBlue)** vulnerability
 
 ---
-## 2. SMB Vulnerability Scanning
+## 2. Service Enumeration
 
 List Nmap NSE script categories:
 
@@ -119,11 +129,14 @@ nmap --script "vuln and safe" -p445 10.10.10.40 -oN smbVulnScan
 The scan confirms the target is vulnerable to **MS17-010**.
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 Given the confirmed EternalBlue vulnerability, we can exploit it directly using **Metasploit**.
 
 ### 3.1 Launching Metasploit
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 msfconsole
@@ -174,7 +187,7 @@ exploit
 The exploit succeeds, and we obtain a **Meterpreter** session as `NT AUTHORITY\SYSTEM`.
 
 ---
-## 4. Post-Exploitation
+## 4. Privilege Escalation
 
 ### 4.1 User Flag
 

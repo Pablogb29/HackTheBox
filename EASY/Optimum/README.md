@@ -1,3 +1,4 @@
+
 # HTB - Optimum
 
 **IP Address:** `10.10.10.8`  
@@ -30,6 +31,9 @@ Privilege escalation is achieved by using **Windows Exploit Suggester (WES-NG)**
 ## 1. Initial Enumeration
 
 ### 1.1 Connectivity Test
+
+Check if the host is alive using ICMP:
+
 
 We start by verifying host availability with ICMP:
 
@@ -70,6 +74,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan on the identified port:
 
 ```bash
@@ -89,7 +96,7 @@ nmap -p80 -sC -sV 10.10.10.8 -oN targeted
 | 80   | HTTP    | HFS 2.3             |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Browsing to the site shows the **HFS web interface**:
 
@@ -124,7 +131,7 @@ searchsploit -x windows/remote/39161.py
 3. `exec|` → Launch `nc.exe -e cmd.exe` to connect back.  
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 Check for a Metasploit module:
 
@@ -152,7 +159,9 @@ A Meterpreter session is established.
 ✅ **User flag obtained**
 
 ---
-## 4. Foothold
+## 4. Privilege Escalation
+
+### 4.1 Local enumeration
 
 Attempting access to Administrator’s directory:
 
@@ -176,8 +185,7 @@ systeminfo
 
 ![systeminfo](screenshots/systeminfo.png)
 
----
-## 5. Privilege Escalation
+### 4.2 Kernel exploit (MS16-098)
 
 Save the output for analysis:
 

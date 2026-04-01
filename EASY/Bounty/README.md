@@ -1,9 +1,10 @@
+
 # HTB - Bounty
 
 **IP Address:** `10.10.10.93`  
 **OS:** Windows  
 **Difficulty:** Easy  
-**Tags:** #IIS, #ASP.NET, #FileUpload, #web.config, #JuicyPotato, #RCE
+**Tags:** #IIS, #ASP-NET, #FileUpload, #web-config, #JuicyPotato, #RCE
 
 ---
 ## Synopsis
@@ -44,6 +45,9 @@ The host responds, confirming it is reachable.
 ---
 ### 1.2 Port Scanning
 
+Scan all TCP ports to identify open services:
+
+
 We perform a full TCP scan to identify open services:
 
 ```bash
@@ -70,6 +74,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -91,7 +98,7 @@ nmap -sCV -p80 10.10.10.93 -oN targeted
 At this stage, we know the attack surface is a web application running on IIS with ASP.NET.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 We first identify the web technology using **WhatWeb**:
 
@@ -147,7 +154,7 @@ We need to identify valid extensions. A custom Python script was used to fuzz va
 The most interesting is **`.config`**.
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 web.config Exploit
 
@@ -316,6 +323,12 @@ Execute JuicyPotato:
 ![executing_JP](screenshots/executing_JP.png)
 
 ### 4.3 Root Flag
+
+Read the **Administrator** desktop flag after obtaining a privileged context:
+
+```powershell
+type C:\Users\Administrator\Desktop\root.txt
+```
 
 ![root_flag](screenshots/root_flag.png)
 

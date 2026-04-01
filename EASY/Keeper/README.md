@@ -1,3 +1,4 @@
+
 # HTB - Keeper
 
 **IP Address:** `10.10.11.227`  
@@ -32,6 +33,9 @@ Post-compromise, sensitive files are exfiltrated — notably a KeePass database 
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 First, we verify that the host is reachable:
 
 ```bash
@@ -42,6 +46,9 @@ ping -c 1 10.10.11.227
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We scan all TCP ports with Nmap to identify services:
 
@@ -61,6 +68,9 @@ extractPorts allPorts
 
 ---
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 We run a detailed scan on discovered ports:
 
@@ -82,7 +92,7 @@ nmap -sCV -p22,80 10.10.11.227 -oN targeted
 Note: The `Uploaded To` field in banners hints that one service could be containerized (possibly Docker), but this detail does not directly affect exploitation.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Accessing the Web Application
 
@@ -167,7 +177,7 @@ ssh lnorgaard@10.10.11.227
 🏁 **User flag obtained**.
 
 ---
-## 4. Post-Exploitation
+## 4. Privilege Escalation
 
 ### 4.1 Gathering System Info
 
@@ -260,12 +270,13 @@ Inside KeePass, we find two entries. The `root` entry contains a **PuTTY-User-Ke
 
 ![keepass_password_saved](screenshots/keepass_password_saved.png)
 
----
-## 5. Privilege Escalation
-
-### 5.1 Direct root login does not work
+### 4.6 Direct root login does not work
 
 First, we verify that common direct escalation paths are **not** viable:
+
+```bash
+ssh root@10.10.11.227
+```
 
 - SSH login as `root` using a password → rejected.  
     ![ssh_root](screenshots/ssh_root.png)
@@ -277,7 +288,7 @@ This confirms we must leverage the material found in KeePass.
 
 ---
 
-### 5.2 Convert the PuTTY key to OpenSSH
+### 4.7 Convert the PuTTY key to OpenSSH
 
 The `root` entry in KeePass includes a **PuTTY-User-Key-File**. We save its contents as `private_key` and convert it to an OpenSSH private key with `puttygen`:
 
@@ -291,7 +302,7 @@ puttygen private_key -O private-openssh -o id_rsa
 
 ---
 
-### 5.3 SSH as root using the converted key
+### 4.8 SSH as root using the converted key
 
 With the OpenSSH key ready and permissions set, we authenticate as `root` **without a password**:
 

@@ -1,3 +1,4 @@
+
 # HTB - Headless
 
 **IP Address:** `10.10.11.8`  
@@ -45,6 +46,9 @@ The host responds, confirming it is reachable.
 ---
 ### 1.2 Port Scanning
 
+Scan all TCP ports to identify open services:
+
+
 Scan all TCP ports to identify running services:
 
 ```bash
@@ -71,6 +75,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service/version detection and default scripts:
 
 ```bash
@@ -91,7 +98,7 @@ nmap -sCV -p22,5000 10.10.11.8 -oN targeted
 | 5000 | HTTP    | Werkzeug httpd (Python) |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Identify web technologies:
 
@@ -126,7 +133,7 @@ However, `/dashboard` returns **401 Unauthorized**:
 The `whatweb` results also revealed the cookie `is_admin`, suggesting privilege-based access.  
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 XSS Discovery
 

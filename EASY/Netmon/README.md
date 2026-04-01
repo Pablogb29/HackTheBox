@@ -1,3 +1,4 @@
+
 # HTB - Netmon
 
 **IP Address:** `10.10.10.152`  
@@ -32,6 +33,9 @@ By abusing this flaw, a new privileged user was created, leading to a full syste
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is reachable using ICMP:
 
 ```bash
@@ -44,6 +48,9 @@ The host responds, confirming it is reachable.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Scan all TCP ports to identify services:
 
@@ -70,6 +77,9 @@ extractPorts allPorts
 
 ---
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Perform a deeper scan with default scripts and service detection:
 
@@ -146,7 +156,7 @@ Let's go to website:
 Credentials don't work.
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 Credential Discovery via FTP
 
@@ -229,7 +239,9 @@ Confirmed user creation:
 ![crackmapexec_pwn3d](screenshots/crackmapexec_pwn3d.png)
 
 ---
-## 4. Foothold
+## 4. Privilege Escalation
+
+### 4.1 WinRM as privileged user
 
 Login via **Evil-WinRM** using the newly created account:
 

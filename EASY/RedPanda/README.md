@@ -1,3 +1,4 @@
+
 # HTB - RedPanda
 
 **IP Address:** `10.10.11.170`  
@@ -44,6 +45,9 @@ The host responds, confirming it is reachable.
 ---
 ### 1.2 Port Scanning
 
+Scan all TCP ports to identify open services:
+
+
 Scan all TCP ports to identify running services:
 
 ```bash
@@ -69,6 +73,9 @@ extractPorts allPorts
 
 ---
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Run a deeper scan on SSH and the web port with version detection and default scripts:
 
@@ -106,6 +113,10 @@ whatweb http://10.10.11.170:8080
 
 The site exposes a **search** box. Submitting input reflects **“You searched for: …”**, indicating user-controlled content is processed server-side (candidate for **SSTI** or **XSS**).
 
+```bash
+curl -i "http://10.10.11.170:8080/"
+```
+
 ![web home](screenshots/redpanda_07_web_search_home.png)
 
 Searching for **`test`** shows the reflection clearly:
@@ -127,9 +138,20 @@ The **author** link shows user profiles (**woodenk**, **damian**) and uploaded *
 ![export xml](screenshots/redpanda_12_export_stats_xml.png)
 
 ---
-## 2. Exploitation
+## 2. Service Enumeration
 
-### 2.1 Confirming SSTI (SpEL / Thymeleaf)
+### 2.1 Web stack (port 8080)
+
+Review the HTTP surface before testing template injection; the application stack is fingerprinted in **§1.3** and probed here:
+
+```bash
+curl -i http://10.10.11.170:8080/
+```
+
+---
+## 3. Foothold
+
+### 3.1 Confirming SSTI (SpEL / Thymeleaf)
 
 Using **PayloadsAllTheThings**-style probes, several classic **SSTI** forms are tried. Plain braces do not evaluate to **`49`**:
 
@@ -166,7 +188,7 @@ With a leading **`*`** (**Thymeleaf** selection expression), the product evaluat
 This confirms **SSTI** in a **SpEL**-friendly context.
 
 ---
-### 2.2 Remote Command Execution
+### 3.2 Remote Command Execution
 
 A naive **`Runtime.exec`**-style payload (with quoted paths) does not return **`/etc/passwd`** in this setup:
 
@@ -255,7 +277,7 @@ python3 ssti_cmd.py "cat /home/woodenk/user.txt"
 ![netcat attempt](screenshots/redpanda_20_netcat_reverse_failed.png)
 
 ---
-### 2.3 Discovering SSH Credentials
+### 3.3 Discovering SSH Credentials
 
 Process listing shows a **cron**-related path:
 
@@ -292,9 +314,9 @@ ssh woodenk@10.10.11.170
 🏁 **User flag obtained**
 
 ---
-## 3. Privilege Escalation
+## 4. Privilege Escalation
 
-### 3.1 Observing Root Cron Activity
+### 4.1 Observing Root Cron Activity
 
 A simple loop can highlight **new** processes (similar in spirit to **pspy**):
 
@@ -338,7 +360,7 @@ The cron-invoked **Java** program:
 ```
 
 ---
-### 3.2 Injecting the User-Agent Field
+### 4.2 Injecting the User-Agent Field
 
 Because **`user_agent`** is taken from the **HTTP User-Agent** header, we can inject **`||`** segments so **`parseLog`** still yields **four** fields, while controlling **`uri`** (and keeping **`.jpg`** in the line so **`isImage`** returns true):
 
@@ -353,7 +375,7 @@ The log reflects the injected structure:
 ![log four fields](screenshots/redpanda_30_redpanda_log_four_fields.png)
 
 ---
-### 3.3 Path Traversal via EXIF Artist
+### 4.3 Path Traversal via EXIF Artist
 
 Set **`Artist`** to a **path traversal** pointing under **`/tmp`** (example **`test.jpg`**):
 
@@ -397,7 +419,7 @@ ssh -i id_rsa root@10.10.11.170
 🏁 **Root flag obtained**
 
 ---
-# ✅MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
@@ -414,4 +436,3 @@ ssh -i id_rsa root@10.10.11.170
 - Avoid using **string split** on untrusted logs without validation; treat **log fields** as attacker-controlled.  
 - Use **`==` / `.equals`** correctly in **Java**, validate **file paths** (no **`..`**), and **disable external entities** in **XML** parsers (**XXE** hardening).  
 - Store **secrets** in **vaults** or environment-specific config, not in **source trees** readable by the service account.
-

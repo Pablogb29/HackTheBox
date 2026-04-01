@@ -1,3 +1,4 @@
+
 # HTB - Sightless
 
 **IP Address:** `10.10.11.32`  
@@ -37,6 +38,9 @@ Sightless is an easy Linux machine that demonstrates multiple chained exploits:
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 ```bash
 ping -c 1 10.10.11.32
 ```
@@ -46,6 +50,9 @@ The host responds, confirming it is alive.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We scan all TCP ports to identify open services:
 
@@ -71,6 +78,9 @@ extractports allPorts
 
 ---
 ### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
 
 Using the discovered ports, we perform a deeper scan with default scripts and service detection:
 
@@ -107,7 +117,7 @@ Although this information may not be 100% accurate, it is useful to consider whe
 Continuing with the web enumeration, we discovered several links. One of them was inaccessible, so as before, we added the corresponding subdomain to our `/etc/hosts` file.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 Accessing the main website reveals several links. One subdomain is restricted, so we add it to `/etc/hosts`:
 
@@ -121,7 +131,9 @@ Accessing the main website reveals several links. One subdomain is restricted, s
 SQLPad is an application for executing SQL queries and visualizing results.  
 
 ---
-## 3. Exploiting SQLPad (Foothold)
+## 3. Foothold
+
+### 3.1 SQLPad RCE
 
 SQLPad shows an option to add a new connection. Even though port **3306** (MySQL) is closed, we can trick SQLPad into connecting to us.
 
@@ -169,8 +181,9 @@ On execution:
 
 We obtain a shell inside a **Docker container**.
 
----
-## 4. Docker Enumeration
+### 3.2 Docker Enumeration
+
+Confirm container identity and basic host metadata:
 
 ```bash
 whoami
@@ -212,8 +225,7 @@ Password recovered: **insaneclownposse**
 
 The root hash was tested but it did not work.
 
----
-## 5. SSH Access
+### 3.3 SSH Access
 
 We log in as **michael**:
 
@@ -226,9 +238,9 @@ ssh michael@10.10.11.32
 🏁 **User flag obtained**
 
 ---
-## 6. Privilege Escalation
+## 4. Privilege Escalation
 
-### 6.1 Process Enumeration
+### 4.1 Process Enumeration
 
 After logging in as **michael**, we can confirm that we are now inside the main host instead of the Docker container:  
 
@@ -308,7 +320,7 @@ ss -nltp
 At this point, the most effective approach is to use **Local Port Forwarding**. This technique allows us to redirect traffic from our local machine to a service running internally on the victim, usually through an **SSH tunnel**.
 
 ---
-### 6.2 Local Port Forwarding
+### 4.2 Local Port Forwarding
 
 We forward port **8080**:
 
@@ -333,7 +345,7 @@ Now accessible:
 ![web_froxlor](screenshots/web_froxlor.png)  
 
 ---
-### 6.3 Froxlor Exploitation (XSS)
+### 4.3 Froxlor Exploitation (XSS)
 
 We are now inside **Froxlor**, a free and open-source web hosting control panel originally derived from the **SysCP project**.
 
@@ -342,6 +354,12 @@ After exploring the interface, nothing obvious appeared exploitable. A quick sea
 🔗 [GHSA-x525-54hf-xr53](https://github.com/advisories/GHSA-x525-54hf-xr53)
 
 This vulnerability describes a **Cross-Site Scripting (XSS)** issue in the login form. To exploit it, we need to craft and inject a malicious payload.
+
+Confirm the forwarded admin vhost responds locally before weaponizing the XSS PoC:
+
+```bash
+curl -sk -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8081/
+```
 
 First, we download the proof-of-concept payload and inspect it:
 
@@ -378,7 +396,7 @@ On reload, we gain access with credentials:
 ![froxlor_login_true](screenshots/froxlor_login_true.png)  
 
 ---
-### 6.4 FTP Access via Froxlor
+### 4.4 FTP Access via Froxlor
 
 Inside Froxlor, under customers → `web1`, we can reset FTP credentials.
 
@@ -397,7 +415,7 @@ lftp 10.10.11.32
 We discover a `Database.kdb` file (KeePass).
 
 ---
-### 6.5 KeePass Database Exploitation
+### 4.5 KeePass Database Exploitation
 
 Convert KeePass database to hash:
 
@@ -438,10 +456,13 @@ Instead, an **id_rsa private key** is stored:
 ![keepassxc_id_rsa](screenshots/keepassxc_id_rsa.png)  
 
 
----
-## 7. Root Access
+### 4.6 Root Access
 
-Using `id_rsa`, we authenticate as root:
+Using the recovered **id_rsa** key material, authenticate over SSH as **root**:
+
+```bash
+ssh -i id_rsa root@10.10.11.32
+```
 
 ![root_flag](screenshots/root_flag.png)  
 

@@ -1,4 +1,5 @@
-﻿# HTB - Photobomb
+
+# HTB - Photobomb
 
 **IP Address:** `10.10.11.182`  
 **OS:** Ubuntu Focal  
@@ -30,6 +31,9 @@ Privilege escalation is achieved by exploiting a misconfigured **cleanup.sh** sc
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 Verify if the host is alive:
 
 ```bash
@@ -40,6 +44,9 @@ ping -c 1 10.10.11.182
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 Perform a full TCP port scan:
 
@@ -67,6 +74,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Run a deeper scan with service detection:
 
 ```bash
@@ -90,7 +100,7 @@ nmap -p22,80 -sC -sV 10.10.11.182 -oN targeted
 A web application is hosted under the domain `photobomb.htb`.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Technology Fingerprinting
 
@@ -163,7 +173,7 @@ convert test.jpg -resize 500x500 new.jpg
 ![kitten_new](screenshots/kitten_new.png)
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 Command Injection
 
@@ -205,19 +215,24 @@ Send the request:
 
 Reverse shell obtained.
 
----
-## 4. Foothold
+### 3.3 User flag
 
 Confirming access and retrieving the user flag:
+
+```bash
+id
+whoami
+cat /home/wizard/user.txt
+```
 
 ![user_flag](screenshots/user_flag.png)
 
 ✅ **User flag obtained**
 
 ---
-## 5. Privilege Escalation
+## 4. Privilege Escalation
 
-### 5.1 Sudo Permissions
+### 4.1 Sudo Permissions
 
 Check sudo privileges:
 
@@ -237,7 +252,7 @@ It incorrectly uses `[` without absolute path, making it exploitable.
 
 ![command_square_bracket](screenshots/command_square_bracket.png)
 
-### 5.2 PATH Hijacking
+### 4.2 PATH Hijacking
 
 Create a malicious `[` binary in `/tmp`:
 

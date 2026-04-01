@@ -1,4 +1,5 @@
-﻿# HTB - Late
+
+# HTB - Late
 
 **IP Address:** `10.10.11.156`  
 **OS:** Linux  
@@ -32,6 +33,9 @@ Privilege escalation is achieved by abusing a root-executed script with the appe
 
 ### 1.1 Connectivity Test
 
+Check if the host is alive using ICMP:
+
+
 To verify if the host is reachable, we send a single ICMP packet:
 
 ```bash
@@ -44,6 +48,9 @@ The host responds, confirming it is alive.
 
 ---
 ### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
 
 We run a full TCP port scan to identify open services:
 
@@ -71,6 +78,9 @@ extractPorts allPorts
 ---
 ### 1.3 Targeted Scan
 
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
 Using the identified ports, we perform a targeted scan with version detection and default scripts:
 
 ```bash
@@ -94,9 +104,12 @@ nmap -p22,80 -sC -sV 10.10.11.156 -oN targeted
 At this stage we confirm the target is a **Linux machine running a Flask web app with SSH access**.
 
 ---
-## 2. Web Enumeration
+## 2. Service Enumeration
 
 ### 2.1 Technology Fingerprinting
+
+Continue the attack chain with the next commands:
+
 
 ```bash
 whatweb http://10.10.11.156
@@ -112,6 +125,10 @@ The scan indicates a **Flask/Jinja2 stack**.
 During browsing, we find a reference to **image.late.htb**.  
 After adding it to `/etc/hosts`, we can access the application:
 
+```bash
+curl -i http://image.late.htb/
+```
+
 ![web](screenshots/web.png)
 
 The vhost provides **OCR functionality** (uploading an image generates a `results.txt` file).
@@ -121,11 +138,16 @@ The vhost provides **OCR functionality** (uploading an image generates a `result
 ![resukt_example](screenshots/resukt_example.png)
 
 ---
-## 3. Exploitation
+## 3. Foothold
 
 ### 3.1 SSTI Probe
 
 We test for SSTI by uploading an image containing `{{7*7}}`:
+
+```bash
+# Crafted via web upload — payload embedded in image (see screenshots)
+true
+```
 
 ![image_49](screenshots/image_49.png)
 
@@ -177,8 +199,7 @@ We clean the key to ensure a valid PEM format:
 
 ![id_rsa_clean](screenshots/id_rsa_clean.png)
 
----
-## 4. Foothold
+### 3.4 SSH session and user flag
 
 Using the extracted key, we log in via SSH:
 
@@ -191,9 +212,9 @@ ssh -i id_rsa svc_acc@10.10.11.156
 ✅ **User flag obtained**
 
 ---
-## 5. Privilege Escalation
+## 4. Privilege Escalation
 
-### 5.1 Hunting Writable Files
+### 4.1 Hunting Writable Files
 
 We search for files owned by `svc_acc` outside common directories:
 
@@ -210,7 +231,9 @@ We find:
 ```
 
 ---
-### 5.2 Inspecting the Script
+### 4.2 Inspecting the Script
+
+Review ownership and contents of the SSH login hook executed as **root**:
 
 ```bash
 ls -l /usr/local/sbin/ssh-alert.sh
@@ -222,7 +245,7 @@ cat /usr/local/sbin/ssh-alert.sh
 This script is executed as **root** when someone logs in via SSH.
 
 ---
-### 5.3 Process Monitoring with pspy
+### 4.3 Process Monitoring with pspy
 
 We upload `pspy64` and monitor processes:
 
@@ -237,7 +260,7 @@ chmod +x pspy64
 When logging in again, we confirm the script is executed by **root**.
 
 ---
-### 5.4 Exploiting Append-Only Attribute
+### 4.4 Exploiting Append-Only Attribute
 
 Attempts to edit fail:
 
