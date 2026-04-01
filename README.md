@@ -24,11 +24,7 @@
 
 ## 📊 Progress
 
-<<<<<<< HEAD
-- **Total machines documented:** 33 
-=======
 - **Total machines completed:** 51 
->>>>>>> c1ac246 (March CTFs added)
 - **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
 - **Platform:** [Hack The Box](https://www.hackthebox.com/)
 
