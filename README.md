@@ -16,7 +16,7 @@
 | Difficulty | Description | # Solved |
 |------------|-------------|:--------:|
 | 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | **44** |
-| 🟡 **[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | **7** |
+| 🟡 **[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | **8** |
 | 🔴 **[**Hard**](./HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
 | ⚫ **[**Insane**](./INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
 
@@ -24,7 +24,7 @@
 
 ## 📊 Progress
 
-- **Total machines completed:** 51 
+- **Total machines completed:** 52 
 - **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
 - **Platform:** [Hack The Box](https://www.hackthebox.com/)
 
