@@ -6,8 +6,6 @@
 **Difficulty:** Easy  
 **Tags:** #Windows #IIS #Minecraft #Log4j #Log4Shell #JD-GUI #RunasCs #PrivilegeEscalation
 
-> **Vault note:** This README matches the solved run documented in `notes/ctf/htb-crafty.md`. Redact flags, hashes, and passwords if you publish a public writeup.
-
 ---
 ## Synopsis
 

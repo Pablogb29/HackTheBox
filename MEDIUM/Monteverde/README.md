@@ -6,8 +6,6 @@
 **Difficulty:** Medium  
 **Tags:** #Windows #ActiveDirectory #LDAP #RPC #SMB #WinRM #PasswordSpraying #AzureADConnect #ADSync
 
-> **Vault note:** This README matches the solved run documented in `notes/ctf/htb-monteverde.md`. Redact flags, hashes, and passwords if you publish a public writeup.
-
 ---
 ## Synopsis
 

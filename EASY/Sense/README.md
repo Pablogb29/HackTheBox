@@ -6,8 +6,6 @@
 **Difficulty:** Easy  
 **Tags:** #htb #pfsense #lighttpd #cve-2014-4688 #command-injection
 
-> **Vault note:** This README matches the solved run documented in `notes/ctf/htb-sense.md`. Evidence images live under `screenshots/`. Redact flags, hashes, and passwords if you publish a public writeup.
-
 ---
 ## Synopsis
 

@@ -12,8 +12,6 @@ tags: ["htb", "writeup", "linux", "easy", "dns", "lfi", "fail2ban"]
 **Difficulty:** Easy  
 **Tags:** #htb #linux #dns #lfi #fail2ban #sqli
 
-> **Vault note:** This README matches the solved run documented in `notes/ctf/htb-trick.md`. Redact flags, hashes, and passwords if you publish a public writeup.
-
 ---
 ## Synopsis
 

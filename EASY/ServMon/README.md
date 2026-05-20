@@ -6,8 +6,6 @@
 **Difficulty:** Easy  
 **Tags:** #FTP, #NVMS-1000, #DirectoryTraversal, #CrackMapExec, #SSH, #NSClient++, #PrivilegeEscalation
 
-> **Vault note:** This README matches the solved run documented in `notes/ctf/htb-ServMon.md`. Redact flags, hashes, and passwords if you publish a public writeup.
-
 ---
 ## Synopsis
 

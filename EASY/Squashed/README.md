@@ -5,8 +5,6 @@
 **Difficulty:** Easy  
 **Tags:** #Linux #NFS #PHP #X11 #KeePassXC #Web
 
-> **Vault note:** This README matches the solved run documented in `notes/ctf/htb-squashed.md`. Redact flags, hashes, and any cleartext secrets before publishing a public writeup.
-
 ---
 ## Synopsis
 
