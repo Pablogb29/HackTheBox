@@ -17,7 +17,7 @@ tags: ["htb", "writeup", "linux", "easy", "web", "moodle", "rce", "mysql", "cron
 
 ## Synopsis
 
-Teacher exposes only **HTTP**. Directory listing and a mislabeled â€œPNGâ€ under `/images/` leak a password hint for **Giovanni**, which brute-forces cleanly against **Moodle** on `teacher.htb`. As a teacher-capable user, you abuse a **calculated quiz question** weakness to get **RCE**, land a shell as **`www-data`**, read **`config.php`** for **MariaDB** credentials, and pull a legacy **MD5** from **`mdl_user`** that becomes the Linux password for **`giovanni`**.
+Teacher exposes only **HTTP**. Directory listing and a mislabeled “PNG” under `/images/` leak a password hint for **Giovanni**, which brute-forces cleanly against **Moodle** on `teacher.htb`. As a teacher-capable user, you abuse a **calculated quiz question** weakness to get **RCE**, land a shell as **`www-data`**, read **`config.php`** for **MariaDB** credentials, and pull a legacy **MD5** from **`mdl_user`** that becomes the Linux password for **`giovanni`**.
 
 Privilege escalation to root comes from a **root cron** job running **`backup.sh`**: a broad **`chmod 777 * -R`** after **`cd tmp`** lets you point a symlink at **`/usr/bin/backup.sh`**, make the script world-writable, replace it with a **`chmod u+s /bin/bash`**, then use **`bash -p`** as root.
 
@@ -36,7 +36,7 @@ Privilege escalation to root comes from a **root cron** job running **`backup.sh
 - Turning **mislabeled static files** and **directory listings** into credential material
 - **Moodle** teacher workflows and **calculated-question** evaluation abuse (see public write-ups / CVE context)
 - **Credential reuse** from application database fields to **local `su`**
-- PrivEsc via **unsafe `chmod` globbing** on attacker-influenced paths (symlink â†’ root-owned script)
+- PrivEsc via **unsafe `chmod` globbing** on attacker-influenced paths (symlink → root-owned script)
 
 ---
 
@@ -201,7 +201,7 @@ wfuzz -c --hh=439 -t 200 -w giovanni_dictionary_pass.txt \
 
 ### 3.1 Calculated-question injection and proof of execution
 
-Public analysis (for example [SonarSourceâ€™s write-up on Moodle](https://www.sonarsource.com/blog/moodle-remote-code-execution)) explains how a **calculated** quiz answer formula can be abused to reach **code evaluation** paths. In practice, you enable editing on the **Algebra** course, create a **Quiz**, add a **Calculated** question, and place a small payload in the **answer formula** field. Execution is then triggered via a crafted request parameter (here, parameter **`0`**).
+Public analysis (for example [SonarSource’s write-up on Moodle](https://www.sonarsource.com/blog/moodle-remote-code-execution)) explains how a **calculated** quiz answer formula can be abused to reach **code evaluation** paths. In practice, you enable editing on the **Algebra** course, create a **Quiz**, add a **Calculated** question, and place a small payload in the **answer formula** field. Execution is then triggered via a crafted request parameter (here, parameter **`0`**).
 
 Use the course UI to add a **Quiz**, then add a **Calculated** question and set **Answer 1 formula** to:
 
@@ -314,7 +314,7 @@ cat user.txt
 
 ![user flag](screenshots/teacher_26_user_flag_su_giovanni.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 
@@ -347,7 +347,7 @@ Observed behavior included **`/usr/bin/backup.sh`** running under cron, with **`
 
 ### 4.2 Inspect `backup.sh` and the unsafe `chmod` glob
 
-The scriptâ€™s logic archives course data, extracts into **`tmp`**, then applies a recursive world-writable permission change to **everything** in that directory â€” which is dangerous if an attacker can place symlinks there.
+The script’s logic archives course data, extracts into **`tmp`**, then applies a recursive world-writable permission change to **everything** in that directory — which is dangerous if an attacker can place symlinks there.
 
 ```bash
 cat /usr/bin/backup.sh
@@ -391,10 +391,10 @@ cat /root/root.txt
 
 ![root flag](screenshots/teacher_31_root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 
@@ -414,7 +414,7 @@ cat /root/root.txt
 - **Disable directory listing** on public static paths (`Options -Indexes` or equivalent) and avoid serving sensitive notes as web-accessible files.
 - **Do not store password hints** or secrets in files mislabeled as images; keep operational notes out of the document root.
 - **Patch and harden Moodle**: keep core and plugins current; restrict who can create **calculated** and other high-risk question types; follow vendor hardening guidance.
-- **Database least privilege**: Moodle should use a **dedicated DB account** with minimal privileges â€” not **`root`**, and not with unnecessary local superuser coupling.
+- **Database least privilege**: Moodle should use a **dedicated DB account** with minimal privileges — not **`root`**, and not with unnecessary local superuser coupling.
 - **Password storage**: migrate legacy **MD5** (or other weak formats) to strong modern hashes; enforce **unique** OS passwords unrelated to application DB fields.
 - **Cron and scripts**: never run **`chmod 777 * -R`** over trees writable by users; avoid glob chmod patterns that follow **symlinks**; ensure scripts executed as **root** are **root-owned** and **not writable** by unprivileged users; consider **`chmod -h`** semantics and symlink hardening.
 - **Monitoring**: alert on **SUID** changes on shells and unexpected edits to **`/usr/bin`** scripts.

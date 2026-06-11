@@ -14,7 +14,7 @@ tags: ["htb", "writeup", "windows", "easy", "iis", "minecraft", "log4j", "log4sh
 ---
 ## Synopsis
 
-Crafty is an easy Windows machine that exposes a marketing site on IIS and a Minecraft server on TCP 25565. Web enumeration confirms virtual host names and yields little beyond a reference to `play.crafty.htb`. The Minecraft surface accepts an offline-mode client session without a password, and an in-game chat payload confirms Log4j-style JNDI behavior. A public Log4j proof-of-concept chain is adapted for Windows (`cmd.exe`), producing an initial shell. A plugin artifact copied from the serverâ€™s Minecraft tree contains recoverable secrets that map to the local `administrator` account; those credentials are exercised with RunasCs to spawn a privileged command session and capture the administrator proof.
+Crafty is an easy Windows machine that exposes a marketing site on IIS and a Minecraft server on TCP 25565. Web enumeration confirms virtual host names and yields little beyond a reference to `play.crafty.htb`. The Minecraft surface accepts an offline-mode client session without a password, and an in-game chat payload confirms Log4j-style JNDI behavior. A public Log4j proof-of-concept chain is adapted for Windows (`cmd.exe`), producing an initial shell. A plugin artifact copied from the server’s Minecraft tree contains recoverable secrets that map to the local `administrator` account; those credentials are exercised with RunasCs to spawn a privileged command session and capture the administrator proof.
 
 ---
 ## Skills Required
@@ -112,8 +112,8 @@ whatweb http://10.129.230.193
 
 **Observed (representative):**
 
-- `http://10.129.230.193` â†’ `301`, **Microsoft-IIS/10.0**, `RedirectLocation[http://crafty.htb]`
-- `http://crafty.htb` â†’ `200`, IIS 10.0, jQuery 3.6.0, title **Crafty - Official Website**
+- `http://10.129.230.193` → `301`, **Microsoft-IIS/10.0**, `RedirectLocation[http://crafty.htb]`
+- `http://crafty.htb` → `200`, IIS 10.0, jQuery 3.6.0, title **Crafty - Official Website**
 
 ---
 ### 2.2 Web content discovery and public pages
@@ -205,7 +205,7 @@ You should land in a Windows command context from which you can read the user pr
 
 ![user shell and user flag context](screenshots/crafty_17_user_shell.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -268,10 +268,10 @@ Validate the recovered password by executing a command as `administrator` with R
 
 ![runascs administrator reverse shell / root proof](screenshots/crafty_23_runascs_reverse_root.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

@@ -15,7 +15,7 @@ tags: ["htb", "writeup", "windows", "medium", "smb", "mssql", "winrm", "responde
 
 ## Synopsis
 
-The machine exposes **SMB**, **MSSQL**, and **WinRM** on a Windows Server host. A guest-readable **`Reports`** share holds a macro-enabled workbook whose VBA embeds SQL credentials; **domain context** matters for reuseâ€”**`WORKGROUP`** with **Windows authentication** succeeds where **`HTB.LOCAL`**-oriented attempts can fail.
+The machine exposes **SMB**, **MSSQL**, and **WinRM** on a Windows Server host. A guest-readable **`Reports`** share holds a macro-enabled workbook whose VBA embeds SQL credentials; **domain context** matters for reuse—**`WORKGROUP`** with **Windows authentication** succeeds where **`HTB.LOCAL`**-oriented attempts can fail.
 
 As **`reporting`**, **`xp_cmdshell`** is blocked, but **`xp_dirtree`** against an attacker-controlled UNC with **Responder** forces **`mssql-svc`** to authenticate, leaking **NetNTLMv2** for offline cracking. **`mssql-svc`** is **sysadmin**: enable **`xp_cmdshell`**, pull **Nishang** over HTTP, and collect **`user.txt`**. On-box, **PowerUp** **`Invoke-AllChecks`** highlights **cached Group Policy Preferences** in **`Groups.xml`**, exposing the **local Administrator** password. **WinRM** as **`WORKGROUP\Administrator`** completes the box with **`root.txt`**.
 
@@ -101,7 +101,7 @@ cat targeted
 | 135 / 139 / 445 | MSRPC / NetBIOS / SMB | `QUERIER`, **HTB.LOCAL** |
 | 1433 | MSSQL | SQL Server **2017** RTM |
 | 5985 / 47001 | WinRM (HTTPAPI) | Remote management |
-| 49664â€“49671 | MSRPC | Dynamic endpoints |
+| 49664–49671 | MSRPC | Dynamic endpoints |
 
 Optional **`/etc/hosts`** (helpful for DNS-style references):
 
@@ -113,7 +113,7 @@ Optional **`/etc/hosts`** (helpful for DNS-style references):
 
 ## 2. Service Enumeration
 
-### 2.1 SMB â€” `Reports` share
+### 2.1 SMB — `Reports` share
 
 Because **445/tcp** is open and SMB often exposes readable shares, map the surface with anonymous and guest access before pulling files.
 
@@ -183,7 +183,7 @@ Password: **`PcwTWTHRwryjc$c6`** (paste at prompt). Session should land in **`vo
 
 ---
 
-### 3.3 NetNTLM capture â€” `xp_dirtree` + Responder
+### 3.3 NetNTLM capture — `xp_dirtree` + Responder
 
 On Kali (**`tun0`** example **`10.10.15.206`**):
 
@@ -211,7 +211,7 @@ john --format=netntlmv2 hash_mssql_svc.txt --wordlist=/usr/share/wordlists/rocky
 
 ---
 
-### 3.4 MSSQL as `mssql-svc` â€” `xp_cmdshell`
+### 3.4 MSSQL as `mssql-svc` — `xp_cmdshell`
 
 Reconnect as the service account with higher privileges to enable command execution:
 
@@ -282,7 +282,7 @@ type C:\Users\mssql-svc\Desktop\user.txt
 
 ![user-flag](screenshots/querier_15_user_txt.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 
@@ -290,7 +290,7 @@ type C:\Users\mssql-svc\Desktop\user.txt
 
 With foothold as **`mssql-svc`**, run structured local checks before chasing manual paths.
 
-### 4.1 PowerUp â€” cached GPP
+### 4.1 PowerUp — cached GPP
 
 Download **PowerUp** from PowerShellMafia:
 
@@ -336,23 +336,23 @@ type C:\Users\Administrator\Desktop\root.txt
 
 ![evil-winrm-root](screenshots/querier_18_evil_winrm_root_txt.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
 
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 
 ## Summary of Exploitation Path
 
 1. Enumerated services; confirmed **SMB**, **MSSQL**, and **WinRM** on **Querier**.  
-2. Guest **`Reports`** â†’ **`Currency Volume Report.xlsm`** â†’ **olevba** â†’ **`reporting`** SQL credentials.  
-3. **`WORKGROUP` + Windows auth** â†’ **MSSQL** as **`reporting`** in **`volume`** (domain-oriented clients failed).  
-4. **`xp_dirtree` UNC** + **Responder** â†’ **NetNTLMv2** for **`mssql-svc`** â†’ **John** â†’ **`corporate568`**.  
-5. **MSSQL** as **`mssql-svc`** â†’ enable **`xp_cmdshell`**, stage **Nishang** over HTTP, reverse shell â†’ **`user.txt`**.  
-6. **PowerUp** **`Invoke-AllChecks`** â†’ **cached `Groups.xml` (GPP)** â†’ **Administrator** password.  
-7. **CME** **SMB/WinRM** validation â†’ **Evil-WinRM** **`WORKGROUP\Administrator`** â†’ **`root.txt`**.
+2. Guest **`Reports`** → **`Currency Volume Report.xlsm`** → **olevba** → **`reporting`** SQL credentials.  
+3. **`WORKGROUP` + Windows auth** → **MSSQL** as **`reporting`** in **`volume`** (domain-oriented clients failed).  
+4. **`xp_dirtree` UNC** + **Responder** → **NetNTLMv2** for **`mssql-svc`** → **John** → **`corporate568`**.  
+5. **MSSQL** as **`mssql-svc`** → enable **`xp_cmdshell`**, stage **Nishang** over HTTP, reverse shell → **`user.txt`**.  
+6. **PowerUp** **`Invoke-AllChecks`** → **cached `Groups.xml` (GPP)** → **Administrator** password.  
+7. **CME** **SMB/WinRM** validation → **Evil-WinRM** **`WORKGROUP\Administrator`** → **`root.txt`**.
 
 ---
 

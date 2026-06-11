@@ -14,7 +14,7 @@ tags: ["htb", "writeup", "linux", "easy", "java,", "springboot,", "thymeleaf,", 
 ---
 ## Synopsis
 
-RedPanda is an easy Linux machine running a **Java/Spring Boot** web application on **port 8080**. The search feature is vulnerable to **Server-Side Template Injection (SSTI)** via **Spring Expression Language (SpEL)** in a **Thymeleaf** context, allowing **remote command execution** as the web service user. **SSH credentials** are leaked in application source under `/opt/panda_search/`. **Privilege escalation** abuses a **root** **cron** job that parses `redpanda.log`, reads **JPEG EXIF** metadata, and updates **XML** files under `/credits/`. By controlling the **User-Agent** (logged as `user_agent`), **path traversal** in the **Artist** EXIF field, and an **XXE** payload in a crafted `_creds.xml` file, we redirect processing to **`/tmp`** and read **rootâ€™s SSH private key**.
+RedPanda is an easy Linux machine running a **Java/Spring Boot** web application on **port 8080**. The search feature is vulnerable to **Server-Side Template Injection (SSTI)** via **Spring Expression Language (SpEL)** in a **Thymeleaf** context, allowing **remote command execution** as the web service user. **SSH credentials** are leaked in application source under `/opt/panda_search/`. **Privilege escalation** abuses a **root** **cron** job that parses `redpanda.log`, reads **JPEG EXIF** metadata, and updates **XML** files under `/credits/`. By controlling the **User-Agent** (logged as `user_agent`), **path traversal** in the **Artist** EXIF field, and an **XXE** payload in a crafted `_creds.xml` file, we redirect processing to **`/tmp`** and read **root’s SSH private key**.
 
 ---
 ## Skills Required
@@ -116,7 +116,7 @@ whatweb http://10.10.11.170:8080
 ---
 ### 1.4 Web Application
 
-The site exposes a **search** box. Submitting input reflects **â€œYou searched for: â€¦â€**, indicating user-controlled content is processed server-side (candidate for **SSTI** or **XSS**).
+The site exposes a **search** box. Submitting input reflects **“You searched for: …”**, indicating user-controlled content is processed server-side (candidate for **SSTI** or **XSS**).
 
 ```bash
 curl -i "http://10.10.11.170:8080/"
@@ -147,7 +147,7 @@ The **author** link shows user profiles (**woodenk**, **damian**) and uploaded *
 
 ### 2.1 Web stack (port 8080)
 
-Review the HTTP surface before testing template injection; the application stack is fingerprinted in **Â§1.3** and probed here:
+Review the HTTP surface before testing template injection; the application stack is fingerprinted in **§1.3** and probed here:
 
 ```bash
 curl -i http://10.10.11.170:8080/
@@ -316,7 +316,7 @@ ssh woodenk@10.10.11.170
 
 ![ssh woodenk](screenshots/redpanda_24_ssh_woodenk_shell.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -350,7 +350,7 @@ grep -r "redpanda.log" /opt/panda_search/ 2>/dev/null
 The cron-invoked **Java** program:
 
 - Parses each log line split by **`||`** into **`status_code`**, **`ip`**, **`user_agent`**, **`uri`**.  
-- Treats the line as an â€œimageâ€ request if the string **contains** **`.jpg`** (**`isImage`**).  
+- Treats the line as an “image” request if the string **contains** **`.jpg`** (**`isImage`**).  
 - Reads the **JPEG** at **`/opt/panda_search/src/main/resources/static` + `uri`**, extracts **EXIF** **`Artist`**.  
 - Updates **`/credits/<Artist>_creds.xml`** via **JDOM2** (`addViewTo`).
 
@@ -410,7 +410,7 @@ curl -s -X GET -A "test||/../../../../../../../../tmp/test.jpg" http://10.10.11.
 
 ![curl URI to tmp jpg](screenshots/redpanda_34_curl_uri_tmp_test_jpg.png)
 
-The **cron** job processes **`redpanda.log`** periodically (roughly **once per minute** in testing). After it runs, **`/tmp/test_creds.xml`** updates and the **XXE** output appears in the fileâ€”revealing **rootâ€™s** private key.
+The **cron** job processes **`redpanda.log`** periodically (roughly **once per minute** in testing). After it runs, **`/tmp/test_creds.xml`** updates and the **XXE** output appears in the file—revealing **root’s** private key.
 
 Save the key and connect:
 
@@ -421,17 +421,17 @@ ssh -i id_rsa root@10.10.11.170
 
 ![ssh root](screenshots/redpanda_35_ssh_root_key_root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **SSTI (Thymeleaf / SpEL)** on **`/search`** â†’ **RCE** as the web runtime user via **`IOUtils`** + **`Runtime.exec`**.  
-2. **Credential discovery** in **`/opt/panda_search/`** â†’ **SSH** as **`woodenk`**.  
-3. **Cron** **log parser** + **`User-Agent`** **injection** + **EXIF** **`Artist`** **path traversal** + **XXE** in **`/tmp/test_creds.xml`** â†’ read **root** **SSH key** â†’ **root shell**.
+1. **SSTI (Thymeleaf / SpEL)** on **`/search`** → **RCE** as the web runtime user via **`IOUtils`** + **`Runtime.exec`**.  
+2. **Credential discovery** in **`/opt/panda_search/`** → **SSH** as **`woodenk`**.  
+3. **Cron** **log parser** + **`User-Agent`** **injection** + **EXIF** **`Artist`** **path traversal** + **XXE** in **`/tmp/test_creds.xml`** → read **root** **SSH key** → **root shell**.
 
 ---
 ## Defensive Recommendations

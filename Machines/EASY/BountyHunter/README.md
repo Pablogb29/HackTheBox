@@ -140,7 +140,7 @@ The response reflects our input, so we test with `{{7*7}}` for SSTI:
 
 ![web_log_submit_7](screenshots/web_log_submit_7.png)
 
-No result. Letâ€™s intercept with **BurpSuite**.
+No result. Let’s intercept with **BurpSuite**.
 
 ![bs_test](screenshots/bs_test.png)
 
@@ -237,7 +237,7 @@ ssh development@10.10.11.100
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 Inside `/home/development`, we also find `contract.txt`:
 
@@ -266,7 +266,7 @@ ls -l /opt/skytrain_inc/ticketValidator.py
 
 ![bash_priv](screenshots/bash_priv.png)
 
-The script is root-owned, so cannot be modified. Letâ€™s review it:
+The script is root-owned, so cannot be modified. Let’s review it:
 
 ```bash
 cat /opt/skytrain_inc/ticketValidator.py | less
@@ -306,19 +306,19 @@ bash -p
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified SSH and HTTP.  
-2. **XXE Injection** â†’ Extracted `/etc/passwd`.  
-3. **PHP Source Disclosure** â†’ Found database credentials.  
-4. **SSH Foothold** â†’ Logged in as `development`.  
-5. **Privilege Escalation** â†’ Exploited insecure `eval()` in Python script to escalate privileges.  
+1. **Port Scanning** → Identified SSH and HTTP.  
+2. **XXE Injection** → Extracted `/etc/passwd`.  
+3. **PHP Source Disclosure** → Found database credentials.  
+4. **SSH Foothold** → Logged in as `development`.  
+5. **Privilege Escalation** → Exploited insecure `eval()` in Python script to escalate privileges.  
 
 ---
 ## Defensive Recommendations

@@ -15,7 +15,7 @@ tags: ["htb", "writeup", "windows", "medium", "activedirectory", "kerberos", "ld
 
 ## Synopsis
 
-Scrambled is an Active Directory host exposing the typical DC surface (**Kerberos/LDAP/SMB**) plus an IIS intranet site and **MSSQL**. The intranetâ€™s IT section provides both a key constraint (NTLM is disabled) and a valid username, which pushes the workflow toward Kerberos-based enumeration. With a domain user, we can request service tickets (kerberoasting) and crack a service account password. Direct Kerberos MSSQL access is unreliable in this environment, so we pivot to a **Silver Ticket** to impersonate `Administrator` to the SQL service. From there, we use SQL command execution to stage tooling and retrieve proof via SQL file reads.
+Scrambled is an Active Directory host exposing the typical DC surface (**Kerberos/LDAP/SMB**) plus an IIS intranet site and **MSSQL**. The intranet’s IT section provides both a key constraint (NTLM is disabled) and a valid username, which pushes the workflow toward Kerberos-based enumeration. With a domain user, we can request service tickets (kerberoasting) and crack a service account password. Direct Kerberos MSSQL access is unreliable in this environment, so we pivot to a **Silver Ticket** to impersonate `Administrator` to the SQL service. From there, we use SQL command execution to stage tooling and retrieve proof via SQL file reads.
 
 ---
 
@@ -113,7 +113,7 @@ cat targeted
 ### 2.1 SMB/RPC Baseline
 
 On Windows AD targets, SMB/RPC is usually the fastest way to confirm hostname/domain hints and check share access.
-However, this machine explicitly disables NTLM, so most â€œclassicâ€ SMB/RPC workflows (that rely on NTLM auth) will not get us far.
+However, this machine explicitly disables NTLM, so most “classic” SMB/RPC workflows (that rely on NTLM auth) will not get us far.
 The goal here is to confirm that **NTLM-based authentication is a dead end** and pivot to Kerberos-first enumeration.
 
 Examples of what was attempted (NTLM-based auth paths are not viable here):
@@ -131,7 +131,7 @@ rpcclient -U '' -N 10.129.11.205
 ### 2.2 LDAP Probing
 
 LDAP is a good companion to Kerberos on DC-like hosts: it can leak the domain naming context, hostnames, and user/group objects.
-Even if it yields â€œnothing interestingâ€, it helps validate the realm and confirms weâ€™re looking at an AD environment.
+Even if it yields “nothing interesting”, it helps validate the realm and confirms we’re looking at an AD environment.
 
 ```bash
 ldapsearch -x -H ldap://10.129.11.205 -s base namingcontexts
@@ -146,7 +146,7 @@ ldapsearch -x -H ldap://10.129.11.205 -b 'DC=scrm,DC=local'
 ### 2.3 Web Hints (NTLM Disabled + User Discovery)
 
 When a Windows target hosts an intranet site, it often contains policy notes and internal hints (usernames, helpdesk process, password reset practices).
-Here, the web app is also the cleanest place to confirm the â€œNTLM disabledâ€ constraint.
+Here, the web app is also the cleanest place to confirm the “NTLM disabled” constraint.
 
 Browse the intranet site:
 
@@ -156,11 +156,11 @@ firefox http://10.129.11.205/
 
 ![ntlm disabled](screenshots/scrambled_07_website.png)
 
-The websiteâ€™s IT services messaging indicates NTLM auth is disabled, steering the run toward Kerberos.
+The website’s IT services messaging indicates NTLM auth is disabled, steering the run toward Kerberos.
 
 ![ntlm disabled](screenshots/scrambled_08_web_ntlm_disabled.png)
 
-From â€œContact ITâ€ in the web UI, a username is revealed:
+From “Contact IT” in the web UI, a username is revealed:
 
 ![contact it user](screenshots/scrambled_09_contact_it_user.png)
 
@@ -181,13 +181,13 @@ kerbrute userenum --dc 10.129.11.205 -d scrm.local users
 
 ## 3. Foothold
 
-### 3.1 Kerberos-focused Service Material â†’ Public Share â†’ SQL Creds
+### 3.1 Kerberos-focused Service Material → Public Share → SQL Creds
 
 With NTLM out of the picture, we lean on Kerberos-compatible tooling.
 In this run, the web hints lead to a valid user whose credentials follow the IT policy pattern (**password == username**).
 That user is then used to access SMB over Kerberos and pull a PDF containing SQL-related hints.
 
-First, try the â€œpassword == usernameâ€ pattern suggested by the IT policy, then use Kerberos-authenticated SMB access:
+First, try the “password == username” pattern suggested by the IT policy, then use Kerberos-authenticated SMB access:
 
 ```bash
 impacket-smbclient -k scrm.local/ksimpson:ksimpson@DC1.scrm.local
@@ -320,20 +320,20 @@ xp_cmdshell "dir /r /s root.txt"
 
 ![nt authority system logged](screenshots/scrambled_26_user_root_flags.png)
 
-ðŸ **User flag obtained**
-ðŸ **Root flag obtained**
+🏁 **User flag obtained**
+🏁 **Root flag obtained**
 
 ---
 
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 
 ## Summary of Exploitation Path
 
-1. `nmap` discovery â†’ AD/DC services + IIS + MSSQL + custom `4411`
-2. Web hints (`NTLM disabled`) â†’ user discovery (`ksimpson`)
-3. SMB access with Kerberos â†’ retrieve PDF â†’ SQL service-account material
+1. `nmap` discovery → AD/DC services + IIS + MSSQL + custom `4411`
+2. Web hints (`NTLM disabled`) → user discovery (`ksimpson`)
+3. SMB access with Kerberos → retrieve PDF → SQL service-account material
 4. Kerberos-based Silver Ticket to reach MSSQL as `Administrator`
 5. MSSQL `xp_cmdshell` for execution; retrieve flags via SQL `OPENROWSET` in your run
 6. (Optional reference) official solve path continues through port `4411` for a SYSTEM shell

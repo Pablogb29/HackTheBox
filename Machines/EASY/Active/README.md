@@ -239,7 +239,7 @@ crackmapexec smb 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18'
 
 ![crackmapexec_svg_tgs](screenshots/crackmapexec_svg_tgs.png)
 
-Login successful â€” the credentials are valid.
+Login successful — the credentials are valid.
 
 ### 2.7 Explore Shares with Credentials
 
@@ -267,7 +267,7 @@ smbmap -H 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' --download U
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 > **Group Policy Preferences (GPP)** is a feature in Active Directory that allowed administrators to set local users and passwords via Group Policy Objects. These credentials were stored in XML files (like `Groups.xml`) under SYSVOL and encrypted using a known AES key published by Microsoft.
 > 
@@ -316,12 +316,12 @@ Special attention should be given to administrative or privileged groups such as
 
 Group enumeration provides insight into privilege levels, delegation, and trust relationships.
 
-> ðŸ’¡ **Tip:** Since we have valid credentials, other tools like `ldapsearch`, `BloodHound`, or `CrackMapExec` with LDAP enumeration modules could be used for more in-depth reconnaissance. However, for this machine, the RPC enumeration is enough to identify the next attack vector: **Kerberoasting**.
+> 💡 **Tip:** Since we have valid credentials, other tools like `ldapsearch`, `BloodHound`, or `CrackMapExec` with LDAP enumeration modules could be used for more in-depth reconnaissance. However, for this machine, the RPC enumeration is enough to identify the next attack vector: **Kerberoasting**.
 
 ---
-### 3.3 Kerberos SPN Attack â€” SPN Enumeration
+### 3.3 Kerberos SPN Attack — SPN Enumeration
 
-We attempt to enumerate and request service tickets using **Impacketâ€™s GetUserSPNs.py** tool:
+We attempt to enumerate and request service tickets using **Impacket’s GetUserSPNs.py** tool:
 
 ```bash
 impacket-GetUserSPNs active.htb/SVC_TGS:GPPstillStandingStrong2k18 -request
@@ -329,9 +329,9 @@ impacket-GetUserSPNs active.htb/SVC_TGS:GPPstillStandingStrong2k18 -request
 
 ![tgs_admin_user](screenshots/tgs_admin_user.png)
 
-â— **Issue:** The command fails due to a **time synchronization mismatch** between our attacking machine and the Domain Controller.
+❗ **Issue:** The command fails due to a **time synchronization mismatch** between our attacking machine and the Domain Controller.
 
-Kerberos is time-sensitive â€” by default, it allows a maximum of 5 minutes of clock skew.
+Kerberos is time-sensitive — by default, it allows a maximum of 5 minutes of clock skew.
 
 ### 3.4 Fixing Time Synchronisation
 
@@ -363,7 +363,7 @@ john --wordlist=/usr/share/wordlists/rockyou.txt --format=krb5tgs hash
 
 ![admin_credentials](screenshots/admin_credentials.png)
 
-âœ… **Password found:**
+✅ **Password found:**
 
 - **Username:** `Administrator`
 - **Password:** `Ticketmaster1968`
@@ -378,13 +378,13 @@ crackmapexec smb 10.10.10.100 -u 'Administrator' -p 'Ticketmaster1968'
 
 ![crackmapexec_admin](screenshots/crackmapexec_admin.png)
 
-Administrator authentication successful â€” **full domain compromise achieved**.
+Administrator authentication successful — **full domain compromise achieved**.
 
-> ðŸ’¡ **Kerberoasting Explained**
+> 💡 **Kerberoasting Explained**
 > 
 > - Kerberos allows domain users to request service tickets for services linked to SPNs.
-> - These tickets are encrypted with the service accountâ€™s NTLM hash.
-> - If the service accountâ€™s password is weak, it can be cracked offline without alerting the target system.
+> - These tickets are encrypted with the service account’s NTLM hash.
+> - If the service account’s password is weak, it can be cracked offline without alerting the target system.
 > 
 > **Mitigation:**
 > - Use strong, random passwords for service accounts.
@@ -419,18 +419,18 @@ psexec.py active.htb/Administrator:Ticketmaster1968@10.10.10.100 cmd.exe
 
 A remote shell is obtained as `NT AUTHORITY\SYSTEM`.
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **SMB Null Session** â†’ Access to SYSVOL/Replication share.
-2. **Group Policy Preferences (GPP)** â†’ Decrypted `SVC_TGS` credentials from Groups.xml.
-3. **Kerberoasting** â†’ Extracted and cracked TGS ticket for `Administrator`.
-4. **psexec.py** â†’ Remote SYSTEM shell on the Domain Controller.
+1. **SMB Null Session** → Access to SYSVOL/Replication share.
+2. **Group Policy Preferences (GPP)** → Decrypted `SVC_TGS` credentials from Groups.xml.
+3. **Kerberoasting** → Extracted and cracked TGS ticket for `Administrator`.
+4. **psexec.py** → Remote SYSTEM shell on the Domain Controller.
 
 ## Defensive Recommendations
 

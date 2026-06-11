@@ -126,7 +126,7 @@ Registered a new account:
 
 ![register](screenshots/register.png)
 
-Once logged in, the dashboard allows uploading `.cif` files â€” suggesting potential **file parsing vulnerabilities**.
+Once logged in, the dashboard allows uploading `.cif` files — suggesting potential **file parsing vulnerabilities**.
 
 ![dashboard_upload](screenshots/dashboard_upload.png)
 
@@ -138,7 +138,7 @@ The application accepts only `.cif` files and provides a sample in **here** butt
 ![cif_example](screenshots/cif_example.png)
 
 Researching CIF file parsing, we found a security advisory for `pymatgen` CIF parser:  
-[GHSA-vgv8-5cpj-qj2f](https://github.com/advisories/GHSA-vgv8-5cpj-qj2f) â€” **Arbitrary Code Execution** vulnerability.
+[GHSA-vgv8-5cpj-qj2f](https://github.com/advisories/GHSA-vgv8-5cpj-qj2f) — **Arbitrary Code Execution** vulnerability.
 
 We crafted a malicious `.cif` file containing a reverse shell payload:
 
@@ -205,7 +205,7 @@ ssh rosa@10.10.11.38
 
 ![ssh_rosa](screenshots/ssh_rosa.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -237,7 +237,7 @@ Refresh the website:
 
 Accessing the local service showed an internal web application.  
 
-This version of `aiohttp` (3.9.1) is vulnerable to **Path Traversal â†’ Arbitrary File Read** ([CVE-2024-23334](https://nvd.nist.gov/vuln/detail/cve-2024-23334)).
+This version of `aiohttp` (3.9.1) is vulnerable to **Path Traversal → Arbitrary File Read** ([CVE-2024-23334](https://nvd.nist.gov/vuln/detail/cve-2024-23334)).
 
 ```bash
 curl --path-as-is http://127.0.0.1:9999
@@ -257,20 +257,20 @@ curl --path-as-is http://127.0.0.1:8080/assets/../../../root/root.txt
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Found CIF file upload in Flask app.  
-2. **pymatgen RCE** â†’ Uploaded malicious `.cif` to obtain reverse shell.  
-3. **Credential Harvesting** â†’ Extracted `rosa`'s hash from SQLite DB and cracked it.  
-4. **SSH Access** â†’ Logged in as `rosa`.  
-5. **Port Forwarding** â†’ Accessed internal web app on port 8080.  
-6. **aiohttp LFI** â†’ Read `/root/root.txt` via path traversal.
+1. **Web Enumeration** → Found CIF file upload in Flask app.  
+2. **pymatgen RCE** → Uploaded malicious `.cif` to obtain reverse shell.  
+3. **Credential Harvesting** → Extracted `rosa`'s hash from SQLite DB and cracked it.  
+4. **SSH Access** → Logged in as `rosa`.  
+5. **Port Forwarding** → Accessed internal web app on port 8080.  
+6. **aiohttp LFI** → Read `/root/root.txt` via path traversal.
 
 ---
 ## Defensive Recommendations

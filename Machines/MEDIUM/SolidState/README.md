@@ -34,7 +34,7 @@ Privilege escalation comes from a **root cron job** executing `python /opt/tmp.p
 ## Skills Learned
 
 - Abusing **default credentials** on Apache James admin (4555)
-- Pivoting **James â†’ POP3 â†’ SSH** using mailbox contents
+- Pivoting **James → POP3 → SSH** using mailbox contents
 - Escaping **`rbash`** by invoking an allowed shell explicitly
 - PrivEsc via **writable script executed by root cron**
 
@@ -102,7 +102,7 @@ nmap -sCV -p22,25,80,110,119,4555 10.129.15.149 -oN targeted
 |---|---|---|
 | 22/tcp | SSH | OpenSSH 7.4p1 (Debian) |
 | 80/tcp | HTTP | Apache 2.4.25 (Debian); low-content landing page in this run |
-| 25/tcp | SMTP | Mail stack present (NSE scripts didnâ€™t fully handshake in this run) |
+| 25/tcp | SMTP | Mail stack present (NSE scripts didn’t fully handshake in this run) |
 | 110/tcp | POP3 | Used later to read mail after resetting password |
 | 119/tcp | NNTP | Present but not required for this solve |
 | 4555/tcp | James admin | Identifies as **JAMES Remote Administration Tool 2.3.2** |
@@ -134,9 +134,9 @@ This yields a verified user list (including `mindy`) and the ability to reset he
 
 In practice, most accounts either had **no mail** or their messages were not useful for gaining access. The only user whose mailbox contained actionable information for lateral access was **`mindy`**.
 
-### 2.2 POP3 mailbox (110) â†’ SSH creds
+### 2.2 POP3 mailbox (110) → SSH creds
 
-After resetting `mindy`â€™s password in James, we can log into POP3 as `mindy` and check her inbox.
+After resetting `mindy`’s password in James, we can log into POP3 as `mindy` and check her inbox.
 
 ```bash
 telnet 10.129.15.149 110
@@ -178,7 +178,7 @@ cat /home/mindy/user.txt
 
 ![rbash + user flag](screenshots/solidstate_foothold_ssh_rbash_userflag_01.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 Because this is an `rbash`-style restriction and SSH allows us to specify a command, we can attempt to bypass it by invoking `bash` directly in the SSH command line. If the restriction is not enforced correctly, this drops us into a more functional shell:
 
@@ -196,7 +196,7 @@ Even with a usable shell, privileges are still limited: there is no direct root 
 
 ### 4.1 Discover root cron activity
 
-To work comfortably, it helps to stabilize the shell (PTY) and then enumerate. While exploring the filesystem, youâ€™ll notice many actions fail (missing binaries / restricted environment), and there is no obvious `sudo` path. At that point the key question becomes:
+To work comfortably, it helps to stabilize the shell (PTY) and then enumerate. While exploring the filesystem, you’ll notice many actions fail (missing binaries / restricted environment), and there is no obvious `sudo` path. At that point the key question becomes:
 
 **Is root executing anything periodically (cron) that we can modify?**
 
@@ -225,10 +225,10 @@ cat /root/root.txt
 
 ![root flag](screenshots/solidstate_privesc_tmp_py_suid_bash_rootflag_01.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

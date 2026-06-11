@@ -123,7 +123,7 @@ nmap --script http-enum -p80 10.10.10.93 -oN webScan
 
 ![webscan](screenshots/webscan.png)
 
-No useful results were found. Letâ€™s manually browse the site:
+No useful results were found. Let’s manually browse the site:
 
 ![web](screenshots/web.png)
 
@@ -131,7 +131,7 @@ The site only shows a static image of Merlin.
 
 #### 2.1 Directory Fuzzing
 
-Using **wfuzz** with SecLists dictionary letâ€™s try fuzzing for `.aspx` files:
+Using **wfuzz** with SecLists dictionary let’s try fuzzing for `.aspx` files:
 
 ```bash
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -z list,asp-aspx http://10.10.10.93/FUZZ.FUZ2Z
@@ -240,7 +240,7 @@ tcpdump -i tun0 icmp -n
 
 ![webconfig_ping_received](screenshots/webconfig_ping_received.png)
 
-âœ… Confirmed RCE.
+✅ Confirmed RCE.
 
 ### 3.4 Reverse Shell
 
@@ -273,7 +273,7 @@ Upload and trigger the payload:
 
 ![shell_received](screenshots/shell_received.png)
 
-âœ… Reverse shell obtained as `merlin`.
+✅ Reverse shell obtained as `merlin`.
 
 ---
 ## 4. Privilege Escalation
@@ -288,7 +288,7 @@ dir -Force
 
 ![user_flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ### 4.2 Escalation with JuicyPotato
@@ -337,20 +337,20 @@ type C:\Users\Administrator\Desktop\root.txt
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Found upload form at `transfer.aspx`.  
-2. **Extension Fuzzing** â†’ `.config` accepted.  
-3. **web.config Upload** â†’ Achieved RCE.  
-4. **Reverse Shell** â†’ Using Nishang payload.  
-5. **Privilege Escalation** â†’ Exploited `SeImpersonatePrivilege` with JuicyPotato.  
-6. **Root Access** â†’ Obtained SYSTEM shell.
+1. **Web Enumeration** → Found upload form at `transfer.aspx`.  
+2. **Extension Fuzzing** → `.config` accepted.  
+3. **web.config Upload** → Achieved RCE.  
+4. **Reverse Shell** → Using Nishang payload.  
+5. **Privilege Escalation** → Exploited `SeImpersonatePrivilege` with JuicyPotato.  
+6. **Root Access** → Obtained SYSTEM shell.
 
 ---
 ## Defensive Recommendations

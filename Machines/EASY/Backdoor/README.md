@@ -90,9 +90,9 @@ nmap -sCV -p22,80,1337 10.10.11.125 -oN targeted
 
 Open ports:
 
-- 22 â†’ SSH
-- 80 â†’ HTTP
-- 1337 â†’ Unknown service (later identified as `gdbserver`)
+- 22 → SSH
+- 80 → HTTP
+- 1337 → Unknown service (later identified as `gdbserver`)
 
 ---
 
@@ -149,8 +149,8 @@ http://10.10.11.125/wp-content/plugins/
 
 Two plugins found:
 
-- `hello.php` â†’ Uninteresting
-- `ebook-download` â†’ Contains `readme.txt` revealing version **1.1**.
+- `hello.php` → Uninteresting
+- `ebook-download` → Contains `readme.txt` revealing version **1.1**.
 
 ---
 
@@ -189,7 +189,7 @@ Database credentials found but not directly useful.
 ### 3.1 What is `/proc/{PID}/cmdline`?
 
 In Linux, `/proc/{PID}/cmdline` contains the full command line used to start a process, without spaces between arguments.  
-This makes it useful for identifying how a process was launched â€” in our case, to investigate port 1337.
+This makes it useful for identifying how a process was launched — in our case, to investigate port 1337.
 
 ```bash
 head -c 200 /proc/self/cmdline | tr '\0' ' '; echo
@@ -275,7 +275,7 @@ Run exploit and connect, obtaining a shell as `user`.
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 
@@ -331,20 +331,20 @@ TERM=xterm screen -x root/
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Identified WordPress 5.8.1 with `ebook-download` plugin.
-2. **File Disclosure** â†’ Retrieved `/wp-config.php` via plugin LFI.
-3. **/proc Enumeration** â†’ Discovered active `gdbserver` instance on port 1337.
-4. **gdbserver Exploitation** â†’ Remote code execution and user shell.
-5. **Privilege Escalation** â†’ Attached to root `screen` session for full control.
+1. **Web Enumeration** → Identified WordPress 5.8.1 with `ebook-download` plugin.
+2. **File Disclosure** → Retrieved `/wp-config.php` via plugin LFI.
+3. **/proc Enumeration** → Discovered active `gdbserver` instance on port 1337.
+4. **gdbserver Exploitation** → Remote code execution and user shell.
+5. **Privilege Escalation** → Attached to root `screen` session for full control.
 
 ---
 

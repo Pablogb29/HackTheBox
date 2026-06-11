@@ -121,7 +121,7 @@ smbclient -L //10.10.10.4 -N
 
 Searching for known vulnerabilities affecting Windows XP SMB, we find **MS08-067**:  
 
-ðŸ”— [Microsoft Security Bulletin MS08-067](https://support.microsoft.com/en-us/topic/ms08-067-vulnerability-in-server-service-could-allow-remote-code-execution-ac7878fc-be69-7143-472d-2507a179cd15)  
+🔗 [Microsoft Security Bulletin MS08-067](https://support.microsoft.com/en-us/topic/ms08-067-vulnerability-in-server-service-could-allow-remote-code-execution-ac7878fc-be69-7143-472d-2507a179cd15)  
 
 This vulnerability allows **Remote Code Execution** via the SMB service.  
 We exploit it using Metasploit:
@@ -146,7 +146,7 @@ exploit
 
 ![exploit_run](screenshots/exploit_run.png)
 
-âœ… We obtain a shell with SYSTEM privileges.
+✅ We obtain a shell with SYSTEM privileges.
 
 ---
 ## 4. Privilege Escalation
@@ -161,7 +161,7 @@ type C:\Documents and Settings\john\Desktop\user.txt
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ### 4.2 Root Flag
@@ -174,18 +174,18 @@ type C:\Documents and Settings\Administrator\Desktop\root.txt
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Detected SMB services on Windows XP  
-2. **Vulnerability Identification** â†’ MS08-067 SMB exploit available  
-3. **Metasploit Exploitation** â†’ Remote code execution as SYSTEM  
-4. **Post-Exploitation** â†’ Retrieved user and root flags  
+1. **Port Scanning** → Detected SMB services on Windows XP  
+2. **Vulnerability Identification** → MS08-067 SMB exploit available  
+3. **Metasploit Exploitation** → Remote code execution as SYSTEM  
+4. **Post-Exploitation** → Retrieved user and root flags  
 
 ---
 ## Defensive Recommendations

@@ -15,7 +15,7 @@ tags: ["htb", "writeup", "linux", "easy", "ruby", "pdfkit", "cve-2022-25765", "d
 ---
 ## Synopsis
 
-Precious exposes a Ruby web app that converts a supplied URL into a PDF. By fingerprinting the PDF generator and leveraging a vulnerable `pdfkit` version, itâ€™s possible to achieve command execution and obtain a shell as `ruby`. From there, plaintext Bundler credentials allow SSH access as `henry` to retrieve the user flag. Finally, `henry` can run a root-owned Ruby script via `sudo` that unsafely performs `YAML.load` on a user-controlled `dependencies.yml`, enabling root code execution and retrieval of the root flag.
+Precious exposes a Ruby web app that converts a supplied URL into a PDF. By fingerprinting the PDF generator and leveraging a vulnerable `pdfkit` version, it’s possible to achieve command execution and obtain a shell as `ruby`. From there, plaintext Bundler credentials allow SSH access as `henry` to retrieve the user flag. Finally, `henry` can run a root-owned Ruby script via `sudo` that unsafely performs `YAML.load` on a user-controlled `dependencies.yml`, enabling root code execution and retrieval of the root flag.
 
 ---
 ## Skills Required
@@ -199,7 +199,7 @@ cat user.txt
 
 ![user flag](screenshots/htb-precious_14_ssh_henry_userflag.png)
 
-ðŸ **User flag obtained:** `b06a034a21ae8e8e0a01d40a2cd866c1`
+🏁 **User flag obtained:** `b06a034a21ae8e8e0a01d40a2cd866c1`
 
 ---
 ### 4.2 Root via unsafe YAML deserialization (sudo Ruby script)
@@ -256,10 +256,10 @@ sudo /usr/bin/ruby /opt/update_dependencies.rb
 
 ![root flag](screenshots/htb-precious_17_root_flag.png)
 
-ðŸ **Root flag obtained:** `ffe19116013590e7552249a0976bc9f0`
+🏁 **Root flag obtained:** `ffe19116013590e7552249a0976bc9f0`
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

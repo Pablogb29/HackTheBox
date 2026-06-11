@@ -258,7 +258,7 @@ into table Pwned.data
 
 ![Adminer SQL executed](screenshots/adminer_sql_command_execued.png)
 
-And now letâ€™s check the data of the table:
+And now let’s check the data of the table:
 
 ```bash
 select output from data;
@@ -268,11 +268,11 @@ select output from data;
 
 We extract new credentials from the table.
 
-Letâ€™s try the credentials on SSH as `waldo`:
+Let’s try the credentials on SSH as `waldo`:
 
 ![User flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -436,19 +436,19 @@ cat root.txt
 
 ![Root flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Directory Fuzzing** â†’ Discovered sensitive files (`contacts.txt`, `credentials.txt`).  
-2. **FTP Access** â†’ Retrieved internal files and database credentials.  
-3. **Adminer Exploitation** â†’ Used a misconfiguration to extract further credentials.  
-4. **SSH Access** â†’ Logged in as `waldo`.  
-5. **Python Hijack** â†’ Escalated to root via malicious `shutil.py`.  
+1. **Directory Fuzzing** → Discovered sensitive files (`contacts.txt`, `credentials.txt`).  
+2. **FTP Access** → Retrieved internal files and database credentials.  
+3. **Adminer Exploitation** → Used a misconfiguration to extract further credentials.  
+4. **SSH Access** → Logged in as `waldo`.  
+5. **Python Hijack** → Escalated to root via malicious `shutil.py`.  
 
 ---
 ## Defensive Recommendations

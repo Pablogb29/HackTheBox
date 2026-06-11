@@ -72,13 +72,13 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.108 -oG allPorts
 ```
 
 **Options explained:**
-- `-p-` â†’ Scan all 65,535 ports.  
-- `--open` â†’ Show only ports that are open.  
-- `-sS` â†’ SYN scan, fast and stealthy.  
-- `--min-rate 5000` â†’ Send at least 5000 packets per second for speed.  
-- `-n` â†’ Skip DNS resolution.  
-- `-Pn` â†’ Treat host as alive (skip host discovery).  
-- `-oG allPorts` â†’ Output in grepable format for later parsing.
+- `-p-` → Scan all 65,535 ports.  
+- `--open` → Show only ports that are open.  
+- `-sS` → SYN scan, fast and stealthy.  
+- `--min-rate 5000` → Send at least 5000 packets per second for speed.  
+- `-n` → Skip DNS resolution.  
+- `-Pn` → Treat host as alive (skip host discovery).  
+- `-oG allPorts` → Output in grepable format for later parsing.
 
 ![allports.png](screenshots/allports.png)
 
@@ -104,9 +104,9 @@ nmap -sC -sV -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49
 ```
 
 **Options explained:**
-- `-sC` â†’ Run default NSE scripts for common service enumeration.  
-- `-sV` â†’ Detect service versions.  
-- `-oN targeted` â†’ Output results in a readable file.
+- `-sC` → Run default NSE scripts for common service enumeration.  
+- `-sV` → Detect service versions.  
+- `-oN targeted` → Output results in a readable file.
 
 
 ![targeted.png](screenshots/targeted.png)
@@ -234,7 +234,7 @@ evil-winrm -i 10.10.11.108 -u 'svc-printer' -p '1edFg43012!!'
 
 ![user_flag.png](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 
@@ -242,7 +242,7 @@ evil-winrm -i 10.10.11.108 -u 'svc-printer' -p '1edFg43012!!'
 
 ### 4.1 Privilege & Group Enumeration
 
-We check the accountâ€™s privileges and group memberships:
+We check the account’s privileges and group memberships:
 
 ```bash
 whoami /priv
@@ -313,7 +313,7 @@ sc.exe stop VMTools
 sc.exe start VMTools
 ```
 
-ðŸ **Root flag obtained**  
+🏁 **Root flag obtained**  
 ![root_flag.png](screenshots/root_flag.png)
 
 ---
@@ -359,18 +359,18 @@ migrate <PID>
 ```
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified SMB, HTTP, LDAP, and WinRM.  
-2. **Web Enumeration** â†’ Found printer panel with LDAP settings.  
-3. **Credential Capture** â†’ Used rogue LDAP server to obtain `svc-printer` credentials.  
-4. **WinRM Access** â†’ Logged in with captured credentials.  
-5. **Privilege Escalation** â†’ Abused Server Operators group to run arbitrary binary as SYSTEM.  
-6. **Alternative** â†’ Meterpreter payload for more stable access.
+1. **Port Scanning** → Identified SMB, HTTP, LDAP, and WinRM.  
+2. **Web Enumeration** → Found printer panel with LDAP settings.  
+3. **Credential Capture** → Used rogue LDAP server to obtain `svc-printer` credentials.  
+4. **WinRM Access** → Logged in with captured credentials.  
+5. **Privilege Escalation** → Abused Server Operators group to run arbitrary binary as SYSTEM.  
+6. **Alternative** → Meterpreter payload for more stable access.
 
 ---
 

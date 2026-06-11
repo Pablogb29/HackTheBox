@@ -255,15 +255,15 @@ Retrieve the flags:
 - Root flag from `C:\Users\Administrator\Desktop`
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **FTP Anonymous Login** â†’ Gained access to upload files into the webroot.  
-2. **Webshell Upload** â†’ Obtained RCE as `iis apppool\web`.  
-3. **Metasploit Reverse Shell** â†’ Established a stable Meterpreter session.  
-4. **KiTrap0D Exploit (MS10-015)** â†’ Escalated privileges to Administrator.  
+1. **FTP Anonymous Login** → Gained access to upload files into the webroot.  
+2. **Webshell Upload** → Obtained RCE as `iis apppool\web`.  
+3. **Metasploit Reverse Shell** → Established a stable Meterpreter session.  
+4. **KiTrap0D Exploit (MS10-015)** → Escalated privileges to Administrator.  
 
 ---
 ## Defensive Recommendations

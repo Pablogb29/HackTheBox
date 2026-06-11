@@ -149,7 +149,7 @@ cat user.txt
 
 ![web shell and user flag](screenshots/bashed_10_user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -240,10 +240,10 @@ Root flag:
 
 ![root escalation](screenshots/bashed_14_root_suid_bash.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

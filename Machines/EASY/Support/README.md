@@ -207,7 +207,7 @@ Open **`UserInfo.exe`** in **ILSpy** (or equivalent) and locate the logic behind
 
 ![ilspy search](screenshots/support_14_ilspy_search.png)
 
-We found a password. LetÂ´s create a decoder in python to obtain the result:
+We found a password. Let's create a decoder in python to obtain the result:
 
 ```python
 import base64
@@ -289,7 +289,7 @@ ldapsearch -x -H ldap://10.129.11.142 -D 'ldap@support.htb' -w 'nvEfEK16^1aM4$e7
 
 ![ldapsearch support](screenshots/support_22_ldapsearch_support.png)
 
-**Recovered (from notes):** the **`info`** attribute contains **`Ironside47pleasure40Watchful`**, treated as **`support`**â€™s password for validation.
+**Recovered (from notes):** the **`info`** attribute contains **`Ironside47pleasure40Watchful`**, treated as **`support`**’s password for validation.
 
 Confirm **WinRM** access for **`support`**:
 
@@ -310,7 +310,7 @@ evil-winrm -i 10.129.11.142 -u 'support' -p 'Ironside47pleasure40Watchful'
 
 ![evil-winrm user](screenshots/support_24_evil_winrm_user.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -330,7 +330,7 @@ We need to escalate to **Domain Administrator**. For **AD** environments, **Bloo
 ---
 ### 4.2 Domain Enumeration with BloodHound
 
-We collect **AD** data from our attacking machine using the **Python**-based collector â€” no need to upload anything to the victim:
+We collect **AD** data from our attacking machine using the **Python**-based collector — no need to upload anything to the victim:
 
 ```bash
 bloodhound-python -d support.htb -u 'support' -p 'Ironside47pleasure40Watchful' -gc dc.support.htb -c all -ns 10.129.11.142
@@ -356,9 +356,9 @@ Using the **Pathfinding** feature from `SUPPORT@SUPPORT.HTB` to `ADMINISTRATOR@S
 
 The graph supports the privilege path used next (membership and **DC**-object abuse):
 
-1. **support** â†’ MemberOf â†’ **Shared Support Accounts**  
-2. **Shared Support Accounts** â†’ effective control over the **domain controller** computer account (abuse path toward **resource-based constrained delegation** / **`msDS-AllowedToActOnBehalfOfOtherIdentity`**)  
-3. **Objective** â†’ obtain a **Kerberos** path to act as **Administrator** on **`cifs`** / the **DC** (see **Â§4.3**â€“**Â§4.4**)
+1. **support** → MemberOf → **Shared Support Accounts**  
+2. **Shared Support Accounts** → effective control over the **domain controller** computer account (abuse path toward **resource-based constrained delegation** / **`msDS-AllowedToActOnBehalfOfOtherIdentity`**)  
+3. **Objective** → obtain a **Kerberos** path to act as **Administrator** on **`cifs`** / the **DC** (see **§4.3**–**§4.4**)
 
 ---
 ### 4.3 RBCD setup
@@ -383,9 +383,9 @@ Get-DomainComputer SERVICEA
 
 ![get domain computer](screenshots/support_30_get_domain_computer_servicea.png)
 
-**Prerequisite for `impacket-rbcd -action write`:** the **computer object** **`SERVICEA$`** must **exist in AD** (created by **`New-MachineAccount`** above). If **`Get-DomainComputer SERVICEA`** returns nothing or errors, **stop** â€” rerun **Powermad** **`New-MachineAccount`** in **WinRM** until it succeeds, then confirm again. **`impacket-rbcd`** looks up **`-delegate-from`** by **sAMAccountName**; **`User not found in LDAP: SERVICEA$`** means the machine account was never created, was deleted, or uses a **different name** (use that exact **`â€¦$`** name in **`-delegate-from`**).
+**Prerequisite for `impacket-rbcd -action write`:** the **computer object** **`SERVICEA$`** must **exist in AD** (created by **`New-MachineAccount`** above). If **`Get-DomainComputer SERVICEA`** returns nothing or errors, **stop** — rerun **Powermad** **`New-MachineAccount`** in **WinRM** until it succeeds, then confirm again. **`impacket-rbcd`** looks up **`-delegate-from`** by **sAMAccountName**; **`User not found in LDAP: SERVICEA$`** means the machine account was never created, was deleted, or uses a **different name** (use that exact **`…$`** name in **`-delegate-from`**).
 
-From **Kali**, set **`msDS-AllowedToActOnBehalfOfOtherIdentity`** on the **DC** computer account so **`SERVICEA$`** may delegate to it â€” use **`impacket-rbcd`**. Authenticate as **`support`**; **`-delegate-to`** is the **DC** **sAMAccountName** (commonly **`DC$`**).
+From **Kali**, set **`msDS-AllowedToActOnBehalfOfOtherIdentity`** on the **DC** computer account so **`SERVICEA$`** may delegate to it — use **`impacket-rbcd`**. Authenticate as **`support`**; **`-delegate-to`** is the **DC** **sAMAccountName** (commonly **`DC$`**).
 
 Write **RBCD** (attribute may log as empty before the new **ACE** is merged):
 
@@ -441,7 +441,7 @@ impacket-psexec -k dc.support.htb
 
 ![psexec](screenshots/support_34_psexec_shell.png)
 
-Retrieve **`root.txt`** from **Administrator**â€™s desktop:
+Retrieve **`root.txt`** from **Administrator**’s desktop:
 
 ```cmd
 cd C:\Users\Administrator\Desktop
@@ -450,17 +450,17 @@ type root.txt
 
 ![root flag](screenshots/support_35_root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
 1. Enumerate **AD** services; identify **`support-tools`** over **SMB** and domain **support.htb**.  
 2. Recover **`ldap`** credentials from **`UserInfo`** via **ILSpy** + **Python** decoding.  
-3. Enumerate **RPC**/**LDAP**; recover **`support`**â€™s password from **`info`**; **WinRM** as **`support`**.  
+3. Enumerate **RPC**/**LDAP**; recover **`support`**’s password from **`info`**; **WinRM** as **`support`**.  
 4. **BloodHound CE** (**`bloodhound-python`** + ingest) to map paths; configure **RBCD** on the **DC** using a created machine account; obtain a **Kerberos** ticket as **Administrator** and **psexec** to **SYSTEM**.
 
 ---

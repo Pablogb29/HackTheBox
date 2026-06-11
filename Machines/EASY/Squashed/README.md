@@ -7,14 +7,14 @@ tags: ["htb", "writeup", "linux", "easy", "nfs", "php", "x11", "keepassxc", "web
 # HTB - Squashed
 
 **IP Address:** `10.129.11.87`  
-**OS:** Linux (Ubuntu â€” OpenSSH 8.2p1 / Apache 2.4.41 per `nmap`)  
+**OS:** Linux (Ubuntu — OpenSSH 8.2p1 / Apache 2.4.41 per `nmap`)  
 **Difficulty:** Easy  
 **Tags:** #Linux #NFS #PHP #X11 #KeePassXC #Web
 
 ---
 ## Synopsis
 
-Squashed is an easy Linux machine where **NFS** exports **`/var/www/html`** and **`/home/ross`** with permissive client mapping. The web docroot is owned by **UID 2017** on the server, so a local user with the same numeric UID can **read and write** the live Apache tree over NFS, drop a **PHP** webshell, and obtain a shell as **`alex`**. A second export exposes **`ross`**â€™s home (**UID 1001**), including **`.Xauthority`**. With **`ross`** logged into a graphical session on **`:0`**, **`alex`** can reuse that cookie (fixing **`HOME`/`XAUTHORITY`** in a reverse shell), capture the desktop with **`xwd`**, and read a **KeePassXC** entry that reveals the **root** password for **`su`**. Files dropped in the web root may be removed after a short interval (cleanup), so the webshell may need to be recreated via NFS.
+Squashed is an easy Linux machine where **NFS** exports **`/var/www/html`** and **`/home/ross`** with permissive client mapping. The web docroot is owned by **UID 2017** on the server, so a local user with the same numeric UID can **read and write** the live Apache tree over NFS, drop a **PHP** webshell, and obtain a shell as **`alex`**. A second export exposes **`ross`**’s home (**UID 1001**), including **`.Xauthority`**. With **`ross`** logged into a graphical session on **`:0`**, **`alex`** can reuse that cookie (fixing **`HOME`/`XAUTHORITY`** in a reverse shell), capture the desktop with **`xwd`**, and read a **KeePassXC** entry that reveals the **root** password for **`su`**. Files dropped in the web root may be removed after a short interval (cleanup), so the webshell may need to be recreated via NFS.
 
 ---
 ## Skills Required
@@ -96,7 +96,7 @@ cat targeted
 | 22/tcp | ssh | OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 |
 | 80/tcp | http | Apache 2.4.41 (Ubuntu), title **Built Better** |
 | 111/tcp | rpcbind | RPC portmapper |
-| 2049/tcp | nfs | NFS 3â€“4; `mountd` / `nlockmgr` on high ports per `rpcinfo` |
+| 2049/tcp | nfs | NFS 3–4; `mountd` / `nlockmgr` on high ports per `rpcinfo` |
 | 36443, 37605, 46585, 47331/tcp | rpc | `nlockmgr` / `mountd` (supporting NFS) |
 
 ---
@@ -136,7 +136,7 @@ sudo mount -t nfs -o vers=3 10.129.11.87:/var/www/html /mnt/squashed_www
 
 ![local mount](screenshots/squashed_07_local_mount.png)
 
-On the attacking host, **`/mnt/squashed_ross`** appears as **1001:1001** (readable tree including **`Documents/Passwords.kdbx`** and **`.Xauthority`**). **`/mnt/squashed_www`** is **`drwxr-xr--`** owned by **2017** / group **www-data** â€” access as a normal local user fails until you impersonate **UID 2017**.
+On the attacking host, **`/mnt/squashed_ross`** appears as **1001:1001** (readable tree including **`Documents/Passwords.kdbx`** and **`.Xauthority`**). **`/mnt/squashed_www`** is **`drwxr-xr--`** owned by **2017** / group **www-data** — access as a normal local user fails until you impersonate **UID 2017**.
 
 ```bash
 cd /mnt
@@ -153,7 +153,7 @@ We have a `Passwords.kdbx` file. Let's see if we can open it:
 
 We need credentials, **so** we cannot continue with this path until we **achieve** credentials (or recover them later from the GUI path).
 
-We also have **`.Xauthority`** in **`ross`**â€™s home, but it is owned by **UID 1001**. Come back to this after you get a shell via another path.
+We also have **`.Xauthority`** in **`ross`**’s home, but it is owned by **UID 1001**. Come back to this after you get a shell via another path.
 
 Separately, we get **permission denied** on `squashed_www/` because the directory is owned by **UID 2017** on the server:
 
@@ -223,7 +223,7 @@ cat /home/alex/user.txt
 
 ![user flag](screenshots/squashed_14_user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -264,7 +264,7 @@ Example `xxd` output (binary MIT-MAGIC-COOKIE data; hostname **`squashed.htb`** 
 00000030: fe88 a248 835e 9212 75                   ...H.^..u
 ```
 
-The cookie is not meaningful in `cat`, but the file is readable as **UID 1001**. **`alex`** on the target cannot read **`ross`**â€™s home directly, so exfiltrate **`.Xauthority`** to **`/home/alex/`** via a short-lived HTTP fetch from the attacker:
+The cookie is not meaningful in `cat`, but the file is readable as **UID 1001**. **`alex`** on the target cannot read **`ross`**’s home directly, so exfiltrate **`.Xauthority`** to **`/home/alex/`** via a short-lived HTTP fetch from the attacker:
 
 ```bash
 # attacker
@@ -337,20 +337,20 @@ cd /root && cat root.txt
 
 ![su root root txt](screenshots/squashed_21_su_root_root_txt.png)
 
-ðŸ **Root flag obtained** 
+🏁 **Root flag obtained** 
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **TCP scan** â†’ SSH, HTTP, **NFS/RPC** surface identified.  
-2. **`showmount`** â†’ exports **`/home/ross`** and **`/var/www/html`**.  
+1. **TCP scan** → SSH, HTTP, **NFS/RPC** surface identified.  
+2. **`showmount`** → exports **`/home/ross`** and **`/var/www/html`**.  
 3. **Mount** shares; observe **UID 1001** (ross home) and **UID 2017** (docroot).  
-4. **Local UID 2017** â†’ write **`cmd.php`** â†’ **RCE** as **`alex`** â†’ reverse shell â†’ **`user.txt`**.  
-5. **Local UID 1001** â†’ read **`.Xauthority`** â†’ exfil to target â†’ fix **`HOME`/`XAUTHORITY`** â†’ **X11** access to **`:0`**.  
-6. **`xwd`** screenshot â†’ **KeePassXC** reveals **root** password â†’ **`su`** â†’ **`root.txt`**.
+4. **Local UID 2017** → write **`cmd.php`** → **RCE** as **`alex`** → reverse shell → **`user.txt`**.  
+5. **Local UID 1001** → read **`.Xauthority`** → exfil to target → fix **`HOME`/`XAUTHORITY`** → **X11** access to **`:0`**.  
+6. **`xwd`** screenshot → **KeePassXC** reveals **root** password → **`su`** → **`root.txt`**.
 
 ---
 ## Defensive Recommendations

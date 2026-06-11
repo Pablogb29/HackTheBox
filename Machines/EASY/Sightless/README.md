@@ -208,7 +208,7 @@ Dumping `/etc/shadow`:
 
 We found password hashes for **michael** and **root**.  
 
-Michaelâ€™s hash:
+Michael’s hash:
 
 ```bash
 $6$mG3Cp2VPGY.FDE8u$KVWVIHzqTzhOSYkzJIpFc2EsgmqvPa.q2Z9bLUU6tlBWaEwuxCDEP9UFHIXNUcF2rBnsaFYuJa6DUh/pL2IJD/
@@ -240,7 +240,7 @@ ssh michael@10.10.11.32
 
 ![user_flag](screenshots/user_flag.png)  
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -341,7 +341,7 @@ lsof -i:8081
 
 ![lsof](screenshots/lsof.png)  
 
-Edit `/etc/hosts` to point `admin.sightless.htb` â†’ `127.0.0.1`.
+Edit `/etc/hosts` to point `admin.sightless.htb` → `127.0.0.1`.
 
 ![etc_hosts](screenshots/etc_hosts.png)  
 
@@ -356,7 +356,7 @@ We are now inside **Froxlor**, a free and open-source web hosting control panel 
 
 After exploring the interface, nothing obvious appeared exploitable. A quick search for known vulnerabilities in Froxlor revealed the following advisory:
 
-ðŸ”— [GHSA-x525-54hf-xr53](https://github.com/advisories/GHSA-x525-54hf-xr53)
+🔗 [GHSA-x525-54hf-xr53](https://github.com/advisories/GHSA-x525-54hf-xr53)
 
 This vulnerability describes a **Cross-Site Scripting (XSS)** issue in the login form. To exploit it, we need to craft and inject a malicious payload.
 
@@ -403,7 +403,7 @@ On reload, we gain access with credentials:
 ---
 ### 4.4 FTP Access via Froxlor
 
-Inside Froxlor, under customers â†’ `web1`, we can reset FTP credentials.
+Inside Froxlor, under customers → `web1`, we can reset FTP credentials.
 
 Set new password:
 
@@ -471,23 +471,23 @@ ssh -i id_rsa root@10.10.11.32
 
 ![root_flag](screenshots/root_flag.png)  
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Discovered SSH, FTP, and Web.  
-2. **SQLPad RCE** â†’ Achieved foothold inside Docker.  
-3. **Hash Cracking** â†’ Extracted and cracked Michaelâ€™s SHA-512 hash.  
-4. **SSH Access** â†’ Logged in as Michael.  
-5. **Local Port Forwarding** â†’ Accessed hidden Froxlor panel.  
-6. **XSS Exploitation** â†’ Gained admin panel access.  
-7. **FTP Reset** â†’ Retrieved KeePass database.  
-8. **KeePass Cracking** â†’ Extracted root credentials and private key.  
-9. **Root Access** â†’ Logged in and retrieved final flag.  
+1. **Port Scanning** → Discovered SSH, FTP, and Web.  
+2. **SQLPad RCE** → Achieved foothold inside Docker.  
+3. **Hash Cracking** → Extracted and cracked Michael’s SHA-512 hash.  
+4. **SSH Access** → Logged in as Michael.  
+5. **Local Port Forwarding** → Accessed hidden Froxlor panel.  
+6. **XSS Exploitation** → Gained admin panel access.  
+7. **FTP Reset** → Retrieved KeePass database.  
+8. **KeePass Cracking** → Extracted root credentials and private key.  
+9. **Root Access** → Logged in and retrieved final flag.  
 
 ---
 ## Defensive Recommendations

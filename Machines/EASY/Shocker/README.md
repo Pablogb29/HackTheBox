@@ -188,7 +188,7 @@ cat /home/shelly/user.txt
 
 ![reverse-shell-user](screenshots/shocker_17_reverse_shell_user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -221,10 +221,10 @@ cat /root/root.txt
 
 ![sudo-perl-root](screenshots/shocker_19_sudo_perl_root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

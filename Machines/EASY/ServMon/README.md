@@ -15,7 +15,7 @@ tags: ["htb", "writeup", "windows", "easy", "ftp,", "nvms-1000,", "directorytrav
 ## Synopsis
 
 ServMon is an easy Windows machine exposing **FTP**, **HTTP (NVMS-1000)**, and later **NSClient++** on **8443**.  
-Anonymous FTP reveals usernames and hints that **Passwords.txt** sits on another userâ€™s desktop.  
+Anonymous FTP reveals usernames and hints that **Passwords.txt** sits on another user’s desktop.  
 **Directory traversal** in NVMS-1000 is abused (via **Burp Suite**) to read that file offline, yielding pairs for **SMB password spraying**. Valid credentials allow **SSH** as a low-privileged user.  
 **Privilege escalation** targets **NSClient++**: recover the web UI password locally, reach the UI through **SSH local port forwarding**, then use **external scripts** to execute a payload and obtain **`NT AUTHORITY\SYSTEM`**.
 
@@ -109,7 +109,7 @@ cat targeted
 | 135 | MSRPC | Windows RPC |
 | 139 / 445 | SMB | Microsoft-DS |
 | 8443 | HTTPS | NSClient++ web interface (seen later) |
-| 49664â€“49670 | high ports | RPC / dynamic endpoints |
+| 49664–49670 | high ports | RPC / dynamic endpoints |
 
 ---
 ## 2. Service Enumeration
@@ -128,7 +128,7 @@ Use username `anonymous` with a blank or email-style password when prompted.
 
 Two home directories appear: **Nadine** (file `Confidential.txt`) and **Nathan** (file `Notes_to_do.txt`). Pull both files locally and read them.
 
-**Confidential.txt** states that **Passwords.txt** was left on Nathanâ€™s desktop:
+**Confidential.txt** states that **Passwords.txt** was left on Nathan’s desktop:
 
 ![Confidential.txt](screenshots/ServMon_07_cat_confidential_txt.png)
 
@@ -152,7 +152,7 @@ Open http://10.10.10.184 in the browser (NVMS-1000).
 
 ### 3.1 NVMS-1000 Directory Traversal (SearchSploit)
 
-**SearchSploit** lists a **directory traversal** issue affecting **NVMS-1000**. Reviewing the advisory text explains how paths can escape the web rootâ€”useful for reading files we cannot reach over FTP alone:
+**SearchSploit** lists a **directory traversal** issue affecting **NVMS-1000**. Reviewing the advisory text explains how paths can escape the web root—useful for reading files we cannot reach over FTP alone:
 
 ```bash
 searchsploit NVMS
@@ -181,7 +181,7 @@ Capture a baseline **`GET /Pages/login.htm`** request in **Repeater** (or send f
 
 ![Burp Repeater login.htm request](screenshots/ServMon_12_burp_repeater_login_htm.png)
 
-Modify the path to walk up the directory tree and read a known Windows fileâ€”**`win.ini`** confirms the traversal works:
+Modify the path to walk up the directory tree and read a known Windows file—**`win.ini`** confirms the traversal works:
 
 ![Burp Repeater traversal win.ini](screenshots/ServMon_13_burp_repeater_traversal_win_ini.png)
 
@@ -189,7 +189,7 @@ Repeat with a traversal targeting the Windows **`hosts`** file under **`System32
 
 ![Burp Repeater traversal hosts](screenshots/ServMon_14_burp_repeater_traversal_hosts.png)
 
-Then point the traversal at **Nathanâ€™s** desktop file **`Passwords.txt`** and recover its contents in the response body:
+Then point the traversal at **Nathan’s** desktop file **`Passwords.txt`** and recover its contents in the response body:
 
 ![Burp Repeater traversal Passwords.txt](screenshots/ServMon_15_burp_repeater_traversal_passwords_txt.png)
 
@@ -230,7 +230,7 @@ After the SSH session lands in a Windows shell, confirm the user context and rea
 
 ![cmd.exe whoami and user.txt](screenshots/ServMon_20_cmd_user_txt.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -269,14 +269,14 @@ nscp web --password --display
 
 ![nscp web password display](screenshots/ServMon_25_nscp_web_password_display.png)
 
-Direct browser access to **`https://10.10.10.184:8443`** from the attacker machine returns **403** even with the correct passwordâ€”access is effectively treated as non-local:
+Direct browser access to **`https://10.10.10.184:8443`** from the attacker machine returns **403** even with the correct password—access is effectively treated as non-local:
 
 ![NSClient++ login 403 forbidden](screenshots/ServMon_26_nsclient_login_403_forbidden.png)
 
 ---
 ### 4.3 SSH Local Port Forwarding
 
-Open a tunnel so local **8443** forwards to the targetâ€™s loopback **8443**, then browse **`https://localhost:8443`** on the attacker host:
+Open a tunnel so local **8443** forwards to the target’s loopback **8443**, then browse **`https://localhost:8443`** on the attacker host:
 
 ```bash
 sshpass -p 'L1k3B1gBut7s@W0rk' ssh Nadine@10.10.10.184 -L 8443:127.0.0.1:8443
@@ -302,7 +302,7 @@ cat evil.bat
 
 ![netcat zip and evil.bat staging](screenshots/ServMon_29_netcat_evil_bat_staging.png)
 
-Serve the folder with **Impacket**â€™s **`smbserver`**. A straight anonymous guest pull from the target can fail under **guest logon** hardening:
+Serve the folder with **Impacket**’s **`smbserver`**. A straight anonymous guest pull from the target can fail under **guest logon** hardening:
 
 ```bash
 impacket-smbserver smbFolder $(pwd) -smb2support
@@ -335,7 +335,7 @@ Start a listener on the port configured in **`evil.bat`** (here, **443**):
 nc -nlvp 443
 ```
 
-In **NSClient++** (**Settings â†’ External Scripts â†’ Scripts**), add a script mapping (this run uses key **`reverse`** pointing at **`c:\temp\evil.bat`**), then **Changes â†’ Save configuration** and **Control â†’ Reload**:
+In **NSClient++** (**Settings → External Scripts → Scripts**), add a script mapping (this run uses key **`reverse`** pointing at **`c:\temp\evil.bat`**), then **Changes → Save configuration** and **Control → Reload**:
 
 ![NSClient++ external script reverse](screenshots/ServMon_33_nsclient_external_script_reverse.png)
 
@@ -343,10 +343,10 @@ When the job fires, the listener receives a shell as **`NT AUTHORITY\SYSTEM`**; 
 
 ![nc listener SYSTEM shell and root.txt](screenshots/ServMon_34_nc_listener_system_shell_root_txt.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
@@ -354,7 +354,7 @@ When the job fires, the listener receives a shell as **`NT AUTHORITY\SYSTEM`**; 
 1. Enumerate open ports; identify **FTP**, **HTTP (NVMS-1000)**, **SMB**, **SSH**, and **HTTPS (NSClient++)**.  
 2. Use anonymous **FTP** for usernames and hints; browse **NVMS-1000** on port **80**.  
 3. Exploit **directory traversal** (documented in **SearchSploit**) via **Burp Repeater** to read **`Passwords.txt`**.  
-4. Build **`users.txt`** / **`passwords.txt`** and spray **SMB** with **CrackMapExec**; obtain **Nadine**â€™s password and access via **SSH**.  
+4. Build **`users.txt`** / **`passwords.txt`** and spray **SMB** with **CrackMapExec**; obtain **Nadine**’s password and access via **SSH**.  
 5. Recover the **NSClient++** web password with **`nscp`**, reach the UI through **SSH local port forwarding**, enable **external scripts**, transfer **netcat** and a batch payload, then execute to get **SYSTEM**.
 
 ---

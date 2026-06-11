@@ -26,7 +26,7 @@ SteamCloud exposed a Kubernetes/minikube control plane and an anonymously access
 ## Skills Learned
 
 - Enumerating kubelet to discover pods and test exec/RCE
-- Pivoting from a podâ€™s service account to authenticated `kubectl`
+- Pivoting from a pod’s service account to authenticated `kubectl`
 - Using `hostPath` mounts (when allowed) to access host filesystems
 
 ---
@@ -139,7 +139,7 @@ cat user.txt
 
 ![user_flag](screenshots/steamcloud_10_user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ### 3.2 Extract service account token and CA
@@ -206,10 +206,10 @@ cat root.txt
 
 ![root_flag](screenshots/steamcloud_19_root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

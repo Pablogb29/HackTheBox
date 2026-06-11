@@ -232,7 +232,7 @@ cat /home/wizard/user.txt
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -283,18 +283,18 @@ sudo PATH=/tmp:$PATH /opt/cleanup.sh
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Found `photobomb.js` containing credentials.  
-2. **Command Injection** â†’ Exploited vulnerable `filetype` parameter in download request.  
-3. **Reverse Shell** â†’ Gained foothold with injected payload.  
-4. **Privilege Escalation** â†’ Abused PATH Hijacking in `cleanup.sh` to gain root.
+1. **Web Enumeration** → Found `photobomb.js` containing credentials.  
+2. **Command Injection** → Exploited vulnerable `filetype` parameter in download request.  
+3. **Reverse Shell** → Gained foothold with injected payload.  
+4. **Privilege Escalation** → Abused PATH Hijacking in `cleanup.sh` to gain root.
 
 ---
 ## Defensive Recommendations

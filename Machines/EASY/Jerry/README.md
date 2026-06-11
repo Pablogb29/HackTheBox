@@ -112,7 +112,7 @@ Accessing the site shows the default Tomcat landing page with links to **Manager
 ---
 ## 3. Foothold
 
-### 3.1 Manager App (403) â†’ Default Credentials
+### 3.1 Manager App (403) → Default Credentials
 
 Clicking **Manager App** prompts for authentication. Providing invalid credentials triggers a **403 Access Denied** response that includes an example `tomcat-users.xml` snippet with:
 
@@ -126,7 +126,7 @@ Using `tomcat:s3cret` successfully authenticates to the Tomcat Web Application M
 ![manager_authenticated](screenshots/jerry_08_manager_authenticated.png)
 
 ---
-### 3.2 WAR Upload â†’ Reverse Shell
+### 3.2 WAR Upload → Reverse Shell
 
 Tomcat Manager supports deploying applications via WAR upload. I generated a JSP reverse shell WAR with `msfvenom`:
 
@@ -162,11 +162,11 @@ type \"2 for the price of 1.txt\"
 
 ![system_shell_flags](screenshots/jerry_11_system_shell_flags.png)
 
-ðŸ **User flag obtained**  
-ðŸ **Root flag obtained**
+🏁 **User flag obtained**  
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

@@ -14,7 +14,7 @@ tags: ["htb", "writeup", "windows", "medium", "activedirectory", "ldap", "rpc", 
 ---
 ## Synopsis
 
-Monteverde is a Windows Active Directory host exposing the typical DC surface (**DNS/Kerberos/LDAP/SMB/WinRM**). Anonymous **LDAP** and **RPC** enumeration reveal a small user list, and the domainâ€™s lockout policy allows safe password spraying. A service account is found using **password = username**, which grants read access to a sensitive SMB share (`users$`). A file in a user profile (`azure.xml`) contains a password that reuses for a WinRM-capable user (`mhope`), giving an interactive shell and the user flag. Privilege escalation comes from **Azure AD Connect / Azure AD Sync** being installed; decrypting the sync credentials yields **domain administrator** access and the root flag.
+Monteverde is a Windows Active Directory host exposing the typical DC surface (**DNS/Kerberos/LDAP/SMB/WinRM**). Anonymous **LDAP** and **RPC** enumeration reveal a small user list, and the domain’s lockout policy allows safe password spraying. A service account is found using **password = username**, which grants read access to a sensitive SMB share (`users$`). A file in a user profile (`azure.xml`) contains a password that reuses for a WinRM-capable user (`mhope`), giving an interactive shell and the user flag. Privilege escalation comes from **Azure AD Connect / Azure AD Sync** being installed; decrypting the sync credentials yields **domain administrator** access and the root flag.
 
 ---
 ## Skills Required
@@ -169,11 +169,11 @@ Using RPC, we were able to obtain a list of domain users that we could not enume
 ---
 ## 3. Foothold
 
-### 3.1 Password spray â€” password == username
+### 3.1 Password spray — password == username
 
 With `lockoutThreshold: 0`, a targeted spray is low risk. Our first hypothesis is a simple lab pattern: **password == username**.
 
-We start with `GetNPUsers` to quickly check if any of the users are AS-REP roastable (it is a fast â€œfree winâ€ check when it hits). In this run, the intended path is not AS-REP roasting, so we pivot to a direct authentication spray.
+We start with `GetNPUsers` to quickly check if any of the users are AS-REP roastable (it is a fast “free win” check when it hits). In this run, the intended path is not AS-REP roasting, so we pivot to a direct authentication spray.
 
 ```bash
 impacket-GetNPUsers MEGABANK.LOCAL/ -no-pass -usersfile users.txt
@@ -222,7 +222,7 @@ The `azure_uploads` and `users$` share is readable. Browse it and pull interesti
 ![azure xml get](screenshots/monteverde_15_smbclient_get_azure_xml.png)
 
 ---
-### 3.3 `azure.xml` password reuse â†’ WinRM as `mhope`
+### 3.3 `azure.xml` password reuse → WinRM as `mhope`
 
 After retrieving `azure.xml`, inspect it locally for any stored credentials before testing them against other services:
 
@@ -255,7 +255,7 @@ cat user.txt
 
 ![user flag](screenshots/monteverde_23_user_txt.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -325,7 +325,7 @@ C:\Windows\Temp\privesc\AdDecrypt.exe -FullSQL
 | `MEGABANK.LOCAL\\administrator` | `d0m@in4dminyeah!` |
 
 ---
-### 4.3 WinRM as `administrator` â†’ root
+### 4.3 WinRM as `administrator` → root
 
 These credentials should work over WinRM:
 
@@ -347,20 +347,20 @@ type root.txt
 
 ![root flag](screenshots/monteverde_26_root_txt.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Nmap** â†’ DC-like services (LDAP/SMB/WinRM/ADWS) identified.  
-2. **LDAP + RPC null session** â†’ user list + `lockoutThreshold: 0` (safe spraying).  
-3. **Password spray** â†’ `SABatchJobs:SABatchJobs` (SMB valid).  
-4. **SMB shares** â†’ `users$` readable â†’ `mhope\\azure.xml` leaks password.  
-5. **Password reuse** â†’ `mhope` WinRM â†’ `user.txt`.  
-6. **Azure AD Sync** â†’ decrypt sync credentials â†’ `administrator` WinRM â†’ `root.txt`.
+1. **Nmap** → DC-like services (LDAP/SMB/WinRM/ADWS) identified.  
+2. **LDAP + RPC null session** → user list + `lockoutThreshold: 0` (safe spraying).  
+3. **Password spray** → `SABatchJobs:SABatchJobs` (SMB valid).  
+4. **SMB shares** → `users$` readable → `mhope\\azure.xml` leaks password.  
+5. **Password reuse** → `mhope` WinRM → `user.txt`.  
+6. **Azure AD Sync** → decrypt sync credentials → `administrator` WinRM → `root.txt`.
 
 ---
 ## Defensive Recommendations

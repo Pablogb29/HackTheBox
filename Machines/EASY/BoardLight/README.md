@@ -139,7 +139,7 @@ The `crm.board.htb` site presented a Dolibarr 17.0.0 login page. Default credent
 ![dolibarr-admin](screenshots/boardlight_09_dolibarr_admin_access_denied.png)
 
 ---
-### 3.2 Authenticated RCE (CVE-2023-30253) â†’ `www-data` shell
+### 3.2 Authenticated RCE (CVE-2023-30253) → `www-data` shell
 
 Since the application was Dolibarr 17.0.0 and I had admin access, I used a CVE-2023-30253 exploit path to trigger command execution and catch a reverse shell:
 
@@ -180,7 +180,7 @@ cat ~/user.txt
 
 ![user-flag](screenshots/boardlight_13_ssh_larissa_user_flag.png)
 
-ðŸ **User flag obtained**: `ab7c93d89c67d44f0ec795b12e3a92f4`
+🏁 **User flag obtained**: `ab7c93d89c67d44f0ec795b12e3a92f4`
 
 ---
 ## 4. Privilege Escalation
@@ -239,15 +239,15 @@ cat /root/root.txt
 
 ![root-flag](screenshots/boardlight_18_root_shell_root_flag.png)
 
-ðŸ **Root flag obtained**: `ba794719088d3d8f3e46679abe7d1b26`
+🏁 **Root flag obtained**: `ba794719088d3d8f3e46679abe7d1b26`
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. Enumerate HTTP and identify `board.htb` â†’ discover `crm.board.htb` Dolibarr vhost.
+1. Enumerate HTTP and identify `board.htb` → discover `crm.board.htb` Dolibarr vhost.
 2. Log into Dolibarr with default credentials (`admin:admin`) and exploit authenticated RCE (CVE-2023-30253) to get a `www-data` shell.
 3. Extract DB credentials from Dolibarr `conf.php` and reuse the password to SSH as `larissa` and grab `user.txt`.
 4. Enumerate SUID binaries, identify vulnerable Enlightenment SUID helper, and escalate to root via CVE-2022-37706 to read `root.txt`.

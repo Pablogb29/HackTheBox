@@ -205,7 +205,7 @@ cat user.txt
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ### 4.2 Root Flag
@@ -219,23 +219,23 @@ cat root.txt
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Detected SMB on port 445 with Windows 7 Professional SP1.  
-2. **Vulnerability Scanning** â†’ Confirmed MS17-010 (EternalBlue) vulnerability.  
-3. **Metasploit Exploitation** â†’ Used `exploit/windows/smb/ms17_010_eternalblue` for remote code execution.  
-4. **Post-Exploitation** â†’ Retrieved user and root flags with SYSTEM privileges.
+1. **Port Scanning** → Detected SMB on port 445 with Windows 7 Professional SP1.  
+2. **Vulnerability Scanning** → Confirmed MS17-010 (EternalBlue) vulnerability.  
+3. **Metasploit Exploitation** → Used `exploit/windows/smb/ms17_010_eternalblue` for remote code execution.  
+4. **Post-Exploitation** → Retrieved user and root flags with SYSTEM privileges.
 
 ---
 ## Defensive Recommendations
 
-- Apply Microsoftâ€™s security patch for **MS17-010** on all affected systems.  
+- Apply Microsoft’s security patch for **MS17-010** on all affected systems.  
 - Disable or restrict access to SMBv1 where possible.  
 - Segment the network to limit exposure of critical services.  
 - Monitor and alert for anomalous SMB traffic patterns.

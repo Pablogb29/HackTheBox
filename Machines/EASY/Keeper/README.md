@@ -16,7 +16,7 @@ tags: ["htb", "writeup", "easy", "ssh,", "nginx,", "requesttracker,", "keepass,"
 
 Keeper is an easy Linux machine where initial access is gained by discovering default credentials in a **Request Tracker** instance, sourced from a public GitHub repository.  
 Those credentials lead to the admin panel, where an SSH password for another user is found.  
-Post-compromise, sensitive files are exfiltrated â€” notably a KeePass database and memory dump â€” allowing extraction of the master password and retrieval of a PuTTY private key, which is converted for SSH login as `root`.
+Post-compromise, sensitive files are exfiltrated — notably a KeePass database and memory dump — allowing extraction of the master password and retrieval of a PuTTY private key, which is converted for SSH login as `root`.
 
 ---
 ## Skills Required
@@ -30,7 +30,7 @@ Post-compromise, sensitive files are exfiltrated â€” notably a KeePass data
 
 - Identifying hardcoded credentials in public repositories  
 - Extracting KeePass master passwords from memory dumps  
-- Handling `.ppk` â†’ OpenSSH key conversion  
+- Handling `.ppk` → OpenSSH key conversion  
 - Using `netcat` for secure file transfers
 
 ---
@@ -86,11 +86,11 @@ nmap -sCV -p22,80 10.10.11.227 -oN targeted
 ![targeted](screenshots/targeted.png)
 
 **Findings:**  
-- **SSH** â†’ OpenSSH 8.9p1 Ubuntu 3ubuntu0.3  
+- **SSH** → OpenSSH 8.9p1 Ubuntu 3ubuntu0.3  
 
 ![launchpad_openssh](screenshots/launchpad_openssh.png)
 
-- **HTTP** â†’ nginx 1.18.0
+- **HTTP** → nginx 1.18.0
 
 ![launchpad_nginx](screenshots/launchpad_nginx.png)
 
@@ -122,7 +122,7 @@ Now, the site loads a login page:
 ---
 ### 2.2 Identifying Request Tracker
 
-We see â€œRequest Trackerâ€ branding:  
+We see “Request Tracker” branding:  
 
 ![request_tracker](screenshots/request_tracker.png)
 
@@ -153,7 +153,7 @@ Access granted.
 ---
 ### 2.4 Enumerating Admin Panel
 
-Inside `Admin â†’ Users`, we locate another user:  
+Inside `Admin → Users`, we locate another user:  
 
 ![web_admin_users_section](screenshots/web_admin_users_section.png)
 
@@ -179,7 +179,7 @@ ssh lnorgaard@10.10.11.227
 
 ![ssh_lnorgaard](screenshots/ssh_lnorgaard.png)
 
-ðŸ **User flag obtained**.
+🏁 **User flag obtained**.
 
 ---
 ## 4. Privilege Escalation
@@ -259,7 +259,7 @@ python3 poc.py KeePassDumpFull.dmp
 
 ![wget_poc_py](screenshots/wget_poc_py.png)
 
-Output contains special characters. Searching reveals itâ€™s Danish: `RÃ¸dgrÃ¸d med FlÃ¸de`.
+Output contains special characters. Searching reveals it’s Danish: `RÃ¸dgrÃ¸d med FlÃ¸de`.
 
 ![password_search](screenshots/password_search.png)
 
@@ -283,7 +283,7 @@ First, we verify that common direct escalation paths are **not** viable:
 ssh root@10.10.11.227
 ```
 
-- SSH login as `root` using a password â†’ rejected.  
+- SSH login as `root` using a password → rejected.  
     ![ssh_root](screenshots/ssh_root.png)
 
 - From the compromised user, trying to elevate locally (e.g., `sudo`/`su`) also fails.  
@@ -318,20 +318,20 @@ ssh -i id_rsa root@10.10.11.227
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Identified Request Tracker.  
-2. **Credential Discovery** â†’ Default creds from GitHub repo.  
-3. **Admin Panel Access** â†’ Found SSH creds for `lnorgaard`.  
-4. **File Exfiltration** â†’ Retrieved KeePass DB.  
-5. **Password Extraction** â†’ KeePass dump exploit recovered master password.  
-6. **SSH Key Conversion** â†’ Logged in as root.
+1. **Web Enumeration** → Identified Request Tracker.  
+2. **Credential Discovery** → Default creds from GitHub repo.  
+3. **Admin Panel Access** → Found SSH creds for `lnorgaard`.  
+4. **File Exfiltration** → Retrieved KeePass DB.  
+5. **Password Extraction** → KeePass dump exploit recovered master password.  
+6. **SSH Key Conversion** → Logged in as root.
 
 ---
 ## Defensive Recommendations

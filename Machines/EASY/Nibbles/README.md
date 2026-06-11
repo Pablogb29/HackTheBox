@@ -261,7 +261,7 @@ Result:
 ![root flag](screenshots/nibbles_23_root_flag.png)
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path

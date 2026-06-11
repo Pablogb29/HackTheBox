@@ -14,7 +14,7 @@ tags: ["htb", "writeup", "windows", "easy", "ad", "smb", "mssql", "powerview", "
 ---
 ## Synopsis
 
-EscapeTwo is an easy Windows AD chain where initial provided credentials (`rose`) allow SMB share access and retrieval of a corrupted Excel file containing domain and SQL credentials. Valid SMB users from that file (e.g. `oscar`) can enumerate the rest of the domain via **RPC** (`enumdomusers`); merging those names with the Excel accounts builds a **`users.txt`** suitable for spraying. After gaining SQL `sa` access on MSSQL and executing commands as `sql_svc`, reading SQL setup artifacts leaks **`SQLSVCPASSWORD`**, which **reuses** onto the domain user **`ryan`** for **WinRM**â€”a hit you only see once **`ryan` is in the spray list** (he does not appear in the recovered spreadsheet). From `ryan`, we abuse ACL rights over `ca_svc`, reset its password, and then exploit a vulnerable ADCS template (`DunderMifflinAuthentication`) with Certipy to request a certificate as `administrator`, recover the admin hash, and obtain full domain compromise.
+EscapeTwo is an easy Windows AD chain where initial provided credentials (`rose`) allow SMB share access and retrieval of a corrupted Excel file containing domain and SQL credentials. Valid SMB users from that file (e.g. `oscar`) can enumerate the rest of the domain via **RPC** (`enumdomusers`); merging those names with the Excel accounts builds a **`users.txt`** suitable for spraying. After gaining SQL `sa` access on MSSQL and executing commands as `sql_svc`, reading SQL setup artifacts leaks **`SQLSVCPASSWORD`**, which **reuses** onto the domain user **`ryan`** for **WinRM**—a hit you only see once **`ryan` is in the spray list** (he does not appear in the recovered spreadsheet). From `ryan`, we abuse ACL rights over `ca_svc`, reset its password, and then exploit a vulnerable ADCS template (`DunderMifflinAuthentication`) with Certipy to request a certificate as `administrator`, recover the admin hash, and obtain full domain compromise.
 
 ---
 ## Skills Required
@@ -248,9 +248,9 @@ EXEC xp_cmdshell 'type C:\SQL2019\ExpressAdv_ENU\sql-Configuration.INI';
 ![mssql-sql-configuration-ini](screenshots/escapetwo_20_mssql_sql_configuration_ini.png)
 
 Important leak:
-- `SQLSVCPASSWORD="WqSZAF6CysDQbGb3"` (install-time password for **`SEQUEL\sql_svc`**; also reused elsewhereâ€”see WinRM below)
+- `SQLSVCPASSWORD="WqSZAF6CysDQbGb3"` (install-time password for **`SEQUEL\sql_svc`**; also reused elsewhere—see WinRM below)
 
-Spray that password against **`users.txt`** from **Â§2.4** (must include **`ryan`** and other domain accounts from **`enumdomusers`**, not only the Excel file):
+Spray that password against **`users.txt`** from **§2.4** (must include **`ryan`** and other domain accounts from **`enumdomusers`**, not only the Excel file):
 
 ```bash
 crackmapexec smb 10.129.232.128 -u users.txt -p 'WqSZAF6CysDQbGb3' --continue-on-success
@@ -271,7 +271,7 @@ evil-winrm -i 10.129.232.128 -u ryan -p 'WqSZAF6CysDQbGb3'
 
 ![user-txt](screenshots/escapetwo_22_user_txt.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -361,18 +361,18 @@ Retrieve root flag from:
 - `C:\Users\Administrator\Desktop\root.txt`
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **SMB with `rose`** â†’ Accounting share and corrupted Excel; recovered SQL and departmental user passwords.
-2. **LDAP root DSE** â†’ confirm **`sequel.htb`**; **`rpcclient` / `enumdomusers` as `oscar`** â†’ full domain username set; **`users.txt`** = Excel + `rose` + enumerated accounts (**`ryan`**, **`sql_svc`**, **`ca_svc`**, etc.).
-3. **MSSQL `sa`** â†’ `xp_cmdshell` as `sql_svc`; read **`sql-Configuration.INI`** â†’ **`SQLSVCPASSWORD`** reused by **`ryan`** on **WinRM** (visible only when **`ryan` is in the spray list**).
-4. **WinRM as `ryan`** â†’ user flag; abused ACLs on the CA object and reset `ca_svc`.
-5. **Certipy ESC4 / template** â†’ certificate as `administrator@sequel.htb`; pass-the-hash and **Domain Admin**.
+1. **SMB with `rose`** → Accounting share and corrupted Excel; recovered SQL and departmental user passwords.
+2. **LDAP root DSE** → confirm **`sequel.htb`**; **`rpcclient` / `enumdomusers` as `oscar`** → full domain username set; **`users.txt`** = Excel + `rose` + enumerated accounts (**`ryan`**, **`sql_svc`**, **`ca_svc`**, etc.).
+3. **MSSQL `sa`** → `xp_cmdshell` as `sql_svc`; read **`sql-Configuration.INI`** → **`SQLSVCPASSWORD`** reused by **`ryan`** on **WinRM** (visible only when **`ryan` is in the spray list**).
+4. **WinRM as `ryan`** → user flag; abused ACLs on the CA object and reset `ca_svc`.
+5. **Certipy ESC4 / template** → certificate as `administrator@sequel.htb`; pass-the-hash and **Domain Admin**.
 
-**Artifacts (internal):** initial `rose` / `KxEPkKe6R8su`; Excel users; RPC user list; `sa` / `MSSQLP@ssw0rd!`; SQL setup password â†’ `ryan`; `ca_svc` after reset; Administrator hash from Certipy.
+**Artifacts (internal):** initial `rose` / `KxEPkKe6R8su`; Excel users; RPC user list; `sa` / `MSSQLP@ssw0rd!`; SQL setup password → `ryan`; `ca_svc` after reset; Administrator hash from Certipy.
 
 - **User flag:** `d9630bb88b8d3b5964c88dd375516b08`
 - **Root:** retrieved as `Administrator` (hash omitted here).

@@ -131,9 +131,9 @@ searchsploit -x windows/remote/39161.py
 - HFS interprets template macros like `{.exec|...}`, leading to RCE.  
 
 **Exploit Flow (3 HTTP requests):**  
-1. `save|` â†’ Create `C:\Users\Public\script.vbs` to download `nc.exe`.  
-2. `exec|` â†’ Run `cscript.exe script.vbs` to fetch the binary.  
-3. `exec|` â†’ Launch `nc.exe -e cmd.exe` to connect back.  
+1. `save|` → Create `C:\Users\Public\script.vbs` to download `nc.exe`.  
+2. `exec|` → Run `cscript.exe script.vbs` to fetch the binary.  
+3. `exec|` → Launch `nc.exe -e cmd.exe` to connect back.  
 
 ---
 ## 3. Foothold
@@ -161,14 +161,14 @@ A Meterpreter session is established.
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
 
 ### 4.1 Local enumeration
 
-Attempting access to Administratorâ€™s directory:
+Attempting access to Administrator’s directory:
 
 ![cd_admin_denied](screenshots/cd_admin_denied.png)
 
@@ -182,7 +182,7 @@ whoami /all
 
 ![kostas_info](screenshots/kostas_info.png)
 
-Minimal privileges. Letâ€™s gather system info:
+Minimal privileges. Let’s gather system info:
 
 ```bash
 systeminfo
@@ -208,7 +208,7 @@ python3 wes.py systeminfo.txt
 
 The screenshot below shows just a portion of the exploits identified for this Windows version.
 
-One promising exploit is **MS16-098 (CVE-2016-0099)** â†’ [ExploitDB 41020](https://www.exploit-db.com/exploits/41020).
+One promising exploit is **MS16-098 (CVE-2016-0099)** → [ExploitDB 41020](https://www.exploit-db.com/exploits/41020).
 
 Instead of compiling, download the prebuilt binary from [Offensive Security GitLab](https://gitlab.com/exploit-database/exploitdb-bin-sploits/-/blob/main/bin-sploits/41020.exe):
 
@@ -224,18 +224,18 @@ Execute the binary:
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified only port 80 open.  
-2. **Web Enumeration** â†’ Discovered HFS 2.3 vulnerable to CVE-2014-6287.  
-3. **Exploitation** â†’ Used Metasploit HFS exploit for a reverse shell.  
-4. **Privilege Escalation** â†’ Identified kernel exploit with WES-NG, executed precompiled binary, escalated to SYSTEM.  
+1. **Port Scanning** → Identified only port 80 open.  
+2. **Web Enumeration** → Discovered HFS 2.3 vulnerable to CVE-2014-6287.  
+3. **Exploitation** → Used Metasploit HFS exploit for a reverse shell.  
+4. **Privilege Escalation** → Identified kernel exploit with WES-NG, executed precompiled binary, escalated to SYSTEM.  
 
 ---
 ## Defensive Recommendations

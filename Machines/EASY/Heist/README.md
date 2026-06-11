@@ -14,7 +14,7 @@ tags: ["htb", "writeup", "windows", "easy", "smb,", "winrm,", "cisco,", "passwor
 ---
 ## Synopsis
 
-Heist is an easy Windows machine that demonstrates credential harvesting from Cisco configuration files, brute-force attempts with CrackMapExec, enumeration of domain users via Impacketâ€™s `lookupsid.py`, and process dumping with Sysinternals ProcDump to extract sensitive information from memory. The attack path culminates in obtaining valid administrator credentials from a Firefox memory dump.
+Heist is an easy Windows machine that demonstrates credential harvesting from Cisco configuration files, brute-force attempts with CrackMapExec, enumeration of domain users via Impacket’s `lookupsid.py`, and process dumping with Sysinternals ProcDump to extract sensitive information from memory. The attack path culminates in obtaining valid administrator credentials from a Firefox memory dump.
 
 ---
 ## Skills Required
@@ -27,7 +27,7 @@ Heist is an easy Windows machine that demonstrates credential harvesting from Ci
 ## Skills Learned
 
 - Decoding Cisco type 7 passwords  
-- Using Impacketâ€™s `lookupsid.py` to enumerate domain users  
+- Using Impacket’s `lookupsid.py` to enumerate domain users  
 - Extracting passwords from memory dumps  
 - Lateral movement using valid credentials  
 
@@ -159,8 +159,8 @@ echo "0242114B0E143F015F5D1E161713"
 
 Decrypted:
 
-- **rout3r** â†’ `$uperP@ssword`  
-- **admin** â†’ `Q4)sJu\Y8qz*A3?d`  
+- **rout3r** → `$uperP@ssword`  
+- **admin** → `Q4)sJu\Y8qz*A3?d`  
 
 ![credentials](screenshots/credentials.png)
 
@@ -219,7 +219,7 @@ No useful information is retrieved.
 
 ### 3.4 Domain Enumeration
 
-To continue, we use **Impacketâ€™s `lookupsid.py`**, which allows enumeration of domain accounts when valid credentials are available. With the following details:
+To continue, we use **Impacket’s `lookupsid.py`**, which allows enumeration of domain accounts when valid credentials are available. With the following details:
 
 - **Username**
 - **Password**
@@ -273,7 +273,7 @@ evil-winrm -i 10.10.10.149 -u 'Chase' -p 'Q4)sJu\Y8qz*A3?d'
 
 ![user_flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ### 3.7 Privilege Enumeration
 
@@ -347,7 +347,7 @@ strings firefox.dmp | grep password
 
 Recovered credentials:
 
-- **Administrator** â†’ `4dD!5}x/re8]FBuZ`
+- **Administrator** → `4dD!5}x/re8]FBuZ`
 
 ### 4.4 Administrator Access
 
@@ -367,22 +367,22 @@ evil-winrm -i 10.10.10.149 -u 'Administrator' -p '4dD!5}x/re8]FBuZ'
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Found Cisco configuration file with encoded credentials.  
-2. **Cisco Type 7 Password Cracking** â†’ Retrieved plaintext credentials.  
-3. **Password Cracking (John)** â†’ Recovered `stealth1agent`.  
-4. **SMB & User Enumeration** â†’ Valid users `Hazard` and `Chase`.  
-5. **Evil-WinRM Foothold** â†’ Logged in as `Chase`.  
-6. **ProcDump Analysis** â†’ Extracted Firefox process memory.  
-7. **Credential Extraction** â†’ Found Administrator password.  
-8. **Privilege Escalation** â†’ Logged in as Administrator.  
+1. **Web Enumeration** → Found Cisco configuration file with encoded credentials.  
+2. **Cisco Type 7 Password Cracking** → Retrieved plaintext credentials.  
+3. **Password Cracking (John)** → Recovered `stealth1agent`.  
+4. **SMB & User Enumeration** → Valid users `Hazard` and `Chase`.  
+5. **Evil-WinRM Foothold** → Logged in as `Chase`.  
+6. **ProcDump Analysis** → Extracted Firefox process memory.  
+7. **Credential Extraction** → Found Administrator password.  
+8. **Privilege Escalation** → Logged in as Administrator.  
 
 ---
 ## Defensive Recommendations

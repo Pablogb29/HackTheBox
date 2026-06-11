@@ -260,7 +260,7 @@ evil-winrm -i 10.10.10.175 -u 'fsmith' -p 'Thestrokes23'
 
 ![user_flag](screenshots/user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -356,22 +356,22 @@ impacket-psexec EGOTISTICAL-BANK.LOCAL/Administrator@10.10.10.175 cmd.exe -hashe
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **LDAP Enumeration** â†’ Discovered initial user (`hsmith`).  
-2. **Kerberos Validation** â†’ Confirmed valid accounts with Kerbrute.  
-3. **AS-REP Roasting** â†’ Extracted and cracked hash for `fsmith`.  
-4. **WinRM Access** â†’ Logged in as `fsmith`.  
-5. **Privilege Escalation** â†’ Discovered `svc_loanmgr` credentials with WinPEAS.  
-6. **BloodHound Analysis** â†’ Identified DCSync privileges.  
-7. **DCSync Attack** â†’ Extracted Administrator hash.  
-8. **Pass-the-Hash with psexec** â†’ Gained SYSTEM shell and root flag.
+1. **LDAP Enumeration** → Discovered initial user (`hsmith`).  
+2. **Kerberos Validation** → Confirmed valid accounts with Kerbrute.  
+3. **AS-REP Roasting** → Extracted and cracked hash for `fsmith`.  
+4. **WinRM Access** → Logged in as `fsmith`.  
+5. **Privilege Escalation** → Discovered `svc_loanmgr` credentials with WinPEAS.  
+6. **BloodHound Analysis** → Identified DCSync privileges.  
+7. **DCSync Attack** → Extracted Administrator hash.  
+8. **Pass-the-Hash with psexec** → Gained SYSTEM shell and root flag.
 
 ---
 ## Defensive Recommendations

@@ -15,7 +15,7 @@ tags: ["htb", "writeup", "linux", "medium", "mirth-connect", "jetty", "deseriali
 ---
 ## Synopsis
 
-Interpreter exposes **Mirth Connect 4.4.0** on **HTTP/HTTPS (Jetty)**, which is vulnerable to **CVE-2023-43208** and yields an initial shell as the service user **`mirth`**. From there, **local MariaDB credentials** in `/usr/local/mirthconnect/conf/mirth.properties` enable recovering **`sedric`â€™s** verifier from the **`mc_bdd_prod`** database, cracking it offline (**PBKDF2-HMAC-SHA256**, hashcat **`-m 10900`**), and pivoting to **SSH** as **`sedric`** to capture **`user.txt`**. Privilege escalation comes from a **`root`-owned** localhost Flask helper, **`/usr/local/bin/notif.py`**, which processes attacker-controlled XML fields into an **`eval(f'''â€¦''')`** path and allows reading **`/root/root.txt`**.
+Interpreter exposes **Mirth Connect 4.4.0** on **HTTP/HTTPS (Jetty)**, which is vulnerable to **CVE-2023-43208** and yields an initial shell as the service user **`mirth`**. From there, **local MariaDB credentials** in `/usr/local/mirthconnect/conf/mirth.properties` enable recovering **`sedric`’s** verifier from the **`mc_bdd_prod`** database, cracking it offline (**PBKDF2-HMAC-SHA256**, hashcat **`-m 10900`**), and pivoting to **SSH** as **`sedric`** to capture **`user.txt`**. Privilege escalation comes from a **`root`-owned** localhost Flask helper, **`/usr/local/bin/notif.py`**, which processes attacker-controlled XML fields into an **`eval(f'''…''')`** path and allows reading **`/root/root.txt`**.
 
 ---
 ## Skills Required
@@ -32,7 +32,7 @@ Interpreter exposes **Mirth Connect 4.4.0** on **HTTP/HTTPS (Jetty)**, which is 
 
 - Mapping **Mirth Connect** exposure (Jetty) to **version-specific** unauthenticated RCE (**CVE-2023-43208** vs older issues)
 - Turning **application DB secrets** into **user pivots** (password verifier extraction + offline cracking)
-- Recognizing dangerous **Python templating** patterns (`eval` + **f-strings**) even when input is â€œfilteredâ€
+- Recognizing dangerous **Python templating** patterns (`eval` + **f-strings**) even when input is “filtered”
 
 ---
 ## 1. Initial Enumeration
@@ -117,7 +117,7 @@ curl http://10.129.23.60/
 ---
 ### 2.2 HTTPS administrator endpoints (`webadmin`, `webstart`, launcher probe)
 
-Mirth commonly splits â€œthick client / webstartâ€ artifacts from the **HTTPS** administrator UI. Validate what is exposed on **443**, including the administrator landing page and whether a local launcher path exists.
+Mirth commonly splits “thick client / webstart” artifacts from the **HTTPS** administrator UI. Validate what is exposed on **443**, including the administrator landing page and whether a local launcher path exists.
 
 ```bash
 curl -k -i https://10.129.23.60/webadmin/Index.action
@@ -144,7 +144,7 @@ cat webstart.jnlp
 
 The targeted service scan and `webstart.jnlp` both indicate **Mirth Connect 4.4.0**. Public material documents **CVE-2023-43208** as the **post-4.4.0 patch bypass** affecting **< 4.4.1**, which matches the observed version band.
 
-Validate exploitation with an **observable callback** (reverse shell) rather than relying only on a PoCâ€™s â€œappears executedâ€ string.
+Validate exploitation with an **observable callback** (reverse shell) rather than relying only on a PoC’s “appears executed” string.
 
 ```bash
 nc -lvnp 4444
@@ -227,10 +227,10 @@ cat /home/sedric/user.txt
 ![ssh sedric](screenshots/interpreter_20_ssh_sedric.png)
 ![user flag](screenshots/interpreter_21_user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
-### 4.2 Root access via `notif.py` (localhost Flask + `eval(f'''â€¦''')`)
+### 4.2 Root access via `notif.py` (localhost Flask + `eval(f'''…''')`)
 
 Process enumeration shows a **`root`-owned** long-running Python script: **`/usr/local/bin/notif.py`**. 
 
@@ -242,7 +242,7 @@ cat /usr/local/bin/notif.py
 ![ps aux python](screenshots/interpreter_22_ps_aux_python.png)
 ![ps aux python](screenshots/interpreter_23_notify.png)
 
-Reading the script shows a **localhost-only** Flask endpoint on **`127.0.0.1:54321`** and a dangerous `template()` implementation using **`eval(f'''â€¦''')`**.
+Reading the script shows a **localhost-only** Flask endpoint on **`127.0.0.1:54321`** and a dangerous `template()` implementation using **`eval(f'''…''')`**.
 
 Confirm the listener and process ownership:
 
@@ -303,17 +303,17 @@ EOF
 
 ![python requests root flag via notif](screenshots/interpreter_26_python_requests_root_flag_via_notif.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
 1. **Enumerate** Interpreter and identify **Mirth Connect** on **80/443** (Jetty), with version hints pointing to **4.4.0**.
 2. **Foothold** via **CVE-2023-43208** to a shell as **`mirth`**.
-3. **Pivot** using **`mirth.properties`** to access **local MariaDB**, extract **`sedric`â€™s** verifier, **crack** it (**hashcat `-m 10900`**), and **SSH** as **`sedric`** for **`user.txt`**.
+3. **Pivot** using **`mirth.properties`** to access **local MariaDB**, extract **`sedric`’s** verifier, **crack** it (**hashcat `-m 10900`**), and **SSH** as **`sedric`** for **`user.txt`**.
 4. **Privesc** by abusing **`root`** **`/usr/local/bin/notif.py`** on **`127.0.0.1:54321`** to read **`/root/root.txt`**.
 
 ---

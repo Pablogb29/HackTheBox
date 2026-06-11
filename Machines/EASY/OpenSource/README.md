@@ -131,11 +131,11 @@ curl -i http://10.10.11.164/
 ![web](screenshots/web.png)
 
 
-- `Download` â†’ retrieves a file `source.zip`  
+- `Download` → retrieves a file `source.zip`  
 
 ![source_downloaded](screenshots/source_downloaded.png)
 
-- `Take me there!` â†’ redirects to `/uplcloud` (file upload interface)  
+- `Take me there!` → redirects to `/uplcloud` (file upload interface)  
   
 ![web_upcloud](screenshots/web_upcloud.png)
 
@@ -189,7 +189,7 @@ Following HackTricks methodology, required values were extracted:
 - Username: `root`  
 - Flask app path discovered via BurpSuite:  
 ![burpsuite_path](screenshots/burpsuite_path.png)
-- MAC address â†’ converted to decimal:  
+- MAC address → converted to decimal:  
   ```bash
   curl http://10.10.11.164/uploads/..//sys/class/net/eth0/address --path-as-is
   ```
@@ -312,7 +312,7 @@ SSH access as `dev01`:
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… User flag obtained
+✅ User flag obtained
 
 ---
 ## 4. Privilege Escalation
@@ -355,22 +355,22 @@ bash -p
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ Root flag obtained
+🏁 Root flag obtained
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Found file upload & `source.zip`.  
-2. **LFI Bypass** â†’ Used `curl --path-as-is` with `..//`.  
-3. **Werkzeug PIN Exploit** â†’ Generated debugger PIN â†’ RCE.  
-4. **Container Shell** â†’ Gained limited foothold.  
-5. **Git Branch Analysis** â†’ Extracted credentials.  
-6. **Port Forwarding with Chisel** â†’ Accessed private Gitea.  
-7. **SSH Key** â†’ Logged in as `dev01`.  
-8. **Privilege Escalation** â†’ Abused Git hooks run by root cron.  
+1. **Web Enumeration** → Found file upload & `source.zip`.  
+2. **LFI Bypass** → Used `curl --path-as-is` with `..//`.  
+3. **Werkzeug PIN Exploit** → Generated debugger PIN → RCE.  
+4. **Container Shell** → Gained limited foothold.  
+5. **Git Branch Analysis** → Extracted credentials.  
+6. **Port Forwarding with Chisel** → Accessed private Gitea.  
+7. **SSH Key** → Logged in as `dev01`.  
+8. **Privilege Escalation** → Abused Git hooks run by root cron.  
 
 ---
 ## Defensive Recommendations

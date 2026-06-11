@@ -150,7 +150,7 @@ The vhost provides **OCR functionality** (uploading an image generates a `result
 We test for SSTI by uploading an image containing `{{7*7}}`:
 
 ```bash
-# Crafted via web upload â€” payload embedded in image (see screenshots)
+# Crafted via web upload — payload embedded in image (see screenshots)
 true
 ```
 
@@ -188,7 +188,7 @@ Users identified:
 ---
 ### 3.3 Exfiltrating SSH Private Key
 
-We attempt to read the userâ€™s private key:
+We attempt to read the user’s private key:
 
 ```jinja
 {{ get_flashed_messages.__globals__.__builtins__.open("/home/svc_acc/.ssh/id_rsa").read() }}
@@ -214,7 +214,7 @@ ssh -i id_rsa svc_acc@10.10.11.156
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -301,20 +301,20 @@ bash -p
 
 ![ssh_alert_bash](screenshots/ssh_alert_bash.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Detected SSH and HTTP.  
-2. **Web Enumeration** â†’ Found OCR functionality on vhost `image.late.htb`.  
-3. **SSTI Exploitation** â†’ Read sensitive files and extracted SSH private key.  
-4. **SSH Access** â†’ Logged in as `svc_acc`.  
-5. **Privilege Escalation** â†’ Abused append-only root script to set SUID on `/bin/bash`.  
-6. **Root Access** â†’ Obtained full control of the system.
+1. **Port Scanning** → Detected SSH and HTTP.  
+2. **Web Enumeration** → Found OCR functionality on vhost `image.late.htb`.  
+3. **SSTI Exploitation** → Read sensitive files and extracted SSH private key.  
+4. **SSH Access** → Logged in as `svc_acc`.  
+5. **Privilege Escalation** → Abused append-only root script to set SUID on `/bin/bash`.  
+6. **Root Access** → Obtained full control of the system.
 
 ---
 ## Defensive Recommendations

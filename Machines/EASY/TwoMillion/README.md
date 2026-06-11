@@ -311,19 +311,19 @@ Execute the exploit:
 
 ![root_flag](screenshots/root_flag.png)
 
-âœ… **Root flag obtained**
+✅ **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **ROT13 Decode** â†’ Invitation API discovered.  
-2. **Base64 Decode** â†’ Extracted valid invite code.  
-3. **API Abuse** â†’ Upgraded user to admin via PUT request.  
-4. **Command Injection** â†’ Reverse shell via `/api/v1/admin/vpn/generate`.  
-5. **OverlayFS Exploit** â†’ Privilege escalation to root.  
+1. **ROT13 Decode** → Invitation API discovered.  
+2. **Base64 Decode** → Extracted valid invite code.  
+3. **API Abuse** → Upgraded user to admin via PUT request.  
+4. **Command Injection** → Reverse shell via `/api/v1/admin/vpn/generate`.  
+5. **OverlayFS Exploit** → Privilege escalation to root.  
 
 ---
 ## Defensive Recommendations

@@ -176,7 +176,7 @@ At this point, we know that we have **directory listing capabilities**, as we ca
 ---
 ### 3.2 Uploading a Malicious JSP Payload
 
-Among the various options available in the web interface, some are particularly interesting. Letâ€™s go through them one by one:
+Among the various options available in the web interface, some are particularly interesting. Let’s go through them one by one:
 
 - **Mapping**  
     This section reveals system paths, and conveniently we can see the path for `CFIDE`, which originates from `wwwroot`:
@@ -298,7 +298,7 @@ Clicking `reverse.jsp` spawns a shell.
 
 ![User flag](screenshots/user_flag.png)  
 
-ðŸ **User flag obtained**  
+🏁 **User flag obtained**  
 
 We are **tolis** user.
 
@@ -332,18 +332,18 @@ We catch the connection on port 4646 and obtain SYSTEM:
 
 ![Root flag](screenshots/root_flag.png)  
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified Adobe ColdFusion on port 8500.  
-2. **Directory Traversal / LFI** â†’ Extracted and cracked admin password hash.  
-3. **ColdFusion Panel Access** â†’ Abused **Scheduled Tasks** to upload JSP reverse shell.  
-4. **Privilege Escalation** â†’ Used **JuicyPotato** to escalate from user to SYSTEM.  
+1. **Port Scanning** → Identified Adobe ColdFusion on port 8500.  
+2. **Directory Traversal / LFI** → Extracted and cracked admin password hash.  
+3. **ColdFusion Panel Access** → Abused **Scheduled Tasks** to upload JSP reverse shell.  
+4. **Privilege Escalation** → Used **JuicyPotato** to escalate from user to SYSTEM.  
 
 ---
 ## Defensive Recommendations

@@ -30,7 +30,7 @@ Resolute is a Windows **Domain Controller** for **megabank.local**. Enumeration 
 - Extracting credential hints from **LDAP** user attributes (**`description`**, etc.)  
 - Building a controlled **password spray** workflow after policy checks  
 - Finding secrets in **PowerShell transcription** logs  
-- **DnsAdmins** â†’ **DNS** service **plugin DLL** load â†’ **SYSTEM** on the DC
+- **DnsAdmins** → **DNS** service **plugin DLL** load → **SYSTEM** on the DC
 
 ---
 ## 1. Initial Enumeration
@@ -210,7 +210,7 @@ type user.txt
 
 ![user.txt](screenshots/resolute_14_user_flag.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ### 3.4 PowerShell Transcripts
@@ -250,7 +250,7 @@ evil-winrm -i 10.129.96.155 -u ryan -p 'Serv3r4Admin4cc123!'
 
 ![evil-winrm ryan](screenshots/resolute_19_evilwinrm_ryan.png)
 
-`C:\Users\ryan\Desktop\note.txt` states that only **Administrator** account changes persist under an automated revert policyâ€”pointing toward a **Domain Admin** takeover.
+`C:\Users\ryan\Desktop\note.txt` states that only **Administrator** account changes persist under an automated revert policy—pointing toward a **Domain Admin** takeover.
 
 ![note.txt](screenshots/resolute_20_ryan_desktop_note_txt.png)
 
@@ -307,21 +307,21 @@ type root.txt
 
 ![root](screenshots/resolute_25_root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified DC services; **WinRM**, **LDAP**, **SMB**.  
-2. **SMB Enumeration** â†’ No useful guest share access.  
-3. **LDAP** â†’ Default password hint in user metadata; **password spray** â†’ **`melanie`**.  
-4. **WinRM** â†’ Shell as **`melanie`**; **user flag**.  
-5. **`C:\PSTranscripts`** â†’ Transcript leak â†’ **`ryan`**.  
-6. **`ryan`** in **`DnsAdmins`** â†’ **DNS plugin DLL** + service restart â†’ reset **Administrator** password.  
-7. **WinRM** as **Administrator** â†’ **root flag**.
+1. **Port Scanning** → Identified DC services; **WinRM**, **LDAP**, **SMB**.  
+2. **SMB Enumeration** → No useful guest share access.  
+3. **LDAP** → Default password hint in user metadata; **password spray** → **`melanie`**.  
+4. **WinRM** → Shell as **`melanie`**; **user flag**.  
+5. **`C:\PSTranscripts`** → Transcript leak → **`ryan`**.  
+6. **`ryan`** in **`DnsAdmins`** → **DNS plugin DLL** + service restart → reset **Administrator** password.  
+7. **WinRM** as **Administrator** → **root flag**.
 
 ---
 ## Defensive Recommendations

@@ -166,7 +166,7 @@ impacket-mssqlclient 'PublicUser:GuestUserCantWrite1@10.129.12.41'
 
 ![mssql PublicUser](screenshots/escape_11_mssqlclient_publicuser.png)
 
-Confirm limited privileges (`fn_my_permissions` â€” not sysadmin):
+Confirm limited privileges (`fn_my_permissions` — not sysadmin):
 
 ![fn_my_permissions](screenshots/escape_12_sql_fn_my_permissions.png)
 
@@ -230,7 +230,7 @@ type C:\Users\Ryan.Cooper\Desktop\user.txt
 
 ![user.txt](screenshots/escape_23_user_txt.png)
 
-ðŸ **User flag obtained**
+🏁 **User flag obtained**
 
 ---
 ## 4. Privilege Escalation
@@ -239,7 +239,7 @@ type C:\Users\Ryan.Cooper\Desktop\user.txt
 
 Synchronize the attacker clock with the domain (**`sudo timedatectl set-ntp true`**) before **`certipy-ad auth`** to avoid **`KRB_AP_ERR_SKEW`**.
 
-Enumerate **AD CS** and request a certificate **as Administrator** using template **`UserAuthentication`** (the default **`User`** template does not allow forging another principalâ€™s UPN in this scenario):
+Enumerate **AD CS** and request a certificate **as Administrator** using template **`UserAuthentication`** (the default **`User`** template does not allow forging another principal’s UPN in this scenario):
 
 ```bash
 certipy-ad find -u 'ryan.cooper@sequel.htb' -p 'NuclearMosquito3' \
@@ -276,21 +276,21 @@ type C:\Users\Administrator\Desktop\root.txt
 
 ![root](screenshots/escape_28_root_txt.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Port Scanning** â†’ Identified DC services, **MSSQL**, **WinRM**, **LDAP**.  
-2. **SMB Enumeration** â†’ Guest read on **`Public`**; PDF with SQL credentials.  
-3. **MSSQL + Responder** â†’ **`xp_dirtree`** NetNTLM capture; cracked **`sql_svc`**.  
-4. **WinRM** â†’ Shell as **`sql_svc`**; **`ERRORLOG.BAK`** leaks **`ryan.cooper`**.  
-5. **User Access** â†’ **`ryan.cooper`** WinRM; **user flag**.  
-6. **AD CS** â†’ **`UserAuthentication`** template + **`certipy-ad req` / `auth`** â†’ Administrator **NT hash**.  
-7. **WinRM (PTH)** â†’ **Administrator** shell; **root flag**.
+1. **Port Scanning** → Identified DC services, **MSSQL**, **WinRM**, **LDAP**.  
+2. **SMB Enumeration** → Guest read on **`Public`**; PDF with SQL credentials.  
+3. **MSSQL + Responder** → **`xp_dirtree`** NetNTLM capture; cracked **`sql_svc`**.  
+4. **WinRM** → Shell as **`sql_svc`**; **`ERRORLOG.BAK`** leaks **`ryan.cooper`**.  
+5. **User Access** → **`ryan.cooper`** WinRM; **user flag**.  
+6. **AD CS** → **`UserAuthentication`** template + **`certipy-ad req` / `auth`** → Administrator **NT hash**.  
+7. **WinRM (PTH)** → **Administrator** shell; **root flag**.
 
 ---
 ## Defensive Recommendations

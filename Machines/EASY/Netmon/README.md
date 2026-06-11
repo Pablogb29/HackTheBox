@@ -125,7 +125,7 @@ ftp 10.10.10.152
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **User flag obtained**
+✅ **User flag obtained**
 
 ---
 ### 2.2 SMB Enumeration
@@ -211,7 +211,7 @@ Successful login.
 ---
 ### 3.2 Command Injection in Notifications
 
-A known vulnerability in PRTG < 18.2.39 allows command injection in the **Notifications â†’ Execute Program** field.  
+A known vulnerability in PRTG < 18.2.39 allows command injection in the **Notifications → Execute Program** field.  
 
 Reference: [PRTG Command Injection Vulnerability](https://codewatch.org/2018/06/25/prtg-18-2-39-command-injection-vulnerability/)
 
@@ -221,7 +221,7 @@ Payload to create a new user:
 test.txt;net user pentest p3nT3st! /add; net localgroup Administrators pentest /add
 ```
 
-Inside PRTG â†’ `Setup > Notifications`, a new notification was created:
+Inside PRTG → `Setup > Notifications`, a new notification was created:
 
 ![prtg_notifications](screenshots/prtg_notifications.png)  
 ![prtg_new_notification](screenshots/prtg_new_notification.png)
@@ -256,18 +256,18 @@ evil-winrm -i 10.10.10.152 -u 'pentest' -p 'p3nT3st!'
 
 ![root_flag](screenshots/root_flag.png)
 
-ðŸ **Root flag obtained**
+🏁 **Root flag obtained**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Anonymous FTP Access** â†’ Retrieved user flag and sensitive configuration files.  
-2. **PRTG Configuration Leak** â†’ Extracted valid admin credentials.  
-3. **PRTG Command Injection** â†’ Created a new privileged user via notifications.  
-4. **WinRM Access** â†’ Logged in as the new user and retrieved root flag.  
+1. **Anonymous FTP Access** → Retrieved user flag and sensitive configuration files.  
+2. **PRTG Configuration Leak** → Extracted valid admin credentials.  
+3. **PRTG Command Injection** → Created a new privileged user via notifications.  
+4. **WinRM Access** → Logged in as the new user and retrieved root flag.  
 
 ---
 ## Defensive Recommendations

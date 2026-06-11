@@ -123,9 +123,9 @@ Menu options include:
 
 ![dashboard_left_menu](screenshots/dashboard_left_menu.png)
 
-- **IP Config** â†’ Displays output of `ifconfig`  
-- **Network Status** â†’ Displays output of `netstat`  
-- **Security Snapshot** â†’ Generates a downloadable packet capture
+- **IP Config** → Displays output of `ifconfig`  
+- **Network Status** → Displays output of `netstat`  
+- **Security Snapshot** → Generates a downloadable packet capture
 
 ---
 ### 2.2 Capture Analysis & IDOR Discovery
@@ -144,7 +144,7 @@ Testing `/capture/data/0` successfully downloads a previous capture.
 ![dashboard_data_0](screenshots/dashboard_data_0.png)
 
 > **Vulnerability:**  
-> This is an **Insecure Direct Object Reference (IDOR)** â€” direct access to objects by modifying identifiers in the request.
+> This is an **Insecure Direct Object Reference (IDOR)** — direct access to objects by modifying identifiers in the request.
 
 ---
 ### 2.3 Credential Extraction from PCAP
@@ -177,8 +177,8 @@ ssh nathan@10.10.10.245
 
 ![user_flag](screenshots/user_flag.png)
 
-âœ… **SSH login successful**  
-ðŸ **User flag retrieved from Nathan's home directory**
+✅ **SSH login successful**  
+🏁 **User flag retrieved from Nathan's home directory**
 
 ---
 ## 4. Privilege Escalation
@@ -245,19 +245,19 @@ python3.8 -c 'import os; os.setuid(0); os.system("bash")'
 
 ![setuid_0](screenshots/setuid_0.png)
 
-ðŸ **Root flag retrieved from `/root`**
+🏁 **Root flag retrieved from `/root`**
 
 ---
-# âœ… MACHINE COMPLETE
+# ✅ MACHINE COMPLETE
 
 ---
 ## Summary of Exploitation Path
 
-1. **Web Enumeration** â†’ Discovered capture generation feature.  
-2. **IDOR** â†’ Accessed another userâ€™s PCAP file.  
-3. **PCAP Analysis** â†’ Extracted plaintext FTP credentials.  
-4. **SSH Access** â†’ Logged in as Nathan.  
-5. **Privilege Escalation** â†’ Abused Python `cap_setuid` to gain root.
+1. **Web Enumeration** → Discovered capture generation feature.  
+2. **IDOR** → Accessed another user’s PCAP file.  
+3. **PCAP Analysis** → Extracted plaintext FTP credentials.  
+4. **SSH Access** → Logged in as Nathan.  
+5. **Privilege Escalation** → Abused Python `cap_setuid` to gain root.
 
 ---
 ## Defensive Recommendations
