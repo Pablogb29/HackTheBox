@@ -96,7 +96,7 @@ nmap -sCV -p21,22,80 10.10.10.245 -oN targeted
 - `-oN`: Output in human-readable format  
 
 
-![targeted](screenshots/targeted.png)
+![targeted](screenshots/cat_targeted.png)
 
 **Findings:**
 

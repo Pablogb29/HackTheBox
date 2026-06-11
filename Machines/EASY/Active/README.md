@@ -101,7 +101,7 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5722,9389,47001,49152,49
 - `-sV`: Detect service versions
 - `-oN`: Output results in a human-readable format
 
-![targeted](screenshots/targeted.png)
+![targeted](screenshots/cat_targeted.png)
 
 | Port   | Service         | Description                                 |
 | ------ | --------------- | ------------------------------------------- |

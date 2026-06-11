@@ -65,7 +65,7 @@ Since the binary is not stripped and uses `strcmp` for comparison, the password 
 strings pass
 ```
 
-![strings output](spookypass_03_strings.png)
+![strings output](screenshots/spookypass_03_strings.png)
 
 Among the output, the interesting lines are:
 
@@ -90,7 +90,7 @@ Feeding the extracted password to the binary yields the flag:
 ./pass
 ```
 
-![flag](spookypass_04_flag.png)
+![flag](screenshots/spookypass_04_flag.png)
 
 🏁 **Flag obtained**
 

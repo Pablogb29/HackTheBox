@@ -41,7 +41,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.10.59
 ```
 
-![ping](bashed_01_ping.png)
+![ping](screenshots/bashed_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -54,8 +54,8 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.10.59 -oG allPorts
 extractPorts allPorts
 ```
 
-![nmap all ports](bashed_02_nmap_allports.png)
-![extractports](bashed_03_extractports.png)
+![nmap all ports](screenshots/bashed_02_nmap_allports.png)
+![extractports](screenshots/bashed_03_extractports.png)
 
 Open ports:
 
@@ -72,7 +72,7 @@ nmap -sCV -p80 10.129.10.59 -oN targeted
 cat targeted -l java
 ```
 
-![nmap targeted](bashed_04_nmap_targeted.png)
+![nmap targeted](screenshots/bashed_04_nmap_targeted.png)
 
 Key findings:
 - `80/tcp` -> Apache 2.4.18 (Ubuntu)
@@ -92,8 +92,8 @@ curl -i http://10.129.10.59 #output too long
 
 Homepage mentions `phpbash` and that it was developed on the same server.
 
-![whatweb](bashed_05_whatweb.png)
-![homepage](bashed_06_homepage.png)
+![whatweb](screenshots/bashed_05_whatweb.png)
+![homepage](screenshots/bashed_06_homepage.png)
 
 ---
 ### 2.2 Directory Discovery (`http-enum`)
@@ -104,7 +104,7 @@ Run the default `http-enum` script to surface common paths and entry points:
 nmap --script http-enum -p80 10.129.10.59
 ```
 
-![http-enum](bashed_07_nmap_http_enum.png)
+![http-enum](screenshots/bashed_07_nmap_http_enum.png)
 
 High-signal paths discovered:
 
@@ -122,7 +122,7 @@ curl -i http://10.129.10.59/dev/ #output too long
 curl -i http://10.129.10.59/dev/phpbash.php #output too long
 ```
 
-![dev directory listing](bashed_08_dev_index.png)
+![dev directory listing](screenshots/bashed_08_dev_index.png)
 
 `/dev/` has directory listing enabled and exposes:
 - `phpbash.php`.
@@ -130,7 +130,7 @@ curl -i http://10.129.10.59/dev/phpbash.php #output too long
 
 The two .php files executes a webshell:
 
-![phpbash source](bashed_09_phpbash_source.png)
+![phpbash source](screenshots/bashed_09_phpbash_source.png)
 
 ---
 ## 3. Foothold
@@ -147,7 +147,7 @@ cd arrexel
 cat user.txt
 ```
 
-![web shell and user flag](bashed_10_user_flag.png)
+![web shell and user flag](screenshots/bashed_10_user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -165,7 +165,7 @@ sudo -l
 sudo -u scriptmanager whoami
 ```
 
-![sudo scriptmanager](bashed_11_sudo_scriptmanager.png)
+![sudo scriptmanager](screenshots/bashed_11_sudo_scriptmanager.png)
 
 Key finding:
 - `www-data` may run `ALL` as `(scriptmanager : scriptmanager)` with `NOPASSWD`.
@@ -183,8 +183,8 @@ cat test.py
 cat test.txt
 ```
 
-![scriptmanager enum](bashed_15_scriptmanager_enum.png)
-![scripts ownership](bashed_16_scripts_ownership.png)
+![scriptmanager enum](screenshots/bashed_15_scriptmanager_enum.png)
+![scripts ownership](screenshots/bashed_16_scripts_ownership.png)
 
 Notable observation:
 - `/scripts/test.py` is owned by `scriptmanager`
@@ -195,8 +195,8 @@ Notable observation:
 
 Let's check the processes executed:
 
-![ps output a](bashed_17_ps_output_a.png)
-![ps output b duplicate capture](bashed_19_ps_output_b_dup.png)
+![ps output a](screenshots/bashed_17_ps_output_a.png)
+![ps output b duplicate capture](screenshots/bashed_19_ps_output_b_dup.png)
 
 Let's create a custom process diff monitor to see how root user executes test.py:
 
@@ -212,8 +212,8 @@ done
 
 Captured periodic root cron activity (`sessionclean`), confirming scheduled root jobs are active.
 
-![procmon fixed](bashed_12_procmon_fixed.png)
-![cron sessionclean](bashed_13_cron_sessionclean.png)
+![procmon fixed](screenshots/bashed_12_procmon_fixed.png)
+![cron sessionclean](screenshots/bashed_13_cron_sessionclean.png)
 
 Root user executes test.py because there's a CRON task where he must execute all python files from /scripts directory.
 
@@ -238,7 +238,7 @@ cat /root/root.txt
 Root flag:
 - `4af96403ddc19bd52d637acedf67fd89`
 
-![root escalation](bashed_14_root_suid_bash.png)
+![root escalation](screenshots/bashed_14_root_suid_bash.png)
 
 ðŸ **Root flag obtained**
 

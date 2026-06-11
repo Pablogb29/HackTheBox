@@ -49,17 +49,17 @@ curl 154.57.164.61:30324/login
 
 The root path redirects to `/dashboard` and the app exposes `/login` and `/register`.
 
-![evidence](onlyhacks_01_login.png)
+![evidence](screenshots/onlyhacks_01_login.png)
 
-![evidence](onlyhacks_02_register.png)
+![evidence](screenshots/onlyhacks_02_register.png)
 
 After creating an account and logging in, profiles can be liked on the dashboard.
 
-![evidence](onlyhacks_03_dashboard_profile.png)
+![evidence](screenshots/onlyhacks_03_dashboard_profile.png)
 
 Matching with users unlocks chat. The interesting match here is **Renata**, which behaves like an automated victim/bot user.
 
-![evidence](onlyhacks_04_chat_window.png)
+![evidence](screenshots/onlyhacks_04_chat_window.png)
 
 ---
 ## Solution
@@ -74,11 +74,11 @@ We first verify if chat messages are reflected/stored without sanitization by se
 
 The alert triggers when the chat renders, confirming **stored XSS**.
 
-![evidence](onlyhacks_05_xss_alert.png)
+![evidence](screenshots/onlyhacks_05_xss_alert.png)
 
 Renata responds with a warning message (flavor text); it does not prevent execution.
 
-![evidence](onlyhacks_06_renata_warning.png)
+![evidence](screenshots/onlyhacks_06_renata_warning.png)
 
 ---
 ### Step 2 â€“ Exfiltrate Renataâ€™s `session` cookie to a webhook
@@ -91,11 +91,11 @@ To hijack the victim session, we send a payload that appends `document.cookie` t
 
 After sending the payload and refreshing the webhook inbox, we observe two GET requests. The one corresponding to Renataâ€™s bot can be identified by metadata such as a localhost referer (the server rendering the app internally).
 
-![evidence](onlyhacks_07_webhook_cookie.png)
+![evidence](screenshots/onlyhacks_07_webhook_cookie.png)
 
 The sent payloads are visible in the chat history.
 
-![evidence](onlyhacks_08_payloads_sent.png)
+![evidence](screenshots/onlyhacks_08_payloads_sent.png)
 
 ---
 ### Step 3 â€“ Hijack Renataâ€™s session and retrieve the flag

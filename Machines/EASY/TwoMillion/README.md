@@ -222,7 +222,7 @@ We confirm our user is now admin:
 curl -s -X GET "http://2million.htb/api/v1/admin/auth" -H "Cookie: PHPSESSID=..." | jq
 ```
 
-![test_user_is_admin](screenshots/test_user_is_admin.png)
+![test_user_is_admin](screenshots/test_user_is%20admin.png)
 
 ### 3.3 Command injection
 

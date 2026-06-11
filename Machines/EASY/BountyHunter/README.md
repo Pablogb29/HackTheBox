@@ -117,7 +117,7 @@ whatweb http://10.10.11.100
 
 Accessing the website:
 
-![webscan](screenshots/webmain.png)
+![webscan](screenshots/web_main.png)
 ![webscan](screenshots/web_contact.png)
 
 The main page is static, with non-functional buttons like "Download" and *send* button from "Contact Us" is not working.

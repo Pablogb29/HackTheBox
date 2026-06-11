@@ -1,12 +1,15 @@
 /**
- * Normalize README image paths to be relative to each machine/challenge folder.
- * Replaces cases/HackTheBox/.../screenshots/file.png -> screenshots/file.png
+ * Normalize README image paths for GitHub rendering.
+ *
+ * 1. cases/HackTheBox/.../screenshots/file.png -> screenshots/file.png
+ * 2. file.png -> screenshots/file.png when the file lives in screenshots/
  */
-const { readFileSync, writeFileSync, readdirSync, statSync } = require("fs");
-const { join } = require("path");
+const { readFileSync, writeFileSync, readdirSync, statSync, existsSync } = require("fs");
+const { join, normalize, basename } = require("path");
 
 const ROOT = join(__dirname, "..");
-const IMAGE_PATH_RE = /cases\/HackTheBox\/[^)\s]*?\/screenshots\//g;
+const ABSOLUTE_PREFIX_RE = /cases\/HackTheBox\/[^)\s]*?\/screenshots\//g;
+const IMAGE_MD_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
 function walk(dir, files = []) {
   for (const name of readdirSync(dir)) {
@@ -21,14 +24,48 @@ function walk(dir, files = []) {
   return files;
 }
 
+function normalizeImagePath(readmeFile, rawPath) {
+  const rel = rawPath.trim();
+  if (!rel || rel.startsWith("http://") || rel.startsWith("https://")) {
+    return rel;
+  }
+
+  const readmeDir = normalize(readmeFile.replace(/[/\\]README\.md$/, ""));
+
+  let normalized = rel.replace(ABSOLUTE_PREFIX_RE, "screenshots/");
+  if (normalized !== rel) {
+    return normalized;
+  }
+
+  if (normalized.startsWith("screenshots/")) {
+    return normalized;
+  }
+
+  const directPath = normalize(join(readmeDir, ...normalized.split("/")));
+  if (existsSync(directPath)) {
+    return normalized;
+  }
+
+  const screenshotsPath = normalize(join(readmeDir, "screenshots", basename(normalized)));
+  if (existsSync(screenshotsPath)) {
+    return `screenshots/${basename(normalized)}`;
+  }
+
+  return normalized;
+}
+
 let changedFiles = 0;
 let replacedCount = 0;
 
 for (const file of walk(ROOT)) {
   const original = readFileSync(file, "utf8");
-  const updated = original.replace(IMAGE_PATH_RE, () => {
+  const updated = original.replace(IMAGE_MD_RE, (match, alt, path) => {
+    const nextPath = normalizeImagePath(file, path);
+    if (nextPath === path.trim()) {
+      return match;
+    }
     replacedCount += 1;
-    return "screenshots/";
+    return `![${alt}](${nextPath})`;
   });
 
   if (updated !== original) {

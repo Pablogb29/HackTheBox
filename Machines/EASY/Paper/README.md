@@ -42,7 +42,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.129.28.97
 ```
 
-![ping](paper_01_ping.png)
+![ping](screenshots/paper_01_ping.png)
 
 The reply confirms the target is reachable on the VPN path with a TTL consistent with a nearby Linux hop, which is enough signal to move on to a full TCP sweep instead of guessing why later scans might look “empty.”
 
@@ -62,7 +62,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.28.97 -oG allPorts
 - `-Pn` : Skip host discovery  
 - `-oG` : Output in grepable format  
 
-![allports](paper_02_nmap_allports.png)
+![allports](screenshots/paper_02_nmap_allports.png)
 
 The sweep is intentionally boring here in a good way: only three TCP ports surface, so the rest of the box is unlikely to be “hidden” behind obscure services and the focus can stay on **SSH plus the web stack**.
 
@@ -72,7 +72,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](paper_03_extractports.png)
+![extractports](screenshots/paper_03_extractports.png)
 
 `extractPorts` (or any equivalent parser) turns the greppable output into a clean comma list you can paste straight into the next `nmap -p` invocation, which avoids transcription mistakes when the scan output is long.
 
@@ -90,11 +90,11 @@ cat targeted
 - `-sV` : Detect service versions  
 - `-oN` : Output in human-readable format  
 
-![nmap sCV](paper_04_nmap_sCV.png)
+![nmap sCV](screenshots/paper_04_nmap_sCV.png)
 
 The scripted scan pass is where versions and banners start to matter: you want **Apache build strings**, **TLS certificate fields**, and any default-page titles that hint whether you are looking at a real application or a placeholder vhost.
 
-![cat targeted](paper_05_cat_targeted.png)
+![cat targeted](screenshots/paper_05_cat_targeted.png)
 
 Reading the saved `targeted` file end-to-end is often faster than scrolling a live terminal buffer, and it makes it easier to spot small clues (like generic cert subjects) that do not jump out during the scan itself.
 
@@ -118,15 +118,15 @@ whatweb http://10.129.28.97/
 ffuf -u http://10.129.28.97/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -ac -fc 404 -t 40
 ```
 
-![whatweb](paper_06_whatweb.png)
+![whatweb](screenshots/paper_06_whatweb.png)
 
 `whatweb` against the bare IP is useful even when the status code is non-200: the interesting part is often **uncommon response headers** that leak how traffic is routed internally.
 
-![ffuf](paper_07_ffuf.png)
+![ffuf](screenshots/paper_07_ffuf.png)
 
 Directory brute forcing on the default vhost is mostly a sanity check. You are not trying to “solve the box with a wordlist” here; you are confirming whether anything obvious exists on the placeholder surface and calibrating expectations before shifting requests to the correct hostname.
 
-![browser default page on IP](paper_08_browser_default_ip.png)
+![browser default page on IP](screenshots/paper_08_browser_default_ip.png)
 
 A browser view of the same IP helps separate “scanner noise” from what a normal client actually renders: a stock CentOS test page is a strong hint that the meaningful content is **name-based virtual hosting**, not a missing directory.
 
@@ -134,7 +134,7 @@ A browser view of the same IP helps separate “scanner noise” from what a nor
 curl -s -X GET "http://10.129.28.97" -I
 ```
 
-![curl headers](paper_09_curl_headers.png)
+![curl headers](screenshots/paper_09_curl_headers.png)
 
 A header-only `curl` pass is the cleanest way to capture backend routing clues without dumping a huge HTML body. In this case, the response includes a backend identifier pointing at **`office.paper`**, which is the hostname you want mapped locally next.
 
@@ -147,15 +147,15 @@ Once `office.paper` is mapped locally, the blog content and comments provide the
 echo "10.129.28.97 office.paper" | sudo tee -a /etc/hosts
 ```
 
-![hosts office.paper](paper_10_hosts_office_paper.png)
+![hosts office.paper](screenshots/paper_10_hosts_office_paper.png)
 
 Until DNS (or your local `hosts` file) maps `office.paper` to the machine IP, your browser and many CLI tools will keep talking to the wrong logical site even though the TCP connection is correct.
 
-![wordpress home](paper_11_wp_home_office_paper.png)
+![wordpress home](screenshots/paper_11_wp_home_office_paper.png)
 
 Once the vhost resolves, the surface changes completely: you are now looking at a real WordPress install with identifiable themes/plugins and human-written content, which is where username hints and “internal process” storytelling usually start to appear.
 
-![nick comment draft hint](paper_12_wp_nick_draft_hint.png)
+![nick comment draft hint](screenshots/paper_12_wp_nick_draft_hint.png)
 
 Comments are not just flavor text on WordPress boxes. A remark about drafts or unpublished material is a direct nudge to think about **post visibility states** (public vs private vs draft) rather than only chasing plugin CVEs.
 
@@ -169,7 +169,7 @@ searchsploit wordpress 5.2.3
 searchsploit -m multiple/webapps/47690.md
 ```
 
-![searchsploit 47690](paper_13_searchsploit_47690.png)
+![searchsploit 47690](screenshots/paper_13_searchsploit_47690.png)
 
 The exploit-db entry is not “the whole attack” by itself; it is a **behavior description** tied to a specific WordPress version range. The practical question becomes: can you trigger that rendering path without authentication, and does it expose content that was never meant to be public?
 
@@ -178,7 +178,7 @@ The exploit-db entry is not “the whole attack” by itself; it is a **behavior
 # http://office.paper/index.php/author/prisonmike/?static=1
 ```
 
-![author static draft leak](paper_14_wp_author_static_leak.png)
+![author static draft leak](screenshots/paper_14_wp_author_static_leak.png)
 
 The author archive is a natural place to test static rendering quirks. When it works, the impact is immediate operational intelligence: here, draft text references an internal chat host (`chat.office.paper`) and a registration URL that is not linked from the public blog UI.
 
@@ -192,19 +192,19 @@ After adding `chat.office.paper` to `hosts`, the leaked registration path allowe
 # 10.129.28.97 chat.office.paper
 ```
 
-![rocketchat register](paper_15_rocketchat_register.png)
+![rocketchat register](screenshots/paper_15_rocketchat_register.png)
 
 Employee chat platforms often allow **open registration** on internal hostnames because the assumption is “nobody can resolve this unless they are already on-network.” On a lab machine, that assumption is exactly what turns a leaked URL into access.
 
-![rocketchat home after register](paper_16_rocketchat_home_post_register.png)
+![rocketchat home after register](screenshots/paper_16_rocketchat_home_post_register.png)
 
 After onboarding, treat the UI like a small internal portal: note default channels, pinned messages, and integrations. Those elements frequently hide the shortest path to privileged automation.
 
-![rocketchat home users](paper_17_rocketchat_home_users.png)
+![rocketchat home users](screenshots/paper_17_rocketchat_home_users.png)
 
 The users sidebar is useful context even before you DM anyone: you are confirming which accounts look like humans versus bots, and which bot accounts are likely wired to scripts running on the server side.
 
-![recyclops help](paper_18_recyclops_help.png)
+![recyclops help](screenshots/paper_18_recyclops_help.png)
 
 Bot help output is the contract you are about to test. If the bot claims directory restrictions, assume the implementation might be wrong until you prove otherwise with **edge cases** (`..`, absolute paths, alternate spellings, and “list vs read” behaviors).
 
@@ -219,19 +219,19 @@ Bot help output is the contract you are about to test. If the bot claims directo
 
 A sensible progression is: **baseline → boundary tests → high-signal targets**. The screenshots below follow that order so each image answers a distinct question (“does it work normally?”, “does traversal work?”, “does file read work?”, “where is the secret?”, “does SSH accept it?”). Two separate captures of `list sales` (channel vs DM) turned out to be **identical** in content, so only one baseline image is kept here; if you reproduce this locally, prefer a **DM** with `recyclops` so the full traversal thread stays on one clean timeline.
 
-![recyclops list sales](paper_19_recyclops_list_sales.png)
+![recyclops list sales](screenshots/paper_19_recyclops_list_sales.png)
 
 First, exercise the documented path: list the sales folder the bot is supposed to expose. This step is not about finding a vulnerability yet; it is about locking in **expected output shape** so later screenshots are easy to explain (“same bot, same command family, different path—yet it still responded”). Run the same check from a DM if you want a quieter transcript—the visual evidence is the same capture family as a public channel `list sales`.
 
-![recyclops list parent directory](paper_20_recyclops_path_traversal_home.png)
+![recyclops list parent directory](screenshots/paper_20_recyclops_path_traversal_home.png)
 
 Now pressure the boundary: ask `list` to climb out of the sales tree (`..` chains, parent directories, then home-like locations). If the bot prints contents outside sales, you have confirmed a **path traversal in a listing primitive**. The next question is no longer “is there a bug?” but “which directories does this OS user see, and which filenames look like automation?”
 
-![recyclops read etc passwd](paper_21_recyclops_file_passwd.png)
+![recyclops read etc passwd](screenshots/paper_21_recyclops_file_passwd.png)
 
 Switch from `list` to `file` once traversal is credible. `/etc/passwd` is a good next step because it is usually world-readable, short, and it grounds the story in real usernames (`dwight`, service users). You are proving **arbitrary readable file retrieval**, not exfiltrating the flag through chat.
 
-![recyclops hubot env leak](paper_22_recyclops_hubot_env.png)
+![recyclops hubot env leak](screenshots/paper_22_recyclops_hubot_env.png)
 
 Operational secrets rarely live in `/etc/passwd`; they live next to **integrations**. Hubot-style setups commonly store Rocket.Chat credentials in a `.env` beside the bot. If you can pull that file through `file`, you often get a password string that doubles as a UNIX login for whoever owns the workstation narrative on the box.
 
@@ -244,7 +244,7 @@ ssh dwight@10.129.28.97
 whoami
 ```
 
-![ssh dwight and user flag](paper_23_ssh_user_flag.png)
+![ssh dwight and user flag](screenshots/paper_23_ssh_user_flag.png)
 
 SSH is the foothold milestone. Chat access was only the delivery mechanism; an interactive `dwight` session (and the ability to read `user.txt` in the same capture) is what upgrades the finding from “information disclosure via bot” to **authenticated remote access** you can build privesc from.
 
@@ -259,7 +259,7 @@ With an interactive shell as `dwight`, the user flag could be read from the home
 cat /home/dwight/user.txt
 ```
 
-![user flag](paper_23_ssh_user_flag.png)
+![user flag](screenshots/paper_23_ssh_user_flag.png)
 
 🏁 **User flag obtained**
 
@@ -275,7 +275,7 @@ sudo -l
 /usr/bin/sudo --version
 ```
 
-![sudo denied and sudo version](paper_24_sudo_not_allowed_version.png)
+![sudo denied and sudo version](screenshots/paper_24_sudo_not_allowed_version.png)
 
 `sudo -l` failing for `dwight` is not the end of the privesc story on older enterprise Linux images. The next question is whether the box still ships **desktop-era components** (polkit/accountsservice stacks) that historically had local auth bypass issues, which is why collecting `sudo --version` and broader package context still matters even when sudo rules are empty.
 
@@ -288,7 +288,7 @@ id
 sudo -l
 ```
 
-![polkit CVE-2021-3560 exploit output](paper_25_polkit_CVE_2021_3560_exploit.png)
+![polkit CVE-2021-3560 exploit output](screenshots/paper_25_polkit_CVE_2021_3560_exploit.png)
 
 The polkit-style exploit path is intentionally noisy: it is race-based, so expect multiple attempts and messy output. The screenshot is documenting **that the primitive fired on this target**, not that it always works on the first run.
 
@@ -307,7 +307,7 @@ whoami
 cat /root/root.txt
 ```
 
-![root flag](paper_26_root_flag.png)
+![root flag](screenshots/paper_26_root_flag.png)
 
 At this point you are mostly verifying containment: confirm identity with `whoami`, capture the flag artifact, and stop before doing unnecessary post-exploitation on a lab system.
 
