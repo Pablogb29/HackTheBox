@@ -43,7 +43,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.11.100
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -66,7 +66,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.100 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract the results:
 
@@ -74,7 +74,7 @@ Extract the results:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -93,7 +93,7 @@ nmap -sCV -p22,80 10.10.11.100 -oN targeted
 - `-oN`: Output in human-readable format  
 
 
-![targeted](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -113,36 +113,36 @@ We use **whatweb** to identify technologies behind the web service:
 whatweb http://10.10.11.100
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 Accessing the website:
 
 ![webscan](screenshots/webmain.png)
-![webscan](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/web_contact.png)
+![webscan](screenshots/web_contact.png)
 
 The main page is static, with non-functional buttons like "Download" and *send* button from "Contact Us" is not working.
 
 Navigating to **Portal** in the top right:
 
-![webscan](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/web_portal.png)
+![webscan](screenshots/web_portal.png)
 
 We find an input form:
 
-![web_log_submit](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/web_log_submit.png)
+![web_log_submit](screenshots/web_log_submit.png)
 
 This suggests potential for **file upload/LFI/XXE** vulnerabilities.
 
 Filling the form:
 
-![web_log_submit_test](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/web_log_submit_test.png)
+![web_log_submit_test](screenshots/web_log_submit_test.png)
 
 The response reflects our input, so we test with `{{7*7}}` for SSTI:
 
-![web_log_submit_7](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/web_log_submit_7.png)
+![web_log_submit_7](screenshots/web_log_submit_7.png)
 
 No result. Letâ€™s intercept with **BurpSuite**.
 
-![bs_test](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bs_test.png)
+![bs_test](screenshots/bs_test.png)
 
 Captured request shows data encoded in **Base64 XML**.
 
@@ -180,14 +180,14 @@ We craft a payload to read `/etc/passwd`:
 
 Encode to Base64 and send via Burp Repeater:
 
-![bs_xxe_sended](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bs_xxe_sended.png)
+![bs_xxe_sended](screenshots/bs_xxe_sended.png)
 
 Result shows `/etc/passwd`, confirming **XXE exploitation**.  
 We discover users `root` and `development`.
 
 Next, attempt `/home/development/.ssh/id_rsa`:
 
-![bs_id_rsa_sended](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bs_id_rsa_sended.png)
+![bs_id_rsa_sended](screenshots/bs_id_rsa_sended.png)
 
 Failed. We pivot to reading PHP source code.
 
@@ -199,7 +199,7 @@ Using **php://filter** we dump `log_submit.php`:
 <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=log_submit.php"> ]>
 ```
 
-![bs_log_submit_sended](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bs_log_submit_sended.png)
+![bs_log_submit_sended](screenshots/bs_log_submit_sended.png)
 
 Decoded PHP reveals simple input handling, no sensitive data.
 
@@ -209,17 +209,17 @@ We brute-force directories with **WFuzz**:
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt http://10.10.11.100/FUZZ.php
 ```
 
-![wfuzz](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/wfuzz.png)
+![wfuzz](screenshots/wfuzz.png)
 
 Findings: **index.php** and **db.php**
 
 Dumping `db.php` with XXE:
 
-![bs_db_sended](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bs_db_sended.png)
+![bs_db_sended](screenshots/bs_db_sended.png)
 
 Decoded credentials:
 
-![bs_credentials](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bs_credentials.png)
+![bs_credentials](screenshots/bs_credentials.png)
 
 ```php
 $dbusername = "admin";
@@ -235,13 +235,13 @@ We attempt SSH access with the discovered credentials:
 ssh development@10.10.11.100
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 
 Inside `/home/development`, we also find `contract.txt`:
 
-![user_contract](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/user_contract.png)
+![user_contract](screenshots/user_contract.png)
 
 It references special permissions to run a script.
 
@@ -254,7 +254,7 @@ Checking sudo permissions:
 sudo -l
 ```
 
-![user_priv](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/user_priv.png)
+![user_priv](screenshots/user_priv.png)
 
 We can run `/opt/skytrain_inc/ticketValidator.py` as root.
 
@@ -264,7 +264,7 @@ Listing ownership:
 ls -l /opt/skytrain_inc/ticketValidator.py
 ```
 
-![bash_priv](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/bash_priv.png)
+![bash_priv](screenshots/bash_priv.png)
 
 The script is root-owned, so cannot be modified. Letâ€™s review it:
 
@@ -272,7 +272,7 @@ The script is root-owned, so cannot be modified. Letâ€™s review it:
 cat /opt/skytrain_inc/ticketValidator.py | less
 ```
 
-![cat_ticketvalidator](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/cat_ticketvalidator.png)
+![cat_ticketvalidator](screenshots/cat_ticketvalidator.png)
 
 It evaluates Markdown files, using dangerous `eval()`:
 
@@ -304,7 +304,7 @@ Now `/bin/bash` is SUID root. Spawn root shell:
 bash -p
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/BountyHunter/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 âœ… **Root flag obtained**
 

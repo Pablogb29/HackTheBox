@@ -45,7 +45,7 @@ Verify if the host is alive:
 ping -c 1 10.10.11.182
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 ---
 ### 1.2 Port Scanning
@@ -66,7 +66,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.182 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -74,7 +74,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -93,7 +93,7 @@ nmap -p22,80 -sC -sV 10.10.11.182 -oN targeted
 - `-oN`: Output in human-readable format  
 
 
-![targeted](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -111,7 +111,7 @@ A web application is hosted under the domain `photobomb.htb`.
 
 The OS version is identified as **Ubuntu Focal** from Launchpad.
 
-![launchpad](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/launchpad.png)
+![launchpad](screenshots/launchpad.png)
 
 Fingerprinting the web server with WhatWeb:
 
@@ -119,17 +119,17 @@ Fingerprinting the web server with WhatWeb:
 whatweb http://10.10.11.182
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 ### 2.2 Website Analysis
 
 Browsing the website:
 
-![web](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/web.png)
+![web](screenshots/web.png)
 
 The **Click here!** button requests credentials:
 
-![web_login](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/web_login.png)
+![web_login](screenshots/web_login.png)
 
 If cancelled:
 
@@ -230,7 +230,7 @@ whoami
 cat /home/wizard/user.txt
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 
@@ -281,7 +281,7 @@ Execute the script with manipulated PATH:
 sudo PATH=/tmp:$PATH /opt/cleanup.sh 
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Photobomb/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

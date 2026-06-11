@@ -50,7 +50,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.11.164
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 ### 1.2 Port Scanning
 
@@ -68,7 +68,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.164 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -76,7 +76,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ### 1.3 Targeted Scan
 
@@ -91,7 +91,7 @@ nmap -p22,80 -sC -sV 10.10.11.164 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -116,7 +116,7 @@ Continue the attack chain with the next commands:
 whatweb http://10.10.11.164
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 The service appears to be running on **Python Flask**.
 
@@ -128,7 +128,7 @@ Load the main application in the browser and map primary features:
 curl -i http://10.10.11.164/
 ```
 
-![web](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/web.png)
+![web](screenshots/web.png)
 
 
 - `Download` â†’ retrieves a file `source.zip`  
@@ -159,7 +159,7 @@ Let's use WFUZZ to find sub-domains:
 wfuzz -c --hc=404 -t 200 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt http://10.10.11.164/FUZZ
 ```
 
-![wfuzz](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/wfuzz.png)
+![wfuzz](screenshots/wfuzz.png)
 
 Discovered **/console** endpoint, a Werkzeug debugger console:
 
@@ -310,7 +310,7 @@ SSH private key found in repo:
 
 SSH access as `dev01`:
 
-![user_flag](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… User flag obtained
 
@@ -353,7 +353,7 @@ After cron executes:
 bash -p
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/OpenSource/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ Root flag obtained
 

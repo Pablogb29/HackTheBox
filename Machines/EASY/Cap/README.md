@@ -46,7 +46,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.245
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Cap/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -69,7 +69,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.245 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![nmap](cases/HackTheBox/Machines/EASY/Cap/screenshots/nmap.png)
+![nmap](screenshots/nmap.png)
 
 Extract open ports from the result:
 
@@ -77,7 +77,7 @@ Extract open ports from the result:
 extractPorts allPorts
 ```
 
-![extractPorts](cases/HackTheBox/Machines/EASY/Cap/screenshots/extractPorts.png)
+![extractPorts](screenshots/extractPorts.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -96,7 +96,7 @@ nmap -sCV -p21,22,80 10.10.10.245 -oN targeted
 - `-oN`: Output in human-readable format  
 
 
-![targeted](cases/HackTheBox/Machines/EASY/Blue/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -117,11 +117,11 @@ Browsing to `http://10.10.10.245`, after saving it into `/etc/hosts`, reveals a 
 curl -i http://10.10.10.245/
 ```
 
-![dashboard](cases/HackTheBox/Machines/EASY/Cap/screenshots/dashboard.png)
+![dashboard](screenshots/dashboard.png)
 
 Menu options include:
 
-![dashboard_left_menu](cases/HackTheBox/Machines/EASY/Cap/screenshots/dashboard_left_menu.png)
+![dashboard_left_menu](screenshots/dashboard_left_menu.png)
 
 - **IP Config** â†’ Displays output of `ifconfig`  
 - **Network Status** â†’ Displays output of `netstat`  
@@ -136,12 +136,12 @@ When generating a capture, the URL changes to:
 /capture/data/1
 ```
 
-![dashboard_data_1](cases/HackTheBox/Machines/EASY/Cap/screenshots/dashboard_data_1.png)
+![dashboard_data_1](screenshots/dashboard_data_1.png)
 
 This suggests the capture ID is sequential.  
 Testing `/capture/data/0` successfully downloads a previous capture.
 
-![dashboard_data_0](cases/HackTheBox/Machines/EASY/Cap/screenshots/dashboard_data_0.png)
+![dashboard_data_0](screenshots/dashboard_data_0.png)
 
 > **Vulnerability:**  
 > This is an **Insecure Direct Object Reference (IDOR)** â€” direct access to objects by modifying identifiers in the request.
@@ -155,7 +155,7 @@ The capture file from `/capture/data/0` is downloaded, opened in **Wireshark** a
 ftp
 ```
 
-![wireshark](cases/HackTheBox/Machines/EASY/Cap/screenshots/wireshark.png)
+![wireshark](screenshots/wireshark.png)
 
 Captured credentials:
 
@@ -175,7 +175,7 @@ Use the recovered credentials to log in via SSH:
 ssh nathan@10.10.10.245
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Cap/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **SSH login successful**  
 ðŸ **User flag retrieved from Nathan's home directory**
@@ -191,7 +191,7 @@ After obtaining the user flag, we start privilege escalation by checking for SUI
 find / -perm -4000 -user root 2>/dev/null | xargs ls -l
 ```
 
-![root_permisions](cases/HackTheBox/Machines/EASY/Cap/screenshots/root_permisions.png)
+![root_permisions](screenshots/root_permisions.png)
 
 No exploitable SUID binaries are found.
 
@@ -204,7 +204,7 @@ Next, we enumerate all file capabilities for user `nathan`:
 getcap -r / 2>/dev/null
 ```
 
-![getcap_devnull](cases/HackTheBox/Machines/EASY/Cap/screenshots/getcap_devnull.png)
+![getcap_devnull](screenshots/getcap_devnull.png)
 
 Finding:
 
@@ -243,7 +243,7 @@ Finally, spawn a root shell:
 python3.8 -c 'import os; os.setuid(0); os.system("bash")'
 ```
 
-![setuid_0](cases/HackTheBox/Machines/EASY/Cap/screenshots/setuid_0.png)
+![setuid_0](screenshots/setuid_0.png)
 
 ðŸ **Root flag retrieved from `/root`**
 

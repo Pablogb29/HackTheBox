@@ -47,7 +47,7 @@ Verify if the host is reachable using ICMP:
 ping -c 1 10.10.10.152
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Netmon/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -70,7 +70,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.152 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allPorts](cases/HackTheBox/Machines/EASY/Netmon/screenshots/allports.png)
+![allPorts](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -78,7 +78,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractPorts](cases/HackTheBox/Machines/EASY/Netmon/screenshots/extractports.png)
+![extractPorts](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -96,7 +96,7 @@ nmap -p21,80,135,139,445,5985,47001,49664,49665,49666,49667,49668,49669 -sC -sV 
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/Netmon/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -123,7 +123,7 @@ Navigating through, the **user flag** was retrieved directly from the `Public` d
 ftp 10.10.10.152
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Netmon/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 
@@ -136,7 +136,7 @@ Tried to enumerate SMB shares with CrackMapExec:
 crackmapexec 10.10.10.152
 ```
 
-![crackmapexec](cases/HackTheBox/Machines/EASY/Netmon/screenshots/crackmapexec.png)
+![crackmapexec](screenshots/crackmapexec.png)
 
 No useful results.
 
@@ -149,14 +149,14 @@ The web server is running **Paessler PRTG Network Monitor**:
 whatweb http://10.10.10.152
 ```
 
-![whatweb](cases/HackTheBox/Machines/EASY/Netmon/screenshots/whatweb.png)
+![whatweb](screenshots/whatweb.png)
 
 - Detected version: **18.1.37.13946**  
 - Default credentials (`prtgadmin:prtgadmin`) failed.  
 
 Let's go to website:
 
-![web](cases/HackTheBox/Machines/EASY/Netmon/screenshots/web.png)
+![web](screenshots/web.png)
 
 Credentials don't work.
 
@@ -254,7 +254,7 @@ Login via **Evil-WinRM** using the newly created account:
 evil-winrm -i 10.10.10.152 -u 'pentest' -p 'p3nT3st!'
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Netmon/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

