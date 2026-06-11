@@ -5,26 +5,39 @@
 <h1 align="center">WriteUps by M0k4</h1>
 
 <p align="center">
-  <b>Repository containing my documented Hack The Box machine write-ups</b><br>
+  <b>Repository containing my documented Hack The Box machines and challenges</b><br>
   Professional approach, OSCP-oriented, and focused on real-world penetration testing.
 </p>
 
 ---
 
-## 📂 Categories
+## 📂 Machines
 
 | Difficulty | Description | # Solved |
 |------------|-------------|:--------:|
-| 🟢 **[**Easy**](./EASY)** | Beginner-friendly machines to strengthen fundamentals. | **44** |
-| 🟡 **[**Medium**](./MEDIUM)** | Intermediate challenges with multiple exploitation stages. | **8** |
-| 🔴 **[**Hard**](./HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
-| ⚫ **[**Insane**](./INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
+| 🟢 **[**Easy**](./Machines/EASY)** | Beginner-friendly machines to strengthen fundamentals. | **59** |
+| 🟡 **[**Medium**](./Machines/MEDIUM)** | Intermediate machines with multiple exploitation stages. | **10** |
+| 🔴 **[**Hard**](./Machines/HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
+| ⚫ **[**Insane**](./Machines/INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
+
+---
+
+## 🧩 Challenges
+
+| Category | Description | # Solved |
+|----------|-------------|:--------:|
+| 🌐 **[**Challenges**](./Challenges)** | Self-contained CTF puzzles across Web, Reversing, Misc, and more. | **5** |
+
+**Breakdown:** Web (3) · Reversing (1) · Misc (1) — all **Very Easy** so far.
 
 ---
 
 ## 📊 Progress
 
-- **Total machines completed:** 52 
+- **Total machines completed:** 69 (59 Easy · 10 Medium)
+- **Total challenges completed:** 5
+- **Published write-ups:** 62 machines + 5 challenges
+- **Active machines (write-up pending retirement):** 7 — CCTV, Facts, Kobold, MonitorsFour, Reactor, Silentium, WingData
 - **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
 - **Platform:** [Hack The Box](https://www.hackthebox.com/)
 
