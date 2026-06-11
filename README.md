@@ -15,8 +15,8 @@
 
 | Difficulty | Description | # Solved |
 |------------|-------------|:--------:|
-| 🟢 **[**Easy**](./Machines/EASY)** | Beginner-friendly machines to strengthen fundamentals. | **59** |
-| 🟡 **[**Medium**](./Machines/MEDIUM)** | Intermediate machines with multiple exploitation stages. | **10** |
+| 🟢 **[**Easy**](./Machines/EASY)** | Beginner-friendly machines to strengthen fundamentals. | **60** |
+| 🟡 **[**Medium**](./Machines/MEDIUM)** | Intermediate machines with multiple exploitation stages. | **11** |
 | 🔴 **[**Hard**](./Machines/HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
 | ⚫ **[**Insane**](./Machines/INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
 
@@ -34,10 +34,10 @@
 
 ## 📊 Progress
 
-- **Total machines completed:** 69 (59 Easy · 10 Medium)
+- **Total machines completed:** 71 (60 Easy · 11 Medium)
 - **Total challenges completed:** 5
 - **Published write-ups:** 62 machines + 5 challenges
-- **Active machines (write-up pending retirement):** 7 — CCTV, Facts, Kobold, MonitorsFour, Reactor, Silentium, WingData
+- **Active machines (write-up pending retirement):** 9 — CCTV, Connected, DevHub, Facts, Kobold, MonitorsFour, Reactor, Silentium, WingData
 - **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
 - **Platform:** [Hack The Box](https://www.hackthebox.com/)
 
