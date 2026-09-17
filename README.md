@@ -1,65 +1,39 @@
-<p align="center">
-  <img src="https://cdn.brandfetch.io/id-M19oKfL/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="HTB Logo" width="360"/>
-</p>
+# HackTheBox write-ups — M0k4
 
-<h1 align="center">WriteUps by M0k4</h1>
+OSCP-oriented notes for machines and challenges I have solved on [Hack The Box](https://app.hackthebox.com/users/1583498). Methodology, tooling, and mitigations. **No flags.**
 
-<p align="center">
-  <b>Repository containing my documented Hack The Box machines and challenges</b><br>
-  Professional approach, OSCP-oriented, and focused on real-world penetration testing.
-</p>
+Profile: [github.com/Pablogb29](https://github.com/Pablogb29) · Portfolio: [pabloinfosec.com](https://www.pabloinfosec.com)
 
----
+## Machines
 
-## 📂 Machines
+| Difficulty | Folder | Write-ups |
+| --- | --- | ---: |
+| Easy | [Machines/EASY](./Machines/EASY) | 60 |
+| Medium | [Machines/MEDIUM](./Machines/MEDIUM) | 13 |
+| Hard | — | Solved on HTB; write-ups not published yet |
+| Insane | — | — |
 
-| Difficulty | Description | # Solved |
-|------------|-------------|:--------:|
-| 🟢 **[**Easy**](./Machines/EASY)** | Beginner-friendly machines to strengthen fundamentals. | **60** |
-| 🟡 **[**Medium**](./Machines/MEDIUM)** | Intermediate machines with multiple exploitation stages. | **11** |
-| 🔴 **[**Hard**](./Machines/HARD)** | Advanced scenarios requiring lateral thinking and complex techniques. | *Coming soon* |
-| ⚫ **[**Insane**](./Machines/INSANE)** | For the bold: unconventional and highly demanding exploitation. | *Coming soon* |
+**73 published machine write-ups.** Overall HTB progress is **82 machines solved**.
 
----
+## Challenges
 
-## 🧩 Challenges
+| Category | Folder | Write-ups |
+| --- | --- | ---: |
+| Web / Reversing / Misc | [Challenges](./Challenges) | 5 |
 
-| Category | Description | # Solved |
-|----------|-------------|:--------:|
-| 🌐 **[**Challenges**](./Challenges)** | Self-contained CTF puzzles across Web, Reversing, Misc, and more. | **5** |
+All five are Very Easy: FlagCommand, OnlyHacks, Spookifier, SpookyPass, LuckyDice.
 
-**Breakdown:** Web (3) · Reversing (1) · Misc (1) — all **Very Easy** so far.
+## Featured
 
----
+| Machine | Level | Focus |
+| --- | --- | --- |
+| [Administrator](./Machines/MEDIUM/Administrator.md) | Medium | Windows / AD |
+| [Certified](./Machines/MEDIUM/Certified/README.md) | Medium | Windows / AD |
+| [Interpreter](./Machines/MEDIUM/Interpreter/README.md) | Medium | Linux |
+| [EscapeTwo](./Machines/EASY/EscapeTwo/README.md) | Easy | Windows / AD |
+| [Cicada](./Machines/EASY/Cicada/README.md) | Easy | Windows / AD |
+| [Support](./Machines/EASY/Support/README.md) | Easy | Windows / AD |
 
-## 📊 Progress
+## Note
 
-- **Total machines completed:** 71 (60 Easy · 11 Medium)
-- **Total challenges completed:** 5
-- **Published write-ups:** 62 machines + 5 challenges
-- **Active machines (write-up pending retirement):** 9 — CCTV, Connected, DevHub, Facts, Kobold, MonitorsFour, Reactor, Silentium, WingData
-- **Style:** OSCP-style with step-by-step explanations, tool usage, and mitigations.
-- **Platform:** [Hack The Box](https://www.hackthebox.com/)
-
----
-
-## 🛠 Common Tools & Techniques
-
-- 🔍 **Enumeration**: `nmap`, `masscan`, `gobuster`, `enum4linux`, `ldapsearch`
-- 💻 **Exploitation**: SMB, GPP, Kerberoasting, IDOR, SUID, Linux Capabilities
-- 🧠 **Post-Exploitation**: `psexec.py`, `linPEAS`, plaintext credentials, capability-based privilege escalation
-- 🛡 **Mitigations** included in every write-up
-
----
-
-## 📬 Contact
-
-<p align="center">
-  <a href="https://www.linkedin.com/in/pabloinfosec"><img src="https://img.shields.io/badge/LinkedIn-Profile-blue?logo=linkedin"></a>
-  <a href="mailto:pabloinfosec@gmail.com"><img src="https://img.shields.io/badge/Email-Contact-red?logo=gmail"></a>
-  <a href="https://app.hackthebox.com/users/653281"><img src="https://img.shields.io/badge/Hack%20The%20Box-Profile-2E3440?logo=hackthebox&logoColor=00FF00"></a>
-</p>
-
----
-
-> ⚠️ **Disclaimer:** All content is for educational and documentation purposes only. Do not perform any activities without proper authorization.
+These write-ups are for learning and documentation. Do not use the techniques against systems you do not own or do not have permission to test.
