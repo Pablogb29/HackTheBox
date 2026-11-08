@@ -1,43 +1,32 @@
 # HackTheBox write-ups — M0k4
 
-OSCP-oriented notes for machines and challenges I have solved on [Hack The Box](https://app.hackthebox.com/users/1583498). Methodology, tooling, and mitigations. **No flags.**
+Documented machine and challenge solutions from [Hack The Box](https://app.hackthebox.com/users/1583498), focused on offensive security methodology, tooling, exploitation paths, and mitigations.
 
-Profile: [github.com/Pablogb29](https://github.com/Pablogb29) · Portfolio: [pabloinfosec.com](https://www.pabloinfosec.com)
-
-<div align="center">
+[Portfolio](https://www.pabloinfosec.com) · [GitHub profile](https://github.com/Pablogb29)
 
 ## Machines
 
-| Difficulty | Folder | Write-ups | Solved on HTB |
-| :---: | :---: | :---: | :---: |
-| Easy | [Machines/EASY](./Machines/EASY) | 60 | 64 |
-| Medium | [Machines/MEDIUM](./Machines/MEDIUM) | 13 | 16 |
-| Hard | — | — | 2 |
-| Insane | — | — | 1 ([BlockSynergy](https://app.hackthebox.com/machines/975)) |
+| Difficulty | Folder | Full write-ups |
+| :--- | :--- | ---: |
+| Easy | [Machines/1. EASY](./Machines/1.%20EASY) | 53 |
+| Medium | [Machines/2. MEDIUM](./Machines/2.%20MEDIUM) | 18 |
+| Hard | [Machines/3. HARD](./Machines/3.%20HARD) | 2 |
+| Insane | [Machines/4. INSANE](./Machines/4.%20INSANE) | 1 |
 
-**73 published machine write-ups.** Overall HTB progress is **83 machines solved**, including first Insane.
+**74 full machine write-ups** are available here. My [HTB profile](https://app.hackthebox.com/users/1583498) records **97 machines solved**; write-ups for other solves are being prepared or await retirement.
+
+## Featured write-ups
+
+- [Ghost](./Machines/4.%20INSANE/Ghost/README.md) — multi-domain Active Directory and Golden SAML
+- [Redelegate](./Machines/3.%20HARD/Redelegate/README.md) — Active Directory delegation
+- [Snoopy](./Machines/3.%20HARD/Snoopy/README.md) — DNS, credential capture, and privilege escalation
+- [Voleur](./Machines/2.%20MEDIUM/Voleur/README.md) — Kerberos, DPAPI, and backup exploitation
+- [Craft](./Machines/2.%20MEDIUM/Craft/README.md) — API exploitation and Vault
 
 ## Challenges
 
-| Category | Folder | Write-ups |
-| :---: | :---: | :---: |
-| Web / Reversing / Misc | [Challenges](./Challenges) | 5 |
+[Five challenge write-ups](./Challenges) covering Web, Reversing, and Misc.
 
-All five are Very Easy: FlagCommand, OnlyHacks, Spookifier, SpookyPass, LuckyDice.
+## Responsible use
 
-## Featured
-
-| Machine | Level | Focus |
-| :---: | :---: | :---: |
-| [BlockSynergy](https://app.hackthebox.com/machines/975) | Insane | Linux · write-up pending |
-| [Administrator](./Machines/MEDIUM/Administrator.md) | Medium | Windows / AD |
-| [Certified](./Machines/MEDIUM/Certified/README.md) | Medium | Windows / AD |
-| [Interpreter](./Machines/MEDIUM/Interpreter/README.md) | Medium | Linux |
-| [EscapeTwo](./Machines/EASY/EscapeTwo/README.md) | Easy | Windows / AD |
-| [Cicada](./Machines/EASY/Cicada/README.md) | Easy | Windows / AD |
-
-</div>
-
-## Note
-
-These write-ups are for learning and documentation. Do not use the techniques against systems you do not own or do not have permission to test.
+These notes document authorized lab work. Only publish technical solutions after Hack The Box has officially retired the machine.
