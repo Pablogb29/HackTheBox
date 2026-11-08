@@ -8,12 +8,12 @@ Documented machine and challenge solutions from [Hack The Box](https://app.hackt
 
 | Difficulty | Folder | Full write-ups |
 | :--- | :--- | ---: |
-| Easy | [Machines/1. EASY](./Machines/1.%20EASY) | 53 |
-| Medium | [Machines/2. MEDIUM](./Machines/2.%20MEDIUM) | 18 |
+| Easy | [Machines/1. EASY](./Machines/1.%20EASY) | 55 |
+| Medium | [Machines/2. MEDIUM](./Machines/2.%20MEDIUM) | 19 |
 | Hard | [Machines/3. HARD](./Machines/3.%20HARD) | 2 |
 | Insane | [Machines/4. INSANE](./Machines/4.%20INSANE) | 1 |
 
-**74 full machine write-ups** are available here. My [HTB profile](https://app.hackthebox.com/users/1583498) records **97 machines solved**; write-ups for other solves are being prepared or await retirement.
+**77 full machine write-ups** are available here. My [HTB profile](https://app.hackthebox.com/users/1583498) records **97 machines solved**; write-ups for other solves are being prepared or await retirement.
 
 ## Featured write-ups
 
